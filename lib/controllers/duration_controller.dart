@@ -2,110 +2,101 @@
 // Author: haptome H.
 // Linked Spec Section: Duration Page
 
+import 'package:et_digital_equb/core/services/group_service.dart';
 import 'package:et_digital_equb/core/widgets/duration_filter_bottom_sheet.dart';
+import 'package:et_digital_equb/models/group_model.dart';
 import 'package:get/get.dart';
+import 'package:flutter/foundation.dart';
 
 class DurationController extends GetxController {
-  final RxList<Map<String, dynamic>> allEkubs = <Map<String, dynamic>>[].obs;
-  final RxList<Map<String, dynamic>> filteredEkubs = <Map<String, dynamic>>[].obs;
-  final RxString selectedFilter = 'all'.obs; // Store filter key, not translated text
+  final GroupService _groupService = GroupService.to;
+
+  final RxList<Group> allGroups = <Group>[].obs;
+  final RxList<Group> filteredGroups = <Group>[].obs;
+  final RxString selectedFrequency = 'all'.obs; // 'all', 'daily', 'weekly', 'monthly'
+  final RxBool isLoading = false.obs;
+  final RxString errorMessage = ''.obs;
 
   @override
   void onInit() {
     super.onInit();
-    _loadEkubs();
+    final args = Get.arguments as Map<String, dynamic>?;
+    if (args != null && args['frequency'] != null) {
+      selectedFrequency.value = args['frequency'] as String;
+    }
+    loadGroups();
     // Listen to filter changes
-    ever(selectedFilter, (_) => _filterEkubs());
+    ever(selectedFrequency, (_) => _filterGroups());
   }
 
-  void _loadEkubs() {
-    // Sample data - in real app, this would come from API
-    allEkubs.value = [
-      {
-        'id': '1',
-        'name': 'fridge_equb'.tr,
-        'frequency': 'weekly'.tr,
-        'amount': '5,000 Birr',
-        'duration': '3 ${'months'.tr}',
-        'totalAmount': '100,000 ETB',
-        'memberCount': 4,
-        'memberAvatars': [],
-      },
-      {
-        'id': '2',
-        'name': 'koka_tv_equb'.tr,
-        'frequency': 'weekly'.tr,
-        'amount': '5,000 Birr',
-        'duration': '6 ${'months'.tr}',
-        'totalAmount': '120,000 ETB',
-        'memberCount': 8,
-        'memberAvatars': [],
-      },
-      {
-        'id': '3',
-        'name': 'byd_seagull_equb'.tr,
-        'frequency': 'weekly'.tr,
-        'amount': '5,000 Birr',
-        'duration': '1 ${'year'.tr}',
-        'totalAmount': '260,000 ETB',
-        'memberCount': 12,
-        'memberAvatars': [],
-      },
-      {
-        'id': '4',
-        'name': 'koka_tv_equb'.tr,
-        'frequency': 'weekly'.tr,
-        'amount': '5,000 Birr',
-        'duration': '3 ${'months'.tr}',
-        'totalAmount': '65,000 ETB',
-        'memberCount': 5,
-        'memberAvatars': [],
-      },
-      {
-        'id': '5',
-        'name': 'byd_seagull_equb_short'.tr,
-        'frequency': 'weekly'.tr,
-        'amount': '5,000 Birr',
-        'duration': '6 ${'months'.tr}',
-        'totalAmount': '130,000 ETB',
-        'memberCount': 10,
-        'memberAvatars': [],
-      },
-    ];
-    _filterEkubs();
+  Future<void> loadGroups() async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      final response = await _groupService.getGroups(
+        status: 'active',
+        limit: 100, // Get more groups to filter by frequency
+      );
+
+      if (response.success && response.data != null) {
+        allGroups.value = response.data!;
+        _filterGroups();
+      } else {
+        errorMessage.value = response.message ?? 'Failed to load groups';
+        Get.snackbar('Error', errorMessage.value);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading groups: $e');
+      }
+      errorMessage.value = 'Failed to load groups: $e';
+      Get.snackbar('Error', errorMessage.value);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  void _filterEkubs() {
-    List<Map<String, dynamic>> filtered = List.from(allEkubs);
+  void _filterGroups() {
+    List<Group> filtered = List.from(allGroups);
 
-    // Filter by duration (if filter is set)
-    if (selectedFilter.value != 'all') {
-      // TODO: Implement duration filtering logic based on selectedFilter
-      // For now, just pass through
+    // Filter by frequency (if filter is set)
+    if (selectedFrequency.value != 'all') {
+      filtered = filtered
+          .where((group) => group.frequency.toLowerCase() == selectedFrequency.value.toLowerCase())
+          .toList();
     }
 
-    filteredEkubs.value = filtered;
+    filteredGroups.value = filtered;
+  }
+
+  Map<String, int> getFrequencyCounts() {
+    final counts = <String, int>{};
+    for (var group in allGroups) {
+      final frequency = group.frequency.toLowerCase();
+      counts[frequency] = (counts[frequency] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  void onFrequencyTap(String frequency) {
+    selectedFrequency.value = frequency;
   }
 
   void onFilterTap() {
     Get.bottomSheet(
       DurationFilterBottomSheet(
-        selectedFilter: selectedFilter,
+        selectedFilter: selectedFrequency,
         onFilterSelected: (filter) {
-          selectedFilter.value = filter;
+          selectedFrequency.value = filter;
         },
       ),
       isScrollControlled: true,
     );
   }
 
-  void onJoinEkub(String ekubId) {
-    // TODO: Navigate to join ekub page or show join dialog
-    Get.snackbar(
-      'join_ekub'.tr,
-      'joining_ekub'.tr.replaceAll('{id}', ekubId),
-      snackPosition: SnackPosition.BOTTOM,
-    );
+  void onGroupTap(Group group) {
+    Get.toNamed('/group-detail', arguments: group);
   }
 }
 

@@ -11,9 +11,8 @@ import 'storage_service.dart';
 
 class ApiService extends GetxService {
   static ApiService get to => Get.find();
-  
+
   late Dio _dio;
-  final StorageService _storage = StorageService.to;
 
   Future<void> init() async {
     _dio = Dio(
@@ -30,7 +29,7 @@ class ApiService extends GetxService {
 
     // Add interceptors
     _dio.interceptors.add(_AuthInterceptor());
-    
+
     // Add logging interceptor (only in debug mode)
     if (kDebugMode) {
       _dio.interceptors.add(
@@ -49,18 +48,31 @@ class ApiService extends GetxService {
   Dio get dio => _dio;
 
   // Helper methods for different services
-  Dio get authDio => _dio;
-  Dio get userDio => _dio..options.baseUrl = Env.userServiceUrl;
-  Dio get groupDio => _dio..options.baseUrl = Env.groupServiceUrl;
-  Dio get walletDio => _dio..options.baseUrl = Env.walletServiceUrl;
-  Dio get paymentDio => _dio..options.baseUrl = Env.paymentServiceUrl;
+  // All services route through API Gateway at apiBaseUrl
+  // The gateway automatically routes based on path prefix:
+  // /auth/* → Auth Service
+  // /users/* → User Service
+  // /groups/* → Group Service
+  // /wallets/* → Wallet Service
+  // /payments/* → Payment Service
+  // /rotations/* → Rotation Service
+  Dio get authDio => _dio; // Routes via /auth/* path
+  Dio get userDio => _dio; // Routes via /users/* path
+  Dio get groupDio => _dio; // Routes via /groups/* path
+  Dio get walletDio => _dio; // Routes via /wallets/* path
+  Dio get paymentDio => _dio; // Routes via /payments/* path
+  Dio get rotationDio => _dio; // Routes via /rotations/* path
+  Dio get notificationDio => _dio; // Routes via /notifications/* path
 }
 
 class _AuthInterceptor extends Interceptor {
   final StorageService _storage = StorageService.to;
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     final token = await _storage.getAccessToken();
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
@@ -90,10 +102,7 @@ class _AuthInterceptor extends Interceptor {
             opts.headers['Authorization'] = 'Bearer $newAccessToken';
             final retryResponse = await dio.request(
               opts.path,
-              options: Options(
-                method: opts.method,
-                headers: opts.headers,
-              ),
+              options: Options(method: opts.method, headers: opts.headers),
               data: opts.data,
               queryParameters: opts.queryParameters,
             );
@@ -109,4 +118,3 @@ class _AuthInterceptor extends Interceptor {
     handler.next(err);
   }
 }
-

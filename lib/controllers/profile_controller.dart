@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:et_digital_equb/core/services/auth_service.dart';
+import 'package:et_digital_equb/core/routes/app_routes.dart';
 
 class ProfileController extends GetxController {
   final AuthService _authService = AuthService.to;
@@ -81,7 +82,7 @@ class ProfileController extends GetxController {
   }
 
   void onFaqTap() {
-    Get.toNamed('/faq');
+    Get.toNamed(AppRoutes.faq);
   }
 
   void onLogout() {

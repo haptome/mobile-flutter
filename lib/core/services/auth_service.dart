@@ -9,13 +9,14 @@ import 'package:et_digital_equb/models/verify_otp_request.dart';
 import 'package:et_digital_equb/models/login_request.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import 'api_service.dart';
 import 'storage_service.dart';
 
 class AuthService extends GetxService {
   static AuthService get to => Get.find();
-  
+
   final ApiService _apiService = ApiService.to;
   final StorageService _storage = StorageService.to;
 
@@ -31,11 +32,36 @@ class AuthService extends GetxService {
       if (user != null) {
         currentUser.value = user;
         isAuthenticated.value = true;
+
+        // Optionally verify token is still valid by fetching profile
+        // This will refresh user data and validate the token
+        try {
+          await getProfile();
+        } catch (e) {
+          // If token is invalid, clear auth state
+          if (kDebugMode) {
+            print('Token validation failed: $e');
+          }
+          await clearAuthState();
+        }
+      } else {
+        // Token exists but no user data, clear tokens
+        await clearAuthState();
       }
     }
   }
 
+  // Clear authentication state
+  Future<void> clearAuthState() async {
+    await _storage.clearTokens();
+    await _storage.clearUser();
+    currentUser.value = null;
+    isAuthenticated.value = false;
+  }
+
   // Register user with complete registration data
+  // Note: Registration only creates the user and sends OTP
+  // Tokens are returned after OTP verification via verifyOtp()
   Future<ApiResponse<Map<String, dynamic>>> register(
     RegisterRequest request,
   ) async {
@@ -50,30 +76,9 @@ class AuthService extends GetxService {
         (data) => data as Map<String, dynamic>,
       );
 
-      // If registration is successful and returns tokens, save them
-      if (apiResponse.success && apiResponse.data != null) {
-        if (apiResponse.data!.containsKey('access_token')) {
-          await _storage.saveAccessToken(
-            apiResponse.data!['access_token'] as String,
-          );
-        }
-        if (apiResponse.data!.containsKey('refresh_token')) {
-          await _storage.saveRefreshToken(
-            apiResponse.data!['refresh_token'] as String,
-          );
-        }
-
-        // Save user if returned
-        if (apiResponse.data!.containsKey('user')) {
-          final user = UserModel.fromJson(
-            apiResponse.data!['user'] as Map<String, dynamic>,
-          );
-          currentUser.value = user;
-          isAuthenticated.value = true;
-          // Persist user data to storage
-          await _storage.saveUser(user);
-        }
-      }
+      // Registration only returns userId and otp_sent status
+      // Do NOT save tokens here - they come after OTP verification
+      // The response should contain: { userId: string, otp_sent: boolean }
 
       return apiResponse;
     } on DioException catch (e) {
@@ -103,9 +108,9 @@ class AuthService extends GetxService {
     return register(
       RegisterRequest(
         phone: phone,
-        fullName: fullName ?? '',
-        password: password ?? '',
-        workStatus: workStatus ?? 'employed',
+        fullName: fullName,
+        password: password, // Optional for mobile
+        workStatus: workStatus,
         fcmToken: fcmToken,
         deviceId: deviceId,
         deviceType: deviceType,
@@ -188,9 +193,7 @@ class AuthService extends GetxService {
   }
 
   // Login with complete request data
-  Future<ApiResponse<Map<String, dynamic>>> login(
-    LoginRequest request,
-  ) async {
+  Future<ApiResponse<Map<String, dynamic>>> login(LoginRequest request) async {
     try {
       final response = await _apiService.authDio.post(
         '/auth/login',
@@ -314,11 +317,33 @@ class AuthService extends GetxService {
 
   // Logout
   Future<void> logout() async {
-    await _storage.clearTokens();
-    await _storage.clearUser();
-    currentUser.value = null;
-    isAuthenticated.value = false;
-    Get.offAllNamed('/login');
+    try {
+      // Call backend logout endpoint if user is authenticated
+      final token = await _storage.getAccessToken();
+      if (token != null) {
+        try {
+          await _apiService.authDio.post('/auth/logout');
+        } catch (e) {
+          // Log error but continue with local logout
+          // This ensures logout works even if backend is unavailable
+          if (kDebugMode) {
+            print('Logout API call failed: $e');
+          }
+        }
+      }
+    } catch (e) {
+      // Continue with local logout even if there's an error
+      if (kDebugMode) {
+        print('Logout error: $e');
+      }
+    } finally {
+      // Always clear local storage and reset state
+      await _storage.clearTokens();
+      await _storage.clearUser();
+      currentUser.value = null;
+      isAuthenticated.value = false;
+      Get.offAllNamed('/login');
+    }
   }
 
   // Check if user is authenticated
@@ -331,7 +356,7 @@ class AuthService extends GetxService {
         currentUser.value = storedUser;
         isAuthenticated.value = true;
       }
-      
+
       // Then verify with API
       try {
         await getProfile();
@@ -348,4 +373,3 @@ class AuthService extends GetxService {
     return false;
   }
 }
-

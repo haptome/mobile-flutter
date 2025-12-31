@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
+import '../../../core/services/auth_service.dart';
 
 /// Custom splash screen that displays with a smooth animation
 class SplashScreen extends StatefulWidget {
@@ -23,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize animation controller with slower duration
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 2000), // 2 seconds for animation
@@ -31,39 +33,43 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     // Fade animation
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeIn,
-      ),
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
     );
 
     // Scale animation
-    _scaleAnimation = Tween<double>(
-      begin: 0.5,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutCubic,
-      ),
+    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
     );
 
     // Start the animation
     _animationController.forward();
 
-    // Navigate to login screen after animation completes + extra time to view
-    Timer(
-      const Duration(milliseconds: 3500), // Total: 2s animation + 1.5s viewing time
-      () {
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed(AppRoutes.login);
-        }
-      },
-    );
+    // Check authentication and navigate accordingly
+    _checkAuthAndNavigate();
+  }
+
+  Future<void> _checkAuthAndNavigate() async {
+    // Wait for animation to complete (2 seconds)
+    await Future.delayed(const Duration(milliseconds: 2000));
+
+    // Get AuthService and check authentication
+    final authService = AuthService.to;
+
+    // Wait a bit more for viewing (1.5 seconds)
+    await Future.delayed(const Duration(milliseconds: 1500));
+
+    if (!mounted) return;
+
+    // Navigate based on authentication state
+    if (authService.isAuthenticated.value &&
+        authService.currentUser.value != null) {
+      // User is authenticated, go to home
+      Get.offAllNamed(AppRoutes.home);
+    } else {
+      // User is not authenticated, go to login
+      Get.offAllNamed(AppRoutes.login);
+    }
   }
 
   @override
@@ -107,7 +113,7 @@ class _SplashScreenState extends State<SplashScreen>
                   // Delay the text animation slightly
                   final textOpacity = _fadeAnimation.value.clamp(0.0, 1.0);
                   final textScale = _scaleAnimation.value.clamp(0.0, 1.0);
-                  
+
                   return Opacity(
                     opacity: textOpacity,
                     child: Transform.scale(

@@ -2,96 +2,66 @@
 // Author: haptome H.
 // Linked Spec Section: In-Kind Page
 
+import 'package:et_digital_equb/core/services/group_service.dart';
 import 'package:et_digital_equb/core/widgets/price_range_filter_bottom_sheet.dart';
+import 'package:et_digital_equb/models/category_model.dart' as category_models;
 import 'package:get/get.dart';
+import 'package:flutter/foundation.dart';
 
 class InKindController extends GetxController {
-  final RxList<Map<String, dynamic>> allEkubs = <Map<String, dynamic>>[].obs;
-  final RxList<Map<String, dynamic>> filteredEkubs = <Map<String, dynamic>>[].obs;
+  final GroupService _groupService = GroupService.to;
+
+  final RxList<category_models.Category> inKindCategories = <category_models.Category>[].obs;
+  final RxBool isLoadingCategories = false.obs;
+  final RxString errorMessage = ''.obs;
   final RxInt selectedCategoryIndex = 0.obs;
-  final RxString selectedFilter = 'all'.obs; // Store filter key, not translated text
+  final RxString selectedFilter = 'all'.obs;
 
   List<String> get categories => ['all'.tr, 'merchant'.tr, 'driver'.tr, 'employees'.tr];
 
   @override
   void onInit() {
     super.onInit();
-    _loadEkubs();
+    loadInKindCategories();
     // Listen to category and filter changes
-    ever(selectedCategoryIndex, (_) => _filterEkubs());
-    ever(selectedFilter, (_) => _filterEkubs());
+    ever(selectedCategoryIndex, (_) => _filterCategories());
+    ever(selectedFilter, (_) => _filterCategories());
   }
 
-  void _loadEkubs() {
-    // Sample data - in real app, this would come from API
-    allEkubs.value = [
-      {
-        'id': '1',
-        'name': 'fridge_equb'.tr,
-        'frequency': 'weekly'.tr,
-        'amount': '100,000 ETB',
-        'duration': '3 ${'months'.tr}',
-        'category': 'driver',
-        'memberCount': 4,
-        'memberAvatars': [],
-      },
-      {
-        'id': '2',
-        'name': 'samsung_a15_equb'.tr,
-        'frequency': 'monthly'.tr,
-        'amount': '5,000 Birr',
-        'duration': '6 ${'months'.tr}',
-        'category': 'merchant',
-        'memberCount': 8,
-        'memberAvatars': [],
-      },
-      {
-        'id': '3',
-        'name': 'byd_seagull_equb'.tr,
-        'frequency': 'monthly'.tr,
-        'amount': '5,000 Birr',
-        'duration': '1 ${'year'.tr}',
-        'category': 'employees',
-        'memberCount': 12,
-        'memberAvatars': [],
-      },
-      {
-        'id': '4',
-        'name': 'koka_tv_equb'.tr,
-        'frequency': 'monthly'.tr,
-        'amount': '5,000 Birr',
-        'duration': '6 ${'months'.tr}',
-        'category': 'merchant',
-        'memberCount': 10,
-        'memberAvatars': [],
-      },
-    ];
-    _filterEkubs();
-  }
+  Future<void> loadInKindCategories() async {
+    try {
+      isLoadingCategories.value = true;
+      errorMessage.value = '';
+      
+      final response = await _groupService.getCategories(
+        categoryType: 'in_kind',
+        isActive: true,
+      );
 
-  void _filterEkubs() {
-    List<Map<String, dynamic>> filtered = List.from(allEkubs);
-
-    // Filter by category
-    if (selectedCategoryIndex.value > 0) {
-      final categoryKeys = ['all', 'merchant', 'driver', 'employees'];
-      final selectedCategoryKey = categoryKeys[selectedCategoryIndex.value];
-      filtered = filtered
-          .where((ekub) => (ekub['category'] as String) == selectedCategoryKey)
-          .toList();
+      if (response.success && response.data != null) {
+        inKindCategories.value = response.data!;
+      } else {
+        errorMessage.value = response.message ?? 'Failed to load in-kind categories';
+        Get.snackbar('Error', errorMessage.value);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading in-kind categories: $e');
+      }
+      errorMessage.value = 'Failed to load in-kind categories: $e';
+      Get.snackbar('Error', errorMessage.value);
+    } finally {
+      isLoadingCategories.value = false;
     }
-
-    // Filter by price range (if filter is set)
-    if (selectedFilter.value != 'all') {
-      // TODO: Implement price range filtering logic
-      // For now, just pass through
-    }
-
-    filteredEkubs.value = filtered;
   }
 
-  void onCategorySelected(int index) {
-    selectedCategoryIndex.value = index;
+  void _filterCategories() {
+    // Filtering logic can be added here if needed
+    // For now, we just display all categories
+  }
+
+  void onCategoryTap(category_models.Category category) {
+    Get.toNamed('/category-detail', arguments: category);
   }
 
   void onFilterTap() {

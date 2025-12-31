@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:io';
+import 'package:get/get.dart';
 import '../../core/widgets/app_bottom_nav.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/theme/app_colors.dart';
@@ -14,6 +14,7 @@ import '../../core/theme/app_sizes.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/app_assets.dart';
 import '../../core/routes/app_routes.dart';
+import '../../controllers/verification_controller.dart';
 import 'id_card_camera_view.dart';
 
 class VerificationView extends StatefulWidget {
@@ -25,9 +26,7 @@ class VerificationView extends StatefulWidget {
 
 class _VerificationViewState extends State<VerificationView> {
   int _currentNavIndex = 3; // Profile is index 3
-  String? _selectedVerificationMethod;
-  PlatformFile? _uploadedFile;
-  PlatformFile? _verificationFile;
+  final VerificationController _controller = Get.put(VerificationController());
 
   final List<String> _verificationMethods = const [
     'National ID',
@@ -131,13 +130,24 @@ class _VerificationViewState extends State<VerificationView> {
                     horizontal: AppSizes.paddingLarge,
                     vertical: AppSizes.paddingMedium,
                   ),
-                  child: AppButton(
-                    text: 'Continue',
+                  child: Obx(() => AppButton(
+                    text: _controller.isLoading.value ? 'Submitting...' : 'Submit for Review',
                     type: ButtonType.primary,
-                    onPressed: () {
-                      Navigator.of(context).pushNamed(AppRoutes.accountChecking);
-                    },
-                  ),
+                    onPressed: _controller.isLoading.value
+                        ? null
+                        : () {
+                            if (_controller.uploadedDocuments.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please upload at least one document'),
+                                  backgroundColor: AppColors.lightError,
+                                ),
+                              );
+                              return;
+                            }
+                            _controller.submitDocuments();
+                          },
+                  )),
                 ),
                 // Bottom Navigation
                 AppBottomNav(
@@ -209,9 +219,9 @@ class _VerificationViewState extends State<VerificationView> {
           ),
         ),
         const SizedBox(height: AppSizes.spacingMedium),
-        _verificationFile != null
+        Obx(() => _controller.verificationFile != null
             ? _buildVerificationFileCard()
-            : _buildVerificationContainer(),
+            : _buildVerificationContainer()),
       ],
     );
   }
@@ -236,9 +246,9 @@ class _VerificationViewState extends State<VerificationView> {
           ),
         ),
         const SizedBox(height: AppSizes.spacingMedium),
-        _uploadedFile != null
+        Obx(() => _controller.uploadedFile != null
             ? _buildUploadedFileCard()
-            : _buildUploadContainer(),
+            : _buildUploadContainer()),
      
      ],
     );
@@ -290,34 +300,41 @@ class _VerificationViewState extends State<VerificationView> {
             isFullWidth: false,
             onPressed: _showVerificationMethodBottomSheet,
           ),
-          if (_selectedVerificationMethod != null) ...[
-            const SizedBox(height: AppSizes.spacingSmall),
-            AppButton(
-              text: 'Open Camera',
-              type: ButtonType.primary,
-              textStyle: AppTextStyles.bodySmall(
-                color: AppColors.white,
-              ).copyWith(
-                fontWeight: FontWeight.w600
-              ),
-              horizontalPadding: 12,
-              verticalPadding: 6,
-              height: 30,
-              borderRadius: 100,
-              isFullWidth: false,
-              onPressed: _openCameraForVerification,
-            ),
-          ],
+          Obx(() {
+            if (_controller.selectedVerificationMethod != null) {
+              return Column(
+                children: [
+                  const SizedBox(height: AppSizes.spacingSmall),
+                  AppButton(
+                    text: 'Open Camera',
+                    type: ButtonType.primary,
+                    textStyle: AppTextStyles.bodySmall(
+                      color: AppColors.white,
+                    ).copyWith(
+                      fontWeight: FontWeight.w600
+                    ),
+                    horizontalPadding: 12,
+                    verticalPadding: 6,
+                    height: 30,
+                    borderRadius: 100,
+                    isFullWidth: false,
+                    onPressed: _openCameraForVerification,
+                  ),
+                ],
+              );
+            }
+            return const SizedBox.shrink();
+          }),
         ],
       ),
     );
   }
 
   Widget _buildVerificationFileCard() {
-    if (_verificationFile == null) return const SizedBox.shrink();
+    if (_controller.verificationFile == null) return const SizedBox.shrink();
 
-    final fileName = _verificationFile!.name;
-    final fileSize = _verificationFile!.size;
+    final fileName = _controller.verificationFile!.name;
+    final fileSize = _controller.verificationFile!.size;
     final fileSizeMB = (fileSize / (1024 * 1024)).toStringAsFixed(1);
 
     return Container(
@@ -442,7 +459,7 @@ class _VerificationViewState extends State<VerificationView> {
                   verticalPadding: 8,
                   borderRadius: 8,
                   isFullWidth: true,
-                  onPressed: _openCameraForVerification,
+                  onPressed: () => _openCameraForVerification(),
                 ),
               ),
               const SizedBox(width: 12),
@@ -460,10 +477,7 @@ class _VerificationViewState extends State<VerificationView> {
                   borderRadius: 8,
                   isFullWidth: true,
                   onPressed: () {
-                    setState(() {
-                      _verificationFile = null;
-                      _selectedVerificationMethod = null;
-                    });
+                    _controller.removeVerificationFile();
                   },
                 ),
               ),
@@ -481,9 +495,7 @@ class _VerificationViewState extends State<VerificationView> {
         allowMultiple: false,
       );
       if (result != null && result.files.single.path != null) {
-        setState(() {
-          _uploadedFile = result.files.single;
-        });
+        await _controller.uploadDocumentFile(result.files.single.path!);
       }
     } catch (e) {
       if (mounted) {
@@ -495,7 +507,7 @@ class _VerificationViewState extends State<VerificationView> {
   }
 
   Future<void> _openCameraForVerification() async {
-    if (_selectedVerificationMethod == null) {
+    if (_controller.selectedVerificationMethod == null) {
       _showVerificationMethodBottomSheet();
       return;
     }
@@ -504,26 +516,15 @@ class _VerificationViewState extends State<VerificationView> {
     final result = await Navigator.of(context).push<Map<String, dynamic>>(
       MaterialPageRoute(
         builder: (context) => IdCardCameraView(
-          verificationMethod: _selectedVerificationMethod!,
+          verificationMethod: _controller.selectedVerificationMethod!,
         ),
       ),
     );
     
     // Handle result from camera/confirmation screen
     if (result != null && result['imagePath'] != null && mounted) {
-      // Create a PlatformFile from the image path
-      final file = File(result['imagePath']);
-      if (await file.exists()) {
-        if (mounted) {
-          setState(() {
-            _verificationFile = PlatformFile(
-              path: result['imagePath'],
-              name: file.path.split('/').last,
-              size: file.lengthSync(),
-            );
-          });
-        }
-      }
+      // Upload the file
+      await _controller.uploadVerificationFile(result['imagePath']);
     }
   }
 
@@ -584,10 +585,10 @@ class _VerificationViewState extends State<VerificationView> {
   }
 
   Widget _buildUploadedFileCard() {
-    if (_uploadedFile == null) return const SizedBox.shrink();
+    if (_controller.uploadedFile == null) return const SizedBox.shrink();
 
-    final fileName = _uploadedFile!.name;
-    final fileSize = _uploadedFile!.size;
+    final fileName = _controller.uploadedFile!.name;
+    final fileSize = _controller.uploadedFile!.size;
     final fileSizeMB = (fileSize / (1024 * 1024)).toStringAsFixed(1);
 
     return Container(
@@ -726,9 +727,7 @@ class _VerificationViewState extends State<VerificationView> {
                   borderRadius: 8,
                   isFullWidth: true,
                   onPressed: () {
-                    setState(() {
-                      _uploadedFile = null;
-                    });
+                    _controller.removeUploadedFile();
                   },
                 ),
               ),
@@ -781,7 +780,7 @@ class _VerificationViewState extends State<VerificationView> {
               itemCount: _verificationMethods.length,
               itemBuilder: (context, index) {
                 final method = _verificationMethods[index];
-                final isSelected = method == _selectedVerificationMethod;
+                final isSelected = method == _controller.selectedVerificationMethod;
 
                 return ListTile(
                   title: Text(
@@ -799,9 +798,7 @@ class _VerificationViewState extends State<VerificationView> {
                         )
                       : null,
                   onTap: () async {
-                    setState(() {
-                      _selectedVerificationMethod = method;
-                    });
+                    _controller.setVerificationMethod(method);
                     Navigator.of(context).pop();
                     // Open camera for verification
                     await _openCameraForVerification();

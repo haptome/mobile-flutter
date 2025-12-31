@@ -1,108 +1,46 @@
 // Purpose: Controller for Ekub Type page
-// Author: haptome H.
-// Linked Spec Section: Ekub Type Page
+// Author: Auto-generated
 
 import 'package:get/get.dart';
-import 'package:et_digital_equb/core/widgets/filter_bottom_sheet.dart';
+import 'package:et_digital_equb/core/services/group_service.dart';
+import 'package:et_digital_equb/models/category_model.dart' as category_models;
 
 class EkubTypeController extends GetxController {
-  final RxList<Map<String, dynamic>> allEkubs = <Map<String, dynamic>>[].obs;
-  final RxList<Map<String, dynamic>> filteredEkubs = <Map<String, dynamic>>[].obs;
-  final RxInt selectedCategoryIndex = 0.obs;
-  final RxString selectedFilter = 'all'.obs; // Store filter key, not translated text
+  final GroupService _groupService = GroupService.to;
 
-  List<String> get categories => ['all'.tr, 'merchant'.tr, 'driver'.tr, 'employees'.tr];
+  final RxList<category_models.Category> categories = <category_models.Category>[].obs;
+  final RxBool isLoading = true.obs;
+  final RxString errorMessage = ''.obs;
 
   @override
   void onInit() {
     super.onInit();
-    _loadEkubs();
-    // Listen to category and filter changes
-    ever(selectedCategoryIndex, (_) => _filterEkubs());
-    ever(selectedFilter, (_) => _filterEkubs());
+    loadCategories();
   }
 
-  void _loadEkubs() {
-    // Sample data - in real app, this would come from API
-    allEkubs.value = [
-      {
-        'id': '1',
-        'name': 'feres_drivers_equb'.tr,
-        'frequency': 'weekly'.tr,
-        'amount': '100,000 ETB',
-        'duration': '3 ${'months'.tr}',
-        'category': 'driver',
-        'memberCount': 4,
-        'memberAvatars': [],
-      },
-      {
-        'id': '2',
-        'name': 'cbe_employee_equb'.tr,
-        'frequency': 'weekly'.tr,
-        'amount': '5,000 Birr',
-        'duration': '6 ${'months'.tr}',
-        'category': 'employees',
-        'memberCount': 8,
-        'memberAvatars': [],
-      },
-      {
-        'id': '3',
-        'name': 'merchants_equb'.tr,
-        'frequency': 'daily'.tr,
-        'amount': '5,000 Birr',
-        'duration': '1 ${'year'.tr}',
-        'category': 'merchant',
-        'memberCount': 12,
-        'memberAvatars': [],
-      },
-    ];
-    _filterEkubs();
-  }
+  Future<void> loadCategories() async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
 
-  void _filterEkubs() {
-    List<Map<String, dynamic>> filtered = List.from(allEkubs);
+      final response = await _groupService.getCategories(
+        categoryType: 'cash',
+        isActive: true,
+      );
 
-    // Filter by category
-    if (selectedCategoryIndex.value > 0) {
-      final categoryKeys = ['all', 'merchant', 'driver', 'employees'];
-      final selectedCategoryKey = categoryKeys[selectedCategoryIndex.value];
-      filtered = filtered
-          .where((ekub) => (ekub['category'] as String) == selectedCategoryKey)
-          .toList();
+      if (response.success && response.data != null) {
+        categories.value = List<category_models.Category>.from(response.data!);
+      } else {
+        errorMessage.value = response.message ?? 'Failed to load categories';
+      }
+    } catch (e) {
+      errorMessage.value = 'Error loading categories: $e';
+    } finally {
+      isLoading.value = false;
     }
-
-    // Filter by duration (if filter is set)
-    if (selectedFilter.value != 'all') {
-      // TODO: Implement duration filtering logic
-      // For now, just pass through
-    }
-
-    filteredEkubs.value = filtered;
   }
 
-  void onCategorySelected(int index) {
-    selectedCategoryIndex.value = index;
-  }
-
-  void onFilterTap() {
-    Get.bottomSheet(
-      FilterBottomSheet(
-        selectedFilter: selectedFilter,
-        onFilterSelected: (filter) {
-          selectedFilter.value = filter;
-        },
-      ),
-      isScrollControlled: true,
-    );
-  }
-
-  void onJoinEkub(String ekubId) {
-    // TODO: Navigate to join ekub page or show join dialog
-    Get.snackbar(
-      'join_ekub'.tr,
-      'joining_ekub'.tr.replaceAll('{id}', ekubId),
-      snackPosition: SnackPosition.BOTTOM,
-    );
+  void onCategoryTap(category_models.Category category) {
+    Get.toNamed('/category-detail', arguments: category);
   }
 }
-

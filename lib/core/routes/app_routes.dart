@@ -16,6 +16,13 @@ import '../../features/profile/account_checking_view.dart';
 import '../../features/ekub_type/presentation/ekub_type_view.dart';
 import '../../features/in_kind/presentation/in_kind_view.dart';
 import '../../features/duration/presentation/duration_view.dart';
+import '../../features/category_detail/presentation/category_detail_view.dart';
+import '../../features/group_detail/presentation/group_detail_view.dart';
+import '../../features/payment/presentation/select_payment_method_view.dart';
+import '../../features/payment/presentation/upcoming_payments_view.dart';
+import '../../features/lottery/presentation/lottery_view.dart';
+import '../../features/completed_ekubs/presentation/completed_ekubs_view.dart';
+import '../../features/faq/presentation/faq_view.dart';
 import '../../controllers/your_ekubs_controller.dart';
 import '../../controllers/transactions_controller.dart';
 import '../../controllers/profile_controller.dart';
@@ -23,6 +30,16 @@ import '../../controllers/account_setting_controller.dart';
 import '../../controllers/ekub_type_controller.dart';
 import '../../controllers/in_kind_controller.dart';
 import '../../controllers/duration_controller.dart';
+import '../../controllers/category_detail_controller.dart';
+import '../../controllers/group_detail_controller.dart';
+import '../../controllers/payment_controller.dart';
+import '../../controllers/upcoming_payments_controller.dart';
+import '../../controllers/lottery_controller.dart';
+import '../../controllers/completed_ekubs_controller.dart';
+import '../../controllers/faq_controller.dart';
+import '../../models/category_model.dart' as category_models;
+import '../../models/group_model.dart';
+import '../widgets/main_wrapper.dart';
 
 /// Application route names
 class AppRoutes {
@@ -44,10 +61,205 @@ class AppRoutes {
   static const String idCardCamera = '/id-card-camera';
   static const String idCardConfirmation = '/id-card-confirmation';
   static const String accountChecking = '/account-checking';
+  static const String categoryDetail = '/category-detail';
+  static const String groupDetail = '/group-detail';
+  static const String selectPaymentMethod = '/select-payment-method';
+  static const String upcomingPayments = '/upcoming-payments';
+  static const String lottery = '/lottery';
+  static const String completedEkubs = '/completed-ekubs';
+  static const String faq = '/faq';
 }
 
 /// Route configuration for the app
 class AppRouter {
+  static List<GetPage> getPages = [
+    GetPage(name: AppRoutes.splash, page: () => const SplashScreen()),
+    GetPage(name: AppRoutes.login, page: () => const LoginScreen()),
+    GetPage(name: AppRoutes.signup, page: () => const SignupScreen()),
+    GetPage(
+      name: AppRoutes.otp,
+      page: () {
+        final args = Get.arguments as Map<String, dynamic>?;
+        return OtpScreen(
+          phoneNumber: args?['phoneNumber'] ?? '',
+          isFromLogin: args?['isFromLogin'] ?? false,
+        );
+      },
+    ),
+    GetPage(
+      name: AppRoutes.home,
+      page: () => const MainWrapper(currentIndex: 0, child: HomeScreen()),
+    ),
+    GetPage(
+      name: AppRoutes.ekubs,
+      page: () => const MainWrapper(currentIndex: 1, child: YourEkubsView()),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<YourEkubsController>()) {
+          Get.put(YourEkubsController());
+        }
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.transactions,
+      page: () => const MainWrapper(currentIndex: 2, child: TransactionsView()),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<TransactionsController>()) {
+          Get.put(TransactionsController());
+        }
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.profile,
+      page: () => const MainWrapper(currentIndex: 3, child: ProfileView()),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<ProfileController>()) {
+          Get.put(ProfileController());
+        }
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.accountSetting,
+      page: () => const AccountSettingView(),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<AccountSettingController>()) {
+          Get.put(AccountSettingController());
+        }
+      }),
+    ),
+    GetPage(name: AppRoutes.verification, page: () => const VerificationView()),
+    GetPage(
+      name: AppRoutes.ekubType,
+      page: () => const EkubTypeView(),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<EkubTypeController>()) {
+          Get.put(EkubTypeController());
+        }
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.inKind,
+      page: () => const InKindView(),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<InKindController>()) {
+          Get.put(InKindController());
+        }
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.duration,
+      page: () => const DurationView(),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<DurationController>()) {
+          Get.put(DurationController());
+        }
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.idCardCamera,
+      page: () {
+        final args = Get.arguments as Map<String, dynamic>?;
+        return IdCardCameraView(
+          verificationMethod: args?['verificationMethod'] ?? 'National ID',
+        );
+      },
+    ),
+    GetPage(
+      name: AppRoutes.idCardConfirmation,
+      page: () {
+        final args = Get.arguments as Map<String, dynamic>?;
+        return IdCardConfirmationView(
+          imagePath: args?['imagePath'] ?? '',
+          verificationMethod: args?['verificationMethod'] ?? 'National ID',
+        );
+      },
+    ),
+    GetPage(
+      name: AppRoutes.accountChecking,
+      page: () => const AccountCheckingView(),
+    ),
+    GetPage(
+      name: AppRoutes.categoryDetail,
+      page: () {
+        final category = Get.arguments as category_models.Category?;
+        if (category == null) {
+          return const Scaffold(
+            body: Center(child: Text('Category not found')),
+          );
+        }
+        if (!Get.isRegistered<CategoryDetailController>()) {
+          Get.put(CategoryDetailController(category: category));
+        } else {
+          Get.find<CategoryDetailController>().category.value = category;
+          Get.find<CategoryDetailController>().loadGroups();
+        }
+        return const CategoryDetailView();
+      },
+    ),
+    GetPage(
+      name: AppRoutes.groupDetail,
+      page: () {
+        final group = Get.arguments as Group?;
+        if (group == null) {
+          return const Scaffold(body: Center(child: Text('Group not found')));
+        }
+        if (!Get.isRegistered<GroupDetailController>()) {
+          Get.put(GroupDetailController(group: group));
+        } else {
+          Get.delete<GroupDetailController>();
+          Get.put(GroupDetailController(group: group));
+        }
+        return const GroupDetailView();
+      },
+    ),
+    // Action Grid Routes
+    GetPage(
+      name: AppRoutes.selectPaymentMethod,
+      page: () => const SelectPaymentMethodView(),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<PaymentController>()) {
+          Get.put(PaymentController());
+        }
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.upcomingPayments,
+      page: () => const UpcomingPaymentsView(),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<UpcomingPaymentsController>()) {
+          Get.put(UpcomingPaymentsController());
+        }
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.lottery,
+      page: () => const LotteryView(),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<LotteryController>()) {
+          Get.put(LotteryController());
+        }
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.completedEkubs,
+      page: () => const CompletedEkubsView(),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<CompletedEkubsController>()) {
+          Get.put(CompletedEkubsController());
+        }
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.faq,
+      page: () => const FaqView(),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<FaqController>()) {
+          Get.put(FaqController());
+        }
+      }),
+    ),
+  ];
+
+  // Keep generateRoute for backward compatibility if needed
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case AppRoutes.splash:
@@ -185,15 +397,54 @@ class AppRouter {
           settings: settings,
         );
 
+      case AppRoutes.categoryDetail:
+        final category = settings.arguments as category_models.Category?;
+        if (category == null) {
+          // If no category provided, return error page
+          return MaterialPageRoute(
+            builder: (_) =>
+                const Scaffold(body: Center(child: Text('Category not found'))),
+          );
+        }
+        if (!Get.isRegistered<CategoryDetailController>()) {
+          Get.put(CategoryDetailController(category: category));
+        } else {
+          // Update existing controller with new category
+          Get.find<CategoryDetailController>().category.value = category;
+          Get.find<CategoryDetailController>().loadGroups();
+        }
+        return MaterialPageRoute(
+          builder: (_) => const CategoryDetailView(),
+          settings: settings,
+        );
+
+      case AppRoutes.groupDetail:
+        final group = settings.arguments as Group?;
+        if (group == null) {
+          // If no group provided, return error page
+          return MaterialPageRoute(
+            builder: (_) =>
+                const Scaffold(body: Center(child: Text('Group not found'))),
+          );
+        }
+        if (!Get.isRegistered<GroupDetailController>()) {
+          Get.put(GroupDetailController(group: group));
+        } else {
+          // Controller already exists, but we can't update it since group is not reactive
+          // So we'll create a new instance
+          Get.delete<GroupDetailController>();
+          Get.put(GroupDetailController(group: group));
+        }
+        return MaterialPageRoute(
+          builder: (_) => const GroupDetailView(),
+          settings: settings,
+        );
+
       default:
         return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(
-              child: Text('Page not found'),
-            ),
-          ),
+          builder: (_) =>
+              const Scaffold(body: Center(child: Text('Page not found'))),
         );
     }
   }
 }
-

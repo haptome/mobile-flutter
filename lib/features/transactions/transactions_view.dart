@@ -4,9 +4,6 @@
 
 import 'package:et_digital_equb/core/theme/app_colors.dart';
 import 'package:et_digital_equb/core/widgets/transaction_card.dart';
-import 'package:et_digital_equb/core/widgets/app_bottom_nav.dart';
-import 'package:et_digital_equb/core/app_assets.dart';
-import 'package:et_digital_equb/core/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/transactions_controller.dart';
@@ -20,8 +17,6 @@ class TransactionsView extends StatefulWidget {
 }
 
 class _TransactionsViewState extends State<TransactionsView> {
-  int _currentNavIndex = 2; // Transactions is index 2
-
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<TransactionsController>();
@@ -98,53 +93,6 @@ class _TransactionsViewState extends State<TransactionsView> {
                       );
                     },
                   ),
-                ),
-              ],
-            ),
-          ),
-          // Bottom Navigation
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: AppBottomNav(
-              currentIndex: _currentNavIndex,
-              onTap: (index) {
-                if (index == _currentNavIndex) return; // Don't navigate if already on this screen
-                setState(() {
-                  _currentNavIndex = index;
-                });
-                final route = [
-                  AppRoutes.home,
-                  AppRoutes.ekubs,
-                  AppRoutes.transactions,
-                  AppRoutes.profile,
-                ][index];
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  route,
-                  (route) => false, // Remove all previous routes
-                );
-              },
-              items: const [
-                BottomNavItem(
-                  iconPath: AppAssets.homeIcon,
-                  label: 'Home',
-                  route: '/home',
-                ),
-                BottomNavItem(
-                  iconPath: AppAssets.personsIcon,
-                  label: 'Your Ekubs',
-                  route: '/ekubs',
-                ),
-                BottomNavItem(
-                  iconPath: AppAssets.transactionIcon,
-                  label: 'Transactions',
-                  route: '/transactions',
-                ),
-                BottomNavItem(
-                  iconPath: AppAssets.profileIcon,
-                  label: 'Profile',
-                  route: '/profile',
                 ),
               ],
             ),

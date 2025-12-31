@@ -5,6 +5,7 @@
 import 'package:et_digital_equb/core/services/auth_service.dart';
 import 'package:et_digital_equb/core/widgets/country_code_picker.dart';
 import 'package:et_digital_equb/core/utils/device_info.dart';
+import 'package:et_digital_equb/core/routes/app_routes.dart';
 import 'package:et_digital_equb/models/register_request.dart';
 import 'package:et_digital_equb/models/verify_otp_request.dart';
 import 'package:et_digital_equb/models/login_request.dart';
@@ -19,7 +20,7 @@ class AuthController extends GetxController {
   final RxString otp = ''.obs;
   final RxString fullName = ''.obs;
   final RxString workStatus = ''.obs;
-  
+
   // Country code
   final Rx<CountryCode> selectedCountry = const CountryCode(
     name: 'Ethiopia',
@@ -34,10 +35,8 @@ class AuthController extends GetxController {
   final RxString errorMessage = ''.obs;
 
   // Register user with complete registration data
-  Future<void> register({
-    String? fcmToken,
-    String? deviceId,
-  }) async {
+  // Flow: Register → OTP sent automatically → Navigate to OTP verification
+  Future<void> register({String? fcmToken, String? deviceId}) async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
@@ -45,12 +44,12 @@ class AuthController extends GetxController {
       // Build full phone number with country code
       final fullPhone = '${selectedCountry.value.dialCode}${phone.value}';
 
-      // Create registration request
+      // Create registration request (password is optional for mobile - OTP only)
       final registerRequest = RegisterRequest(
         phone: fullPhone,
-        fullName: fullName.value,
-        password: password.value,
-        workStatus: workStatus.value.isEmpty ? 'employed' : workStatus.value,
+        fullName: fullName.value.isEmpty ? null : fullName.value,
+        password: null, // Mobile users don't use passwords - OTP only
+        workStatus: workStatus.value.isEmpty ? null : workStatus.value,
         fcmToken: fcmToken,
         deviceId: deviceId ?? DeviceInfo.getDeviceId(),
         deviceType: DeviceInfo.getDeviceType(),
@@ -58,13 +57,27 @@ class AuthController extends GetxController {
 
       final response = await _authService.register(registerRequest);
 
-      if (response.success) {
-        isOtpSent.value = true;
-        Get.snackbar(
-          'Success',
-          response.message ?? 'OTP sent successfully',
-          snackPosition: SnackPosition.BOTTOM,
-        );
+      if (response.success && response.data != null) {
+        // Registration successful - OTP was sent automatically
+        final otpSent = response.data!['otp_sent'] == true;
+        if (otpSent) {
+          isOtpSent.value = true;
+          // Navigate to OTP verification screen
+          Get.toNamed(
+            AppRoutes.otp,
+            arguments: {
+              'phoneNumber': fullPhone,
+              'isFromLogin': false, // This is registration, not login
+            },
+          );
+        } else {
+          errorMessage.value = 'Failed to send OTP. Please try again.';
+          Get.snackbar(
+            'Error',
+            errorMessage.value,
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
       } else {
         errorMessage.value = response.error?.message ?? 'Registration failed';
         Get.snackbar(
@@ -134,8 +147,9 @@ class AuthController extends GetxController {
     }
   }
 
-  // Login
-  Future<void> login() async {
+  // Request OTP for login
+  // Flow: User enters phone → Request OTP → Navigate to OTP screen
+  Future<void> requestOtpForLogin() async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
@@ -146,11 +160,59 @@ class AuthController extends GetxController {
         fullPhone = '${selectedCountry.value.dialCode}${phone.value}';
       }
 
+      // Request OTP for login
+      final response = await _authService.resendOtp(fullPhone);
+
+      if (response.success) {
+        Get.snackbar(
+          'Success',
+          response.message ?? 'OTP sent successfully',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        // Navigate to OTP verification screen for login
+        Get.toNamed(
+          AppRoutes.otp,
+          arguments: {
+            'phoneNumber': fullPhone,
+            'isFromLogin': true, // This is for login
+          },
+        );
+      } else {
+        errorMessage.value = response.error?.message ?? 'Failed to send OTP';
+        Get.snackbar(
+          'Error',
+          errorMessage.value,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      errorMessage.value = e.toString();
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Login with OTP (after OTP is entered)
+  // Flow: User enters OTP → Login with phone + OTP → Logged in
+  Future<void> loginWithOtp({
+    required String phoneNumber,
+    required String otpCode,
+    String? fcmToken,
+  }) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+
       final loginRequest = LoginRequest(
-        phone: fullPhone,
-        password: password.value.isEmpty ? null : password.value,
-        otp: otp.value.isEmpty ? null : otp.value,
-        fcmToken: null, // TODO: Add FCM token when Firebase is set up
+        phone: phoneNumber,
+        password: null, // Mobile users use OTP only
+        otp: otpCode,
+        fcmToken: fcmToken,
         deviceId: DeviceInfo.getDeviceId(),
         deviceType: DeviceInfo.getDeviceType(),
       );
@@ -163,12 +225,12 @@ class AuthController extends GetxController {
           response.message ?? 'Login successful',
           snackPosition: SnackPosition.BOTTOM,
         );
-        // Navigate to OTP screen after login
-        Get.toNamed('/otp', arguments: {'phoneNumber': fullPhone});
+        // Navigate to home screen
+        Get.offAllNamed('/home');
       } else {
-        errorMessage.value = response.error?.message ?? 'login_failed'.tr;
+        errorMessage.value = response.error?.message ?? 'Login failed';
         Get.snackbar(
-          'error'.tr,
+          'Error',
           errorMessage.value,
           snackPosition: SnackPosition.BOTTOM,
         );
@@ -176,7 +238,7 @@ class AuthController extends GetxController {
     } catch (e) {
       errorMessage.value = e.toString();
       Get.snackbar(
-        'error'.tr,
+        'Error',
         errorMessage.value,
         snackPosition: SnackPosition.BOTTOM,
       );
@@ -185,24 +247,30 @@ class AuthController extends GetxController {
     }
   }
 
-  // Resend OTP
-  Future<void> resendOtp() async {
+  // Resend OTP (used during OTP verification screen)
+  Future<void> resendOtp({String? phoneNumber}) async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
 
-      final response = await _authService.resendOtp(phone.value);
+      // Use provided phone or current phone value
+      String fullPhone = phoneNumber ?? phone.value;
+      if (!fullPhone.startsWith('+')) {
+        fullPhone = '${selectedCountry.value.dialCode}${fullPhone}';
+      }
+
+      final response = await _authService.resendOtp(fullPhone);
 
       if (response.success) {
         Get.snackbar(
-          'success'.tr,
-          response.message ?? 'otp_resent'.tr,
+          'Success',
+          response.message ?? 'OTP resent successfully',
           snackPosition: SnackPosition.BOTTOM,
         );
       } else {
-        errorMessage.value = response.error?.message ?? 'resend_failed'.tr;
+        errorMessage.value = response.error?.message ?? 'Failed to resend OTP';
         Get.snackbar(
-          'error'.tr,
+          'Error',
           errorMessage.value,
           snackPosition: SnackPosition.BOTTOM,
         );
@@ -210,7 +278,7 @@ class AuthController extends GetxController {
     } catch (e) {
       errorMessage.value = e.toString();
       Get.snackbar(
-        'error'.tr,
+        'Error',
         errorMessage.value,
         snackPosition: SnackPosition.BOTTOM,
       );
@@ -230,4 +298,3 @@ class AuthController extends GetxController {
     isOtpSent.value = false;
   }
 }
-

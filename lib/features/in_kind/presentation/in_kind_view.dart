@@ -3,13 +3,15 @@
 // Linked Spec Section: In-Kind Page
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/app_bottom_nav.dart';
-import '../../../../core/widgets/small_card.dart';
+import '../../../../core/widgets/category_section_cards.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/app_assets.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../controllers/in_kind_controller.dart';
 
 class InKindView extends StatefulWidget {
   const InKindView({super.key});
@@ -20,6 +22,7 @@ class InKindView extends StatefulWidget {
 
 class _InKindViewState extends State<InKindView> {
   int _currentNavIndex = 0;
+  final InKindController _controller = Get.put(InKindController());
 
   @override
   Widget build(BuildContext context) {
@@ -72,8 +75,49 @@ class _InKindViewState extends State<InKindView> {
                       children: [
                         // Header
                         _buildHeader(),
-                        // Cards Grid
-                        _buildCardsGrid(),
+                        // In-Kind Categories from API
+                        Obx(() {
+                          if (_controller.isLoadingCategories.value) {
+                            return const Padding(
+                              padding: EdgeInsets.all(AppSizes.paddingLarge),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+                          if (_controller.errorMessage.value.isNotEmpty) {
+                            return Padding(
+                              padding: const EdgeInsets.all(AppSizes.paddingLarge),
+                              child: Center(
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      _controller.errorMessage.value,
+                                      style: const TextStyle(color: Colors.red),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    ElevatedButton(
+                                      onPressed: () => _controller.loadInKindCategories(),
+                                      child: const Text('Retry'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+                          if (_controller.inKindCategories.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.all(AppSizes.paddingLarge),
+                              child: Center(
+                                child: Text('No in-kind categories found.'),
+                              ),
+                            );
+                          }
+                          return CategorySectionCards(
+                            title: 'In-Kind Categories',
+                            categories: _controller.inKindCategories,
+                            onCategoryTap: _controller.onCategoryTap,
+                            onViewAll: null,
+                          );
+                        }),
                         const SizedBox(height: AppSizes.spacingLarge),
                       ],
                     ),
@@ -93,10 +137,7 @@ class _InKindViewState extends State<InKindView> {
                       AppRoutes.transactions,
                       AppRoutes.profile,
                     ][index];
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      route,
-                      (route) => false,
-                    );
+                    Get.offAllNamed(route);
                   },
                   items: const [
                     BottomNavItem(
@@ -142,7 +183,7 @@ class _InKindViewState extends State<InKindView> {
                   Icons.arrow_back,
                   color: AppColors.lightTextPrimary,
                 ),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => Get.back(),
               ),
               const SizedBox(width: AppSizes.spacingSmall),
               Text(
@@ -160,26 +201,5 @@ class _InKindViewState extends State<InKindView> {
     );
   }
 
-  Widget _buildCardsGrid() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingLarge),
-      child: Row(
-        children: const [
-          SmallCard(
-            iconPath: AppAssets.driversIcon,
-            label: 'Cars',
-          ),
-          SmallCard(
-            iconPath: AppAssets.televisionIcon,
-            label: 'Television',
-          ),
-          SmallCard(
-            iconPath: AppAssets.fridgeIcon,
-            label: 'Fridge',
-          ),
-        ],
-      ),
-    );
-  }
 }
 

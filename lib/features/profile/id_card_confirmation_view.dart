@@ -9,9 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_sizes.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/app_button.dart';
-import '../../core/widgets/app_bottom_nav.dart';
 import '../../core/app_assets.dart';
-import '../../core/routes/app_routes.dart';
 
 class IdCardConfirmationView extends StatefulWidget {
   final String imagePath;
@@ -28,7 +26,29 @@ class IdCardConfirmationView extends StatefulWidget {
 }
 
 class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
-  int _currentNavIndex = 3; // Profile is index 3
+  bool _imageExists = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkImageExists();
+  }
+
+  Future<void> _checkImageExists() async {
+    try {
+      final file = File(widget.imagePath);
+      _imageExists = await file.exists();
+    } catch (e) {
+      _imageExists = false;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,22 +145,67 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(12),
-                              child: Image.file(
-                                File(widget.imagePath),
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    color: AppColors.backgroundLightGray,
-                                    child: const Center(
-                                      child: Icon(
-                                        Icons.error_outline,
-                                        size: 48,
-                                        color: AppColors.textLightGray,
+                              child: _isLoading
+                                  ? Container(
+                                      height: 400,
+                                      color: AppColors.backgroundLightGray,
+                                      child: const Center(
+                                        child: CircularProgressIndicator(),
                                       ),
-                                    ),
-                                  );
-                                },
-                              ),
+                                    )
+                                  : _imageExists
+                                      ? Image.file(
+                                          File(widget.imagePath),
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Container(
+                                              height: 400,
+                                              color: AppColors.backgroundLightGray,
+                                              child: Center(
+                                                child: Column(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.error_outline,
+                                                      size: 48,
+                                                      color: AppColors.textLightGray,
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    Text(
+                                                      'Failed to load image',
+                                                      style: AppTextStyles.bodyMedium(
+                                                        color: AppColors.textLightGray,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        )
+                                      : Container(
+                                          height: 400,
+                                          color: AppColors.backgroundLightGray,
+                                          child: Center(
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(
+                                                  Icons.image_not_supported,
+                                                  size: 48,
+                                                  color: AppColors.textLightGray,
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  'Image file not found',
+                                                  style: AppTextStyles.bodyMedium(
+                                                    color: AppColors.textLightGray,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
                             ),
                           ),
                         ),

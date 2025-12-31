@@ -1,14 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/widgets/section_cards.dart';
-import '../../../../core/widgets/app_bottom_nav.dart';
+import '../../../../core/widgets/category_section_cards.dart';
+import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/warning_banner.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/app_assets.dart';
-import '../../../../core/routes/app_routes.dart';
+import '../../../../controllers/home_controller.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,19 +19,22 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentNavIndex = 0;
+  late final HomeController _homeController;
   PageController? _carouselController;
   int _currentCarouselIndex = 0;
   Timer? _carouselTimer;
-  
-  final List<String> _bannerImages = [
-    AppAssets.electronics,
-    AppAssets.mpesa,
-  ];
+
+  final List<String> _bannerImages = [AppAssets.electronics, AppAssets.mpesa];
 
   @override
   void initState() {
     super.initState();
+    // Initialize controller if not already registered
+    if (!Get.isRegistered<HomeController>()) {
+      _homeController = Get.put(HomeController());
+    } else {
+      _homeController = Get.find<HomeController>();
+    }
     _carouselController = PageController();
     _startCarouselTimer();
   }
@@ -45,7 +49,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void _startCarouselTimer() {
     _carouselTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (_carouselController != null && _carouselController!.hasClients) {
-        _currentCarouselIndex = (_currentCarouselIndex + 1) % _bannerImages.length;
+        _currentCarouselIndex =
+            (_currentCarouselIndex + 1) % _bannerImages.length;
         _carouselController!.animateToPage(
           _currentCarouselIndex,
           duration: const Duration(milliseconds: 300),
@@ -101,165 +106,228 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    // Header
-                    _buildHeader(),
+                        // Header
+                        _buildHeader(),
 
-                    // Warning Banner
-                    const WarningBanner(
-                      message:
-                          'You haven\'t yet verified your account. Verify now to access all features.',
-                    ),
+                        // Warning Banner
+                        const WarningBanner(
+                          message:
+                              'You haven\'t yet verified your account. Verify now to access all features.',
+                        ),
 
-                    // Ekub Type Section
-                    SectionCards(
-                      title: 'Ekub Type',
-                      onViewAll: () {
-                        Navigator.of(context).pushNamed('/ekub-type');
-                      },
-                      cards: const [
-                        CardItem(
-                          iconPath: AppAssets.driversIcon,
-                          label: 'For Drivers',
-                        ),
-                        CardItem(
-                          iconPath: AppAssets.merchantIcon,
-                          label: 'For Merchant',
-                        ),
-                        CardItem(
-                          iconPath: AppAssets.employeeIcon,
-                          label: 'For Employee',
-                        ),
+                        // Ekub Type Section - Show cash categories from API
+                        Obx(() {
+                          if (_homeController.isLoadingCategories.value) {
+                            return const Padding(
+                              padding: EdgeInsets.all(AppSizes.paddingLarge),
+                              child: Center(
+                                child: SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                          return CategorySectionCards(
+                            title: 'Ekub Type',
+                            categories: _homeController.cashCategories,
+                            onViewAll: () {
+                              Get.toNamed('/ekub-type');
+                            },
+                            onCategoryTap: (category) {
+                              Get.toNamed(
+                                '/category-detail',
+                                arguments: category,
+                              );
+                            },
+                          );
+                        }),
+
+                        // In-Kind Section - Show in-kind categories from API
+                        Obx(() {
+                          if (_homeController.isLoadingInKindCategories.value) {
+                            return const Padding(
+                              padding: EdgeInsets.all(AppSizes.paddingLarge),
+                              child: Center(
+                                child: SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                          if (_homeController.inKindCategories.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return CategorySectionCards(
+                            title: 'In-Kind',
+                            categories: _homeController.inKindCategories,
+                            onViewAll: _homeController.onViewAllInKind,
+                            onCategoryTap: _homeController.onInKindCategoryTap,
+                          );
+                        }),
+
+                        // Advertisement Banner
+                        _buildAdBanner(),
+
+                        // Duration Section - Show groups by frequency
+                        Obx(() {
+                          if (_homeController.isLoadingDuration.value) {
+                            return const Padding(
+                              padding: EdgeInsets.all(AppSizes.paddingLarge),
+                              child: Center(
+                                child: SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                          final frequencies = ['daily', 'weekly', 'monthly'];
+                          final availableFrequencies = frequencies
+                              .where((f) =>
+                                  (_homeController.durationGroupsCount[f] ?? 0) >
+                                  0)
+                              .toList();
+
+                          if (availableFrequencies.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SectionHeader(
+                                title: 'Duration',
+                                onViewAll: _homeController.onViewAllDuration,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSizes.paddingLarge,
+                                ),
+                                child: Row(
+                                  children: availableFrequencies
+                                      .take(3)
+                                      .map((frequency) {
+                                    final count = _homeController
+                                            .durationGroupsCount[frequency] ??
+                                        0;
+                                    final label = frequency[0].toUpperCase() +
+                                        frequency.substring(1);
+                                    return Expanded(
+                                      child: GestureDetector(
+                                        onTap: () =>
+                                            _homeController.onDurationTap(
+                                          frequency,
+                                        ),
+                                        child: Container(
+                                          margin: const EdgeInsets.symmetric(
+                                            horizontal: AppSizes.spacingSmall,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: AppSizes.paddingMedium,
+                                            horizontal: AppSizes.paddingSmall,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              AppSizes.radiusMedium,
+                                            ),
+                                            border: Border.all(
+                                              color: const Color(0x40000000),
+                                              width: 0.4,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(0x14000000),
+                                                blurRadius: 4,
+                                                spreadRadius: 0,
+                                                offset: const Offset(0, 4),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 50,
+                                                height: 50,
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xfff7f7e6),
+                                                  shape: BoxShape.circle,
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: const Color(
+                                                          0x0F000000),
+                                                      blurRadius: 2,
+                                                      spreadRadius: 0,
+                                                      offset: const Offset(0, 2),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: Center(
+                                                  child: Icon(
+                                                    Icons.calendar_today,
+                                                    size: AppSizes.iconMedium,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .secondary,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                height: AppSizes.spacingSmall,
+                                              ),
+                                              Text(
+                                                label,
+                                                textAlign: TextAlign.center,
+                                                style: GoogleFonts.montserrat(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: const Color(0xff232729),
+                                                ),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              if (count > 0)
+                                                Text(
+                                                  '$count groups',
+                                                  textAlign: TextAlign.center,
+                                                  style: GoogleFonts.montserrat(
+                                                    fontSize: 10,
+                                                    color: AppColors.textLightGray,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                              const SizedBox(height: AppSizes.spacingMedium),
+                            ],
+                          );
+                        }),
+
+                        const SizedBox(height: AppSizes.spacingLarge),
                       ],
                     ),
-
-                    // In-Kind Section
-                    SectionCards(
-                      title: 'In-Kind',
-                      onViewAll: () {
-                        Navigator.of(context).pushNamed('/in-kind');
-                      },
-                      cards: const [
-                        CardItem(
-                          iconPath: AppAssets.driversIcon,
-                          label: 'Cars',
-                        ),
-                        CardItem(
-                          iconPath: AppAssets.televisionIcon,
-                          label: 'Television',
-                        ),
-                        CardItem(
-                          iconPath: AppAssets.fridgeIcon,
-                          label: 'Fridge',
-                        ),
-                      ],
-                    ),
-
-                    // Advertisement Banner
-                    _buildAdBanner(),
-
-                    // Duration Section
-                    SectionCards(
-                      title: 'Duration',
-                      onViewAll: () {
-                        Navigator.of(context).pushNamed('/duration');
-                      },
-                      cards: [
-                        CardItem(
-                          iconPath: AppAssets.calendarIcon,
-                          label: '3 Months',
-                          iconBackgroundColor: const Color(0xfff7f7e6),
-                          iconColor: Theme.of(context).colorScheme.secondary,
-                          iconBoxShadow: [
-                            BoxShadow(
-                              color: const Color(0x0F000000), // #0000000F
-                              blurRadius: 2,
-                              spreadRadius: 0,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        CardItem(
-                          iconPath: AppAssets.calendarIcon,
-                          label: '6 Months',
-                          iconBackgroundColor: const Color(0xfff7f7e6),
-                          iconColor: Theme.of(context).colorScheme.secondary,
-                          iconBoxShadow: [
-                            BoxShadow(
-                              color: const Color(0x0F000000), // #0000000F
-                              blurRadius: 2,
-                              spreadRadius: 0,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        CardItem(
-                          iconPath: AppAssets.calendarIcon,
-                          label: '1 Year',
-                          iconBackgroundColor: const Color(0xfff7f7e6),
-                          iconColor: Theme.of(context).colorScheme.secondary,
-                          iconBoxShadow: [
-                            BoxShadow(
-                              color: const Color(0x0F000000), // #0000000F
-                              blurRadius: 2,
-                              spreadRadius: 0,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: AppSizes.spacingLarge),
-                  ],
-                ),
-              ),
-            ),
-
-            // Bottom Navigation
-            AppBottomNav(
-              currentIndex: _currentNavIndex,
-              onTap: (index) {
-                if (index == _currentNavIndex) return; // Don't navigate if already on this screen
-                setState(() {
-                  _currentNavIndex = index;
-                });
-                final route = [
-                  AppRoutes.home,
-                  AppRoutes.ekubs,
-                  AppRoutes.transactions,
-                  AppRoutes.profile,
-                ][index];
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  route,
-                  (route) => false, // Remove all previous routes
-                );
-              },
-              items: const [
-                BottomNavItem(
-                  iconPath: AppAssets.homeIcon,
-                  label: 'Home',
-                  route: '/home',
-                ),
-                BottomNavItem(
-                  iconPath: AppAssets.personsIcon,
-                  label: 'Your Ekubs',
-                  route: '/ekubs',
-                ),
-                BottomNavItem(
-                  iconPath: AppAssets.transactionIcon,
-                  label: 'Transactions',
-                  route: '/transactions',
-                ),
-                BottomNavItem(
-                  iconPath: AppAssets.profileIcon,
-                  label: 'Profile',
-                  route: '/profile',
+                  ),
                 ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
         ],
       ),
     );
@@ -297,9 +365,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: AppTextStyles.h4(
                   color: AppColors.black,
                   isDark: false,
-                ).copyWith(
-               fontSize: 14,
-                ),
+                ).copyWith(fontSize: 14),
               ),
             ],
           ),
@@ -352,7 +418,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_carouselController == null) {
       return const SizedBox.shrink();
     }
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(
         horizontal: AppSizes.paddingLarge,
@@ -430,12 +496,10 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         color: isActive ? AppColors.primary : Colors.transparent,
         shape: BoxShape.circle,
-        border: isActive ? null : Border.all(
-          color: AppColors.primary,
-          width: 1,
-        ),
+        border: isActive
+            ? null
+            : Border.all(color: AppColors.primary, width: 1),
       ),
     );
   }
 }
-

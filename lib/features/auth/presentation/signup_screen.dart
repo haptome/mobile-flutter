@@ -4,12 +4,12 @@ import 'package:get/get.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/phone_input_field.dart';
+import '../../../../core/widgets/country_code_picker.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/app_assets.dart';
 import '../../../../controllers/auth_controller.dart';
-import '../../../../core/routes/app_routes.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -99,20 +99,45 @@ class _SignupScreenState extends State<SignupScreen> {
     // Trigger validation for all fields
     if (_formKey.currentState!.validate()) {
       // Update controller values
-      _authController.phone.value = _phoneController.text;
+      // Phone number should be just the digits (without country code)
+      // The controller will add the country code when building the full phone
+      _authController.phone.value = _phoneController.text.trim();
       _authController.fullName.value = _fullNameController.text.trim();
       _authController.password.value = _passwordController.text;
       
-      // Map work status to lowercase format for API
-      String workStatusValue = 'employed'; // default
+      // Ensure country code is set to Ethiopia (default)
+      // PhoneInputField uses +251, so we ensure controller matches
+      if (_authController.selectedCountry.value.dialCode != '+251') {
+        _authController.selectedCountry.value = const CountryCode(
+          name: 'Ethiopia',
+          code: 'ET',
+          dialCode: '+251',
+          flag: '🇪🇹',
+        );
+      }
+      
+      // Map work status to backend enum format
+      // Backend expects: 'employed', 'self_employed', 'student', 'unemployed', 'retired'
+      String? workStatusValue;
       if (_workStatus != null) {
-        workStatusValue = _workStatus!.toLowerCase().replaceAll('-', '_');
-        // Map common values
-        if (workStatusValue == 'self-employed') {
-          workStatusValue = 'self_employed';
+        switch (_workStatus!.toLowerCase()) {
+          case 'employed':
+            workStatusValue = 'employed';
+            break;
+          case 'self-employed':
+            workStatusValue = 'self_employed';
+            break;
+          case 'student':
+            workStatusValue = 'student';
+            break;
+          case 'unemployed':
+            workStatusValue = 'unemployed';
+            break;
+          default:
+            workStatusValue = 'employed'; // Default fallback
         }
       }
-      _authController.workStatus.value = workStatusValue;
+      _authController.workStatus.value = workStatusValue ?? '';
 
       // Call registration API
       await _authController.register(
@@ -121,19 +146,8 @@ class _SignupScreenState extends State<SignupScreen> {
       );
 
       // Check if registration was successful
-      if (_authController.isOtpSent.value && mounted) {
-        // Navigate to OTP screen (from signup, so isFromLogin is false)
-        Navigator.of(context).pushNamed(
-          AppRoutes.otp,
-          arguments: {
-            'phoneNumber': '+251${_phoneController.text}',
-            'fullName': _fullNameController.text.trim(),
-            'workStatus': _workStatus,
-            'location': _location,
-            'isFromLogin': false, // Explicitly set to false for signup flow
-          },
-        );
-      }
+      // Navigation is handled in AuthController after successful registration
+      // The controller will navigate to /otp-verify with proper arguments
     }
   }
 
