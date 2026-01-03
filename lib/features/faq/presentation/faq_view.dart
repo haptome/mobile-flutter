@@ -2,6 +2,10 @@
 // Author: haptome H.
 // Linked Spec Section: FAQ/Help Page
 
+import 'package:et_digital_equb/core/widgets/custom_back_button.dart';
+import 'package:et_digital_equb/core/widgets/faq_item.dart';
+import 'package:et_digital_equb/core/widgets/search_bar_widget.dart';
+import 'package:et_digital_equb/core/widgets/tab_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -24,91 +28,93 @@ class FaqView extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.black),
-            onPressed: () => Get.back(),
+          leading: const CustomBackButton(),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'faq'.tr,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.lightTextPrimary,
+                ),
+              ),
+              Text(
+                'explore_faq'.tr,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textLightGray,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
           ),
-          title: Text(
-            'help'.tr,
-            style: GoogleFonts.montserrat(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.splashBackground,
-            ),
-          ),
+          centerTitle: false,
         ),
         body: SafeArea(
           child: Column(
             children: [
-              // Search bar
+              // Tab selector
+              Obx(
+                () => TabSelector(
+                  tabs: controller.tabs,
+                  selectedIndex: controller.selectedTabIndex.value,
+                  onTabSelected: controller.onTabSelected,
+                ),
+              ),
+              // Search section
               Padding(
-                padding: const EdgeInsets.all(AppSizes.paddingLarge),
-                child: TextField(
-                  onChanged: controller.onSearchChanged,
-                  decoration: InputDecoration(
-                    hintText: 'search_faq'.tr,
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppSizes.radiusMedium,
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'how_can_we_help'.tr,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.lightTextPrimary,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    SearchBarWidget(
+                      hintText: 'search'.tr,
+                      onChanged: controller.onSearchChanged,
+                    ),
+                  ],
                 ),
               ),
-              // Tabs
-              Container(
-                height: 50,
-                margin: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.paddingLarge,
-                ),
-                child: Obx(
-                  () => Row(
-                    children: controller.tabs.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final tab = entry.value;
-                      final isSelected =
-                          controller.selectedTabIndex.value == index;
-                      return Expanded(
-                        child: GestureDetector(
-                          onTap: () => controller.onTabSelected(index),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.white,
-                              borderRadius: BorderRadius.circular(
-                                AppSizes.radiusSmall,
-                              ),
-                              border: Border.all(
-                                color: isSelected
-                                    ? AppColors.primary
-                                    : AppColors.lightBorder,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                tab,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 12,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                  color: isSelected
-                                      ? AppColors.white
-                                      : AppColors.black,
-                                ),
-                              ),
-                            ),
-                          ),
+              const SizedBox(height: 16),
+              // Top Questions section header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'top_questions'.tr,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: controller.onViewAll,
+                      child: Text(
+                        'view_all'.tr,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                          decoration: TextDecoration.underline,
                         ),
-                      );
-                    }).toList(),
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: AppSizes.spacingMedium),
               // FAQ list
               Expanded(
                 child: Obx(() {
@@ -116,7 +122,7 @@ class FaqView extends StatelessWidget {
                     return Center(
                       child: Text(
                         'no_faqs_found'.tr,
-                        style: GoogleFonts.montserrat(
+                        style: const TextStyle(
                           fontSize: 16,
                           color: AppColors.textLightGray,
                         ),
@@ -125,13 +131,19 @@ class FaqView extends StatelessWidget {
                   }
 
                   return ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSizes.paddingLarge,
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
                     itemCount: controller.filteredFaqs.length,
                     itemBuilder: (context, index) {
                       final faq = controller.filteredFaqs[index];
-                      return _buildFaqCard(context, faq);
+                      return FaqItem(
+                        id: faq['id'] ?? '',
+                        question: faq['question'] ?? '',
+                        answer: faq['answer'] ?? '',
+                        usersAsked: faq['usersAsked'] ?? 0,
+                        userAvatars: faq['userAvatars'] != null
+                            ? List<String>.from(faq['userAvatars'] as List)
+                            : null,
+                      );
                     },
                   );
                 }),
@@ -139,33 +151,6 @@ class FaqView extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildFaqCard(BuildContext context, Map<String, dynamic> faq) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppSizes.spacingMedium),
-      child: ExpansionTile(
-        title: Text(
-          faq['question'] ?? '',
-          style: GoogleFonts.montserrat(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(AppSizes.paddingMedium),
-            child: Text(
-              faq['answer'] ?? '',
-              style: GoogleFonts.montserrat(
-                fontSize: 14,
-                color: AppColors.textLightGray,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

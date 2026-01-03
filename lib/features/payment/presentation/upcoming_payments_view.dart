@@ -2,6 +2,9 @@
 // Author: haptome H.
 // Linked Spec Section: Upcoming Payments Page
 
+import 'package:et_digital_equb/core/widgets/custom_back_button.dart';
+import 'package:et_digital_equb/core/widgets/month_section.dart';
+import 'package:et_digital_equb/core/widgets/search_bar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -24,43 +27,25 @@ class UpcomingPaymentsView extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.black),
-            onPressed: () => Get.back(),
-          ),
+          leading: const CustomBackButton(),
           title: Text(
-            'upcoming'.tr,
-            style: GoogleFonts.montserrat(
-              fontSize: 20,
+            'upcoming_payments'.tr,
+            style: const TextStyle(
+              fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.splashBackground,
+              color: AppColors.lightTextPrimary,
             ),
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.filter_list, color: AppColors.black),
-              onPressed: controller.onFilterTap,
-            ),
-          ],
+          centerTitle: true,
         ),
         body: SafeArea(
           child: Column(
             children: [
-              // Search bar
-              Padding(
-                padding: const EdgeInsets.all(AppSizes.paddingLarge),
-                child: TextField(
-                  onChanged: controller.onSearchChanged,
-                  decoration: InputDecoration(
-                    hintText: 'search_payments'.tr,
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppSizes.radiusMedium,
-                      ),
-                    ),
-                  ),
-                ),
+              // Search bar with filter
+              SearchBarWidget(
+                hintText: 'search'.tr,
+                onChanged: controller.onSearchChanged,
+                onFilterTap: controller.onFilterTap,
               ),
               // Payments list
               Expanded(
@@ -69,7 +54,7 @@ class UpcomingPaymentsView extends StatelessWidget {
                     return Center(
                       child: Text(
                         'no_upcoming_payments'.tr,
-                        style: GoogleFonts.montserrat(
+                        style: const TextStyle(
                           fontSize: 16,
                           color: AppColors.textLightGray,
                         ),
@@ -78,36 +63,13 @@ class UpcomingPaymentsView extends StatelessWidget {
                   }
 
                   return ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSizes.paddingLarge,
-                    ),
                     itemCount: controller.filteredPayments.length,
                     itemBuilder: (context, index) {
                       final monthData = controller.filteredPayments[index];
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: AppSizes.spacingMedium,
-                            ),
-                            child: Text(
-                              monthData['month'] as String,
-                              style: GoogleFonts.montserrat(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.black,
-                              ),
-                            ),
-                          ),
-                          ...((monthData['payments'] as List).map((payment) {
-                            return _buildPaymentCard(
-                              context,
-                              controller,
-                              payment,
-                            );
-                          })),
-                        ],
+                      return MonthSection(
+                        month: monthData['month'] ?? '',
+                        payments: monthData['payments'] ?? [],
+                        onPaymentTap: controller.onPaymentTap,
                       );
                     },
                   );
@@ -116,53 +78,6 @@ class UpcomingPaymentsView extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildPaymentCard(
-    BuildContext context,
-    UpcomingPaymentsController controller,
-    Map<String, dynamic> payment,
-  ) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppSizes.spacingMedium),
-      child: ListTile(
-        leading: Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: (payment['colorType'] == 'yellow')
-                ? Colors.yellow[100]
-                : Colors.teal[100],
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Text(
-              (payment['round'] ?? '').toString(),
-              style: GoogleFonts.montserrat(
-                fontWeight: FontWeight.bold,
-                color: AppColors.black,
-              ),
-            ),
-          ),
-        ),
-        title: Text(
-          payment['ekubName'] ?? '',
-          style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          '${payment['date']} • ${payment['frequency']}',
-          style: GoogleFonts.montserrat(fontSize: 12),
-        ),
-        trailing: Text(
-          '${payment['amount']} ETB',
-          style: GoogleFonts.montserrat(
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
-        ),
-        onTap: () => controller.onPaymentTap(payment['id'] ?? ''),
       ),
     );
   }

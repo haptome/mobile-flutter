@@ -1,6 +1,9 @@
 // Purpose: Lottery page
 // Author: Auto-generated
 
+import 'package:et_digital_equb/core/widgets/custom_back_button.dart';
+import 'package:et_digital_equb/core/widgets/spin_button.dart';
+import 'package:et_digital_equb/core/widgets/spin_wheel.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,98 +24,149 @@ class LotteryView extends StatelessWidget {
       child: Scaffold(
         backgroundColor: AppColors.lightBackground,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: AppColors.lightBackground,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.black),
-            onPressed: () => Get.back(),
-          ),
+          leading: const CustomBackButton(),
           title: Text(
             'lottery'.tr,
-            style: GoogleFonts.montserrat(
-              fontSize: 20,
+            style: const TextStyle(
+              fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.splashBackground,
+              color: AppColors.lightTextPrimary,
             ),
           ),
+          centerTitle: true,
           actions: [
             IconButton(
-              icon: const Icon(Icons.refresh, color: AppColors.black),
+              icon: const Icon(
+                Icons.refresh_outlined,
+                color: AppColors.lightTextPrimary,
+              ),
               onPressed: controller.onRefresh,
             ),
           ],
         ),
         body: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSizes.paddingLarge),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'spin_to_win'.tr,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.black,
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.spacingXLarge),
-                  Obx(() {
-                    if (controller.lastWonPrize.value > 0) {
-                      return Column(
-                        children: [
-                          Text(
-                            '${controller.lastWonPrize.value} ETB',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(height: AppSizes.spacingMedium),
-                          Text(
-                            'you_won'.tr,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 18,
-                              color: AppColors.textLightGray,
-                            ),
-                          ),
-                        ],
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  }),
-                  const SizedBox(height: AppSizes.spacingXLarge),
-                  Obx(
-                    () => ElevatedButton(
-                      onPressed: controller.isSpinning.value
-                          ? null
-                          : controller.spin,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSizes.paddingLarge * 2,
-                          vertical: AppSizes.paddingMedium,
-                        ),
-                      ),
-                      child: controller.isSpinning.value
-                          ? const CircularProgressIndicator(
-                              color: AppColors.white,
-                            )
-                          : Text(
-                              'spin'.tr,
-                              style: GoogleFonts.montserrat(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.white,
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 24),
+                        // Title - Left aligned
+                        RichText(
+                          textAlign: TextAlign.left,
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'spin_the'.tr + ' ',
+                                style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      AppColors.primary, // Light green/yellow
+                                ),
                               ),
+                              TextSpan(
+                                text: 'wheel'.tr,
+                                style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors
+                                      .lightTextPrimary, // Dark teal/green
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Subtitle - Left aligned
+                        RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'win'.tr + ' ',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors
+                                      .lightTextPrimary, // Dark teal/green
+                                ),
+                              ),
+                              TextSpan(
+                                text: 'lotterys'.tr,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color:
+                                      AppColors.primary, // Light green/yellow
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        // Spin Wheel - Centered
+                        Center(
+                          child: SpinWheel(
+                            // key: _wheelKey,
+                            prizes: controller.prizes,
+                            onSpinComplete: controller.onSpinComplete,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        // Spin Button
+                        Center(
+                          child: Obx(
+                            () => SpinButton(
+                              isSpinning: controller.isSpinning.value,
+                              onSpin: () {
+                                controller.spin();
+                                // _wheelKey.currentState?.spin();
+                              },
                             ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        // Last win message (if any)
+                        Obx(
+                          () => controller.lastWonPrize.value > 0
+                              ? Center(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'you_won'.tr.replaceAll(
+                                        '{amount}',
+                                        '${controller.lastWonPrize.value}',
+                                      ),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.lightTextPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),

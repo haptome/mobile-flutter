@@ -61,4 +61,3 @@ class PaymentController extends GetxController {
     }
   }
 }
-
