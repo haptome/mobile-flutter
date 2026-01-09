@@ -372,4 +372,82 @@ class AuthService extends GetxService {
     }
     return false;
   }
+
+  // Check if user has password set
+  Future<ApiResponse<bool>> hasPassword() async {
+    try {
+      final response = await _apiService.authDio.get('/auth/profile');
+
+      final apiResponse = ApiResponse.fromJson(
+        response.data as Map<String, dynamic>,
+        (data) => _extractHasPassword(data as Map<String, dynamic>),
+      );
+
+      // Update local user data if successful
+      if (apiResponse.success && apiResponse.data != null) {
+        final user = UserModel.fromJson(response.data as Map<String, dynamic>);
+        currentUser.value = user;
+        isAuthenticated.value = true;
+        // Persist user data to storage
+        await _storage.saveUser(user);
+      }
+
+      return apiResponse;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Helper method to extract password status from profile response
+  bool _extractHasPassword(Map<String, dynamic> profileData) {
+    // Check if the profile response contains a field indicating password status
+    // Backend now returns 'has_password' field in the profile response
+    if (profileData.containsKey('has_password')) {
+      return profileData['has_password'] as bool;
+    } else if (profileData.containsKey('hasPassword')) {
+      return profileData['hasPassword'] as bool;
+    }
+
+    // Default assumption: if we can retrieve the profile, password may be set
+    return false; // Default to false if field is not present
+  }
+
+  // Update user profile
+  Future<ApiResponse<UserModel>> updateProfile({
+    String? fullName,
+    String? email,
+    String? workStatus,
+    String? profilePicUrl,
+  }) async {
+    try {
+      final requestData = <String, dynamic>{};
+
+      if (fullName != null) requestData['full_name'] = fullName;
+      if (email != null) requestData['email'] = email;
+      if (workStatus != null) requestData['work_status'] = workStatus;
+      if (profilePicUrl != null) requestData['profile_pic_url'] = profilePicUrl;
+
+      final response = await _apiService.authDio.put(
+        '/auth/profile',
+        data: requestData,
+      );
+
+      final apiResponse = ApiResponse.fromJson(
+        response.data as Map<String, dynamic>,
+        (data) => UserModel.fromJson(data as Map<String, dynamic>),
+      );
+
+      // Update local user data if successful
+      if (apiResponse.success && apiResponse.data != null) {
+        currentUser.value = apiResponse.data;
+        isAuthenticated.value = true;
+        // Persist user data to storage
+        await _storage.saveUser(apiResponse.data!);
+      }
+
+      return apiResponse;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

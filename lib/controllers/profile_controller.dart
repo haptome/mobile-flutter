@@ -68,13 +68,20 @@ class ProfileController extends GetxController {
     Get.toNamed('/verification');
   }
 
-  void onSetPasswordTap() {
-    // TODO: Navigate to set password page
-    Get.snackbar(
-      'set_password'.tr,
-      'set_password_message'.tr,
-      snackPosition: SnackPosition.BOTTOM,
+  void onSetPasswordTap() async {
+    // Navigate to set password view, checking if user actually has a password set
+    // We can check the hasPassword field directly from the current user model
+    final hasPassword = _authService.currentUser.value?.hasPassword ?? false;
+
+    Get.toNamed(
+      '/set-password',
+      arguments: {'hasExistingPassword': hasPassword},
     );
+  }
+
+  void onSetFirstTimePassword() {
+    // Navigate to set password view for first-time password setup
+    Get.toNamed('/set-password', arguments: {'hasExistingPassword': false});
   }
 
   void onTermsConditionsTap() {
@@ -91,10 +98,7 @@ class ProfileController extends GetxController {
         title: Text('logout'.tr),
         content: Text('logout_confirmation'.tr),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: Text('cancel'.tr),
-          ),
+          TextButton(onPressed: () => Get.back(), child: Text('cancel'.tr)),
           TextButton(
             onPressed: () {
               Get.back();

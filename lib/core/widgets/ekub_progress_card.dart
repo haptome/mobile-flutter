@@ -2,6 +2,7 @@
 // Author: haptome H.
 // Linked Spec Section: Your Ekubs Page
 
+import 'package:et_digital_equb/core/theme/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../theme/app_colors.dart';
@@ -51,12 +52,17 @@ class EkubProgressCard extends StatelessWidget {
             // Title and frequency row
             Row(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.splashBackground,
+                SizedBox(
+                  // maxWidth: AppSizes.sizedBoxWidth,
+                  width: AppSizes.sizedBoxWidth,
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.splashBackground,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -104,4 +110,3 @@ class EkubProgressCard extends StatelessWidget {
     );
   }
 }
-

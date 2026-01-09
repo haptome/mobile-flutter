@@ -6,12 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../theme/app_colors.dart';
 
-enum TransactionType {
-  deposit,
-  withdrawal,
-  failed,
-  rewards,
-}
+enum TransactionType { deposit, withdrawal, failed, rewards }
 
 class TransactionCard extends StatefulWidget {
   final String id;
@@ -53,13 +48,13 @@ class _TransactionCardState extends State<TransactionCard> {
   Color _getIconColor() {
     switch (widget.type) {
       case TransactionType.deposit:
-        return const Color(0xFF4CAF50); // Green
+        return const Color(0xFF4CAF50).withOpacity(0.3); // Green
       case TransactionType.withdrawal:
-        return const Color(0xFFFFC107); // Yellow
+        return const Color(0xFFFFC107).withOpacity(0.3); // Yellow
       case TransactionType.failed:
-        return const Color(0xFFF44336); // Red
+        return const Color(0xFFF44336).withOpacity(0.3); // Red
       case TransactionType.rewards:
-        return const Color(0xFF8BC34A); // Light green
+        return const Color(0xFF8BC34A).withOpacity(0.3); // Light green
     }
   }
 
@@ -68,19 +63,19 @@ class _TransactionCardState extends State<TransactionCard> {
       case TransactionType.deposit:
         return const Icon(
           Icons.arrow_downward_outlined,
-          color: Colors.white,
+          color: Color(0xFF4CAF50),
           size: 20,
         );
       case TransactionType.withdrawal:
         return const Icon(
           Icons.arrow_upward_outlined,
-          color: Colors.white,
+          color: Color(0xFFFFC107),
           size: 20,
         );
       case TransactionType.failed:
         return const Icon(
           Icons.close_outlined,
-          color: Colors.white,
+          color: Color(0xFFF44336),
           size: 20,
         );
       case TransactionType.rewards:
@@ -92,7 +87,7 @@ class _TransactionCardState extends State<TransactionCard> {
               width: 16,
               height: 16,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Color(0xFF8BC34A),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -226,7 +221,10 @@ class _TransactionCardState extends State<TransactionCard> {
             ),
           ),
           // Expanded content
-          if (_isExpanded && (widget.ekubName != null || widget.transactionId != null || widget.rounds != null)) ...[
+          if (_isExpanded &&
+              (widget.ekubName != null ||
+                  widget.transactionId != null ||
+                  widget.rounds != null)) ...[
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -239,7 +237,10 @@ class _TransactionCardState extends State<TransactionCard> {
                   _buildDetailRow('date_colon'.tr, widget.date),
                   if (widget.transactionId != null) ...[
                     const SizedBox(height: 12),
-                    _buildDetailRow('transaction_id_colon'.tr, widget.transactionId!),
+                    _buildDetailRow(
+                      'transaction_id_colon'.tr,
+                      widget.transactionId!,
+                    ),
                   ],
                   if (widget.rounds != null) ...[
                     const SizedBox(height: 12),
@@ -264,23 +265,16 @@ class _TransactionCardState extends State<TransactionCard> {
           width: 100,
           child: Text(
             label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.black,
-            ),
+            style: const TextStyle(fontSize: 14, color: AppColors.black),
           ),
         ),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.black,
-            ),
+            style: const TextStyle(fontSize: 14, color: AppColors.black),
           ),
         ),
       ],
     );
   }
 }
-

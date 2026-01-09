@@ -75,44 +75,6 @@ class EkubTypeView extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Bottom Navigation
-                AppBottomNav(
-                  currentIndex: 0,
-                  onTap: (index) {
-                    final route = [
-                      AppRoutes.home,
-                      AppRoutes.ekubs,
-                      AppRoutes.transactions,
-                      AppRoutes.profile,
-                    ][index];
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      route,
-                      (route) => false,
-                    );
-                  },
-                  items: const [
-                    BottomNavItem(
-                      iconPath: AppAssets.homeIcon,
-                      label: 'Home',
-                      route: '/home',
-                    ),
-                    BottomNavItem(
-                      iconPath: AppAssets.personsIcon,
-                      label: 'Your Ekubs',
-                      route: '/ekubs',
-                    ),
-                    BottomNavItem(
-                      iconPath: AppAssets.transactionIcon,
-                      label: 'Transactions',
-                      route: '/transactions',
-                    ),
-                    BottomNavItem(
-                      iconPath: AppAssets.profileIcon,
-                      label: 'Profile',
-                      route: '/profile',
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
@@ -198,15 +160,26 @@ class EkubTypeView extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: AppSizes.spacingMedium),
               child: Row(
                 children: [
-                  for (int j = i; j < i + 3 && j < controller.categories.length; j++)
+                  for (
+                    int j = i;
+                    j < i + 3 && j < controller.categories.length;
+                    j++
+                  )
                     CategoryCard(
-                      iconUrl: controller.categories[j].iconUrl ?? 'material-symbols:category-outline',
+                      iconUrl:
+                          controller.categories[j].iconUrl ??
+                          'material-symbols:category-outline',
                       label: controller.categories[j].name,
-                      onTap: () => controller.onCategoryTap(controller.categories[j]),
+                      onTap: () =>
+                          controller.onCategoryTap(controller.categories[j]),
                     ),
                   // Fill remaining slots with empty space
                   if (controller.categories.length - i < 3)
-                    for (int k = 0; k < 3 - (controller.categories.length - i); k++)
+                    for (
+                      int k = 0;
+                      k < 3 - (controller.categories.length - i);
+                      k++
+                    )
                       const Expanded(child: SizedBox()),
                 ],
               ),

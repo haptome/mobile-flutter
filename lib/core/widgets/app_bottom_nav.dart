@@ -40,7 +40,7 @@ class AppBottomNav extends StatelessWidget {
           topRight: Radius.circular(AppSizes.radiusLarge),
         ),
         boxShadow: [
-            BoxShadow(
+          BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
@@ -51,7 +51,7 @@ class AppBottomNav extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSizes.paddingMedium,
-            vertical: AppSizes.paddingSmall,
+            // vertical: AppSizes.paddingSmall,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -81,9 +81,7 @@ class AppBottomNav extends StatelessWidget {
                         style: AppTextStyles.caption(
                           color: isActive ? AppColors.primary : AppColors.black,
                           isDark: false,
-                        )?.copyWith(
-                          fontSize: 10
-                        ),
+                        )?.copyWith(fontSize: 10),
                       ),
                     ],
                   ),
@@ -96,4 +94,3 @@ class AppBottomNav extends StatelessWidget {
     );
   }
 }
-

@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/transactions_controller.dart';
 
-
 class TransactionsView extends StatefulWidget {
   const TransactionsView({super.key});
 
@@ -39,14 +38,12 @@ class _TransactionsViewState extends State<TransactionsView> {
               ),
             ),
             IconButton(
-              icon: const Icon(
-                Icons.refresh_outlined,
-                color: AppColors.black,
-              ),
+              icon: const Icon(Icons.refresh_outlined, color: AppColors.black),
               onPressed: controller.onRefresh,
             ),
           ],
         ),
+        centerTitle: false,
       ),
       body: Stack(
         children: [
@@ -56,43 +53,42 @@ class _TransactionsViewState extends State<TransactionsView> {
               children: [
                 // Transactions list
                 Expanded(
-                  child: Obx(
-                    () {
-                      if (controller.transactions.isEmpty) {
-                        return Center(
-                          child: Text(
-                            'no_transactions'.tr,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: AppColors.textLightGray,
-                            ),
+                  child: Obx(() {
+                    if (controller.transactions.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'no_transactions'.tr,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: AppColors.textLightGray,
                           ),
-                        );
-                      }
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.only(
-                          top: 8.0,
-                          bottom: 80.0, // Padding for bottom nav
                         ),
-                        itemCount: controller.transactions.length,
-                        itemBuilder: (context, index) {
-                          final transaction = controller.transactions[index];
-                          return TransactionCard(
-                            id: transaction['id'] ?? '',
-                            type: transaction['type'] as TransactionType,
-                            amount: transaction['amount'] ?? '',
-                            date: transaction['date'] ?? '',
-                            source: transaction['source'] ?? '',
-                            ekubName: transaction['ekubName'] as String?,
-                            transactionId: transaction['transactionId'] as String?,
-                            rounds: transaction['rounds'] as String?,
-                            initiallyExpanded: index == 0, // First card expanded
-                          );
-                        },
                       );
-                    },
-                  ),
+                    }
+
+                    return ListView.builder(
+                      padding: const EdgeInsets.only(
+                        top: 8.0,
+                        bottom: 80.0, // Padding for bottom nav
+                      ),
+                      itemCount: controller.transactions.length,
+                      itemBuilder: (context, index) {
+                        final transaction = controller.transactions[index];
+                        return TransactionCard(
+                          id: transaction['id'] ?? '',
+                          type: transaction['type'] as TransactionType,
+                          amount: transaction['amount'] ?? '',
+                          date: transaction['date'] ?? '',
+                          source: transaction['source'] ?? '',
+                          ekubName: transaction['ekubName'] as String?,
+                          transactionId:
+                              transaction['transactionId'] as String?,
+                          rounds: transaction['rounds'] as String?,
+                          initiallyExpanded: index == 0, // First card expanded
+                        );
+                      },
+                    );
+                  }),
                 ),
               ],
             ),
@@ -102,4 +98,3 @@ class _TransactionsViewState extends State<TransactionsView> {
     );
   }
 }
-

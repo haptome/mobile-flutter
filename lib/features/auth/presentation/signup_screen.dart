@@ -21,21 +21,11 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final _fullNameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   late final AuthController _authController;
   String? _workStatus;
   String? _location;
   
-  // Password validation state
-  final RxBool _hasAttemptedRegister = false.obs;
-  final RxString _passwordValue = ''.obs;
-  
-  // Password requirements tracking
-  final RxBool _hasMinLength = false.obs;
-  final RxBool _hasUppercase = false.obs;
-  final RxBool _hasLowercase = false.obs;
-  final RxBool _hasSpecialChar = false.obs;
 
   @override
   void initState() {
@@ -47,20 +37,9 @@ class _SignupScreenState extends State<SignupScreen> {
       _authController = Get.find<AuthController>();
     }
     
-    // Listen to password changes for real-time validation
-    _passwordController.addListener(_onPasswordChanged);
   }
   
-  void _onPasswordChanged() {
-    final password = _passwordController.text;
-    _passwordValue.value = password;
-    
-    // Check requirements
-    _hasMinLength.value = password.length >= 8;
-    _hasUppercase.value = password.contains(RegExp(r'[A-Z]'));
-    _hasLowercase.value = password.contains(RegExp(r'[a-z]'));
-    _hasSpecialChar.value = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
-  }
+  
 
   final List<String> _workStatuses = const [
     'Employed',
@@ -79,23 +58,14 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   void dispose() {
-    _passwordController.removeListener(_onPasswordChanged);
     _fullNameController.dispose();
     _phoneController.dispose();
-    _passwordController.dispose();
-    _hasAttemptedRegister.close();
-    _passwordValue.close();
-    _hasMinLength.close();
-    _hasUppercase.close();
-    _hasLowercase.close();
-    _hasSpecialChar.close();
+    
     super.dispose();
   }
 
   Future<void> _handleRegister() async {
-    // Mark that register was attempted
-    _hasAttemptedRegister.value = true;
-    
+    // Trigger validation for all fields
     // Trigger validation for all fields
     if (_formKey.currentState!.validate()) {
       // Update controller values
@@ -103,7 +73,6 @@ class _SignupScreenState extends State<SignupScreen> {
       // The controller will add the country code when building the full phone
       _authController.phone.value = _phoneController.text.trim();
       _authController.fullName.value = _fullNameController.text.trim();
-      _authController.password.value = _passwordController.text;
       
       // Ensure country code is set to Ethiopia (default)
       // PhoneInputField uses +251, so we ensure controller matches
@@ -184,88 +153,7 @@ class _SignupScreenState extends State<SignupScreen> {
     }
     return null;
   }
-
-  String? _validatePassword(String? value) {
-    // Only validate if register was attempted
-    if (!_hasAttemptedRegister.value) {
-      return null;
-    }
-    
-    if (value == null || value.isEmpty) {
-      return 'Please enter a password';
-    }
-    
-    final errors = <String>[];
-    
-    if (value.length < 8) {
-      errors.add('at least 8 characters');
-    }
-    if (!value.contains(RegExp(r'[A-Z]'))) {
-      errors.add('one uppercase letter');
-    }
-    if (!value.contains(RegExp(r'[a-z]'))) {
-      errors.add('one lowercase letter');
-    }
-    if (!value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-      errors.add('one special character');
-    }
-    
-    if (errors.isNotEmpty) {
-      return 'Password must contain ${errors.join(', ')}';
-    }
-    
-    return null;
-  }
   
-  // Calculate password strength (0.0 to 1.0)
-  double _getPasswordStrength() {
-    int requirementsMet = 0;
-    if (_hasMinLength.value) requirementsMet++;
-    if (_hasUppercase.value) requirementsMet++;
-    if (_hasLowercase.value) requirementsMet++;
-    if (_hasSpecialChar.value) requirementsMet++;
-    return requirementsMet / 4.0;
-  }
-  
-  // Get password strength color
-  Color _getPasswordStrengthColor() {
-    final strength = _getPasswordStrength();
-    if (strength < 0.5) return AppColors.lightError;
-    if (strength < 0.75) return Colors.orange;
-    return Colors.green;
-  }
-  
-  // Build password requirements list
-  List<Widget> _buildPasswordRequirements() {
-    return [
-      _buildRequirementItem('At least 8 characters', _hasMinLength.value),
-      _buildRequirementItem('One uppercase letter', _hasUppercase.value),
-      _buildRequirementItem('One lowercase letter', _hasLowercase.value),
-      _buildRequirementItem('One special character', _hasSpecialChar.value),
-    ];
-  }
-  
-  Widget _buildRequirementItem(String text, bool isValid) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Icon(
-            isValid ? Icons.check_circle : Icons.cancel,
-            size: 16,
-            color: isValid ? Colors.green : AppColors.lightError,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            text,
-            style: AppTextStyles.bodySmall(
-              color: isValid ? Colors.green : AppColors.lightTextSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -359,51 +247,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       maxLength: 9,
                     ),
                     SizedBox(height: screenHeight * 0.02),
-                    AppTextField(
-                      hint: 'Password',
-                      controller: _passwordController,
-                      obscureText: true,
-                      textInputAction: TextInputAction.next,
-                      validator: _validatePassword,
-                      onChanged: (value) {
-                        // Trigger validation after register attempt
-                        if (_hasAttemptedRegister.value) {
-                          _formKey.currentState?.validate();
-                        }
-                      },
-                    ),
-                    // Password strength indicator and requirements
-                    Obx(
-                      () => _hasAttemptedRegister.value
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: AppSizes.spacingSmall),
-                                // Password strength progress bar
-                                Container(
-                                  height: 4,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(2),
-                                    color: AppColors.lightBorder,
-                                  ),
-                                  child: FractionallySizedBox(
-                                    alignment: Alignment.centerLeft,
-                                    widthFactor: _getPasswordStrength(),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(2),
-                                        color: _getPasswordStrengthColor(),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: AppSizes.spacingSmall),
-                                // Password requirements list
-                                ..._buildPasswordRequirements(),
-                              ],
-                            )
-                          : const SizedBox.shrink(),
-                    ),
+                    
                     SizedBox(height: screenHeight * 0.02),
                     DropdownButtonFormField<String>(
                       value: _workStatus,

@@ -15,11 +15,12 @@ class KycService extends GetxService {
 
   final ApiService _apiService = ApiService.to;
 
-  // Upload KYC document
+  // Upload KYC document with progress tracking
   Future<ApiResponse<KycDocument>> uploadDocument({
     required String filePath,
     required DocumentType docType,
     Map<String, dynamic>? metadata,
+    void Function(int sent, int total)? onSendProgress,
   }) async {
     try {
       final formData = dio.FormData.fromMap({
@@ -34,24 +35,96 @@ class KycService extends GetxService {
       final response = await _apiService.userDio.post(
         '/kyc/documents/upload',
         data: formData,
+        onSendProgress: onSendProgress,
       );
 
       final apiResponse = ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
-        (data) => KycDocument.fromJson(data as Map<String, dynamic>),
+        (data) {
+          // Backend returns {document_id, file_url, storage_key}
+          // We need to fetch the full document or construct a partial one
+          if (data is Map<String, dynamic>) {
+            // If backend returns full document, use it
+            if (data.containsKey('id')) {
+              return KycDocument.fromJson(data);
+            }
+            // If backend returns data with nested document, use that
+            if (data.containsKey('data') &&
+                data['data'] is Map<String, dynamic>) {
+              final dataMap = data['data'] as Map<String, dynamic>;
+              if (dataMap.containsKey('id')) {
+                return KycDocument.fromJson(dataMap);
+              }
+            }
+            // Otherwise, construct from upload response
+            return KycDocument(
+              id: data['document_id'] as String? ?? data['id'] as String? ?? '',
+              docType: data['doc_type'] as String? ?? docType.value,
+              fileName:
+                  data['file_name'] as String? ?? filePath.split('/').last,
+              fileUrl:
+                  data['file_url'] as String? ?? data['file_url'] as String?,
+              status: data['status'] as String? ?? 'uploaded',
+              uploadedAt: DateTime.now(),
+              metadata: metadata,
+            );
+          }
+          throw Exception('Invalid response format');
+        },
       );
 
       return apiResponse;
     } on DioException catch (e) {
       if (e.response != null) {
-        return ApiResponse.fromJson(
-          e.response!.data as Map<String, dynamic>,
-          (data) => KycDocument.fromJson(data as Map<String, dynamic>),
+        // Handle error response from server
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic>) {
+          // If the error response has a document in the data field
+          if (responseData.containsKey('data') &&
+              responseData['data'] is Map<String, dynamic>) {
+            try {
+              return ApiResponse.fromJson(
+                responseData,
+                (data) => KycDocument.fromJson(data as Map<String, dynamic>),
+              );
+            } catch (parseError) {
+              // If parsing fails, return error response
+              return ApiResponse<KycDocument>(
+                success: false,
+                error: ApiError(
+                  code: 'UPLOAD_ERROR',
+                  message:
+                      responseData['message'] as String? ??
+                      responseData['error'] as String? ??
+                      'Upload failed',
+                ),
+              );
+            }
+          }
+        }
+
+        // Return error response
+        return ApiResponse<KycDocument>(
+          success: false,
+          error: ApiError(
+            code: 'UPLOAD_ERROR',
+            message: responseData is Map
+                ? (responseData['message'] as String? ??
+                      responseData['error'] as String? ??
+                      'Upload failed')
+                : 'Upload failed',
+          ),
         );
       }
       rethrow;
     } catch (e) {
-      rethrow;
+      return ApiResponse<KycDocument>(
+        success: false,
+        error: ApiError(
+          code: 'UPLOAD_ERROR',
+          message: e.toString(),
+        ),
+      );
     }
   }
 
@@ -73,6 +146,25 @@ class KycService extends GetxService {
       final apiResponse = ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
         (data) {
+          // Backend returns paginated response: {data: [...], pagination: {...}}
+          // The data field is already the array of documents
+          if (data is List) {
+            return data
+                .map((doc) => KycDocument.fromJson(doc as Map<String, dynamic>))
+                .toList();
+          }
+          // Check for nested data array (common API response format)
+          if (data is Map && data.containsKey('data')) {
+            final dataValue = data['data'];
+            if (dataValue is List) {
+              return dataValue
+                  .map(
+                    (doc) => KycDocument.fromJson(doc as Map<String, dynamic>),
+                  )
+                  .toList();
+            }
+          }
+          // Fallback: check for nested documents key (legacy format)
           if (data is Map && data.containsKey('documents')) {
             return (data['documents'] as List<dynamic>)
                 .map((doc) => KycDocument.fromJson(doc as Map<String, dynamic>))
@@ -103,9 +195,7 @@ class KycService extends GetxService {
     try {
       final response = await _apiService.userDio.post(
         '/kyc/documents/submit',
-        data: {
-          'document_ids': documentIds,
-        },
+        data: {'document_ids': documentIds},
       );
 
       final apiResponse = ApiResponse.fromJson(
@@ -132,17 +222,18 @@ class KycService extends GetxService {
     try {
       // Get documents
       final documentsResponse = await getDocuments();
-      
+
       // Get user profile to check kyc_status
       String kycStatus = 'not_started';
-      
+
       try {
         // Try to get current user's kyc_status from AuthService
         // This is a workaround - ideally we'd have a dedicated endpoint
         final profileResponse = await _apiService.authDio.get('/auth/profile');
-        if (profileResponse.data['success'] == true && 
+        if (profileResponse.data['success'] == true &&
             profileResponse.data['data'] != null) {
-          kycStatus = profileResponse.data['data']['kyc_status'] ?? 'not_started';
+          kycStatus =
+              profileResponse.data['data']['kyc_status'] ?? 'not_started';
         }
       } catch (e) {
         // If profile fetch fails, use default
@@ -150,7 +241,7 @@ class KycService extends GetxService {
           print('Could not fetch user profile for KYC status: $e');
         }
       }
-      
+
       final status = KycStatus(
         status: kycStatus,
         documents: documentsResponse.success && documentsResponse.data != null
@@ -170,5 +261,97 @@ class KycService extends GetxService {
       rethrow;
     }
   }
-}
 
+  // Initiate liveness check session
+  Future<ApiResponse<Map<String, dynamic>>> initiateLiveness({
+    String? provider,
+  }) async {
+    try {
+      final response = await _apiService.userDio.post(
+        '/kyc/liveness/initiate',
+        data: {if (provider != null) 'provider': provider},
+      );
+
+      final apiResponse = ApiResponse.fromJson(
+        response.data as Map<String, dynamic>,
+        (data) => data as Map<String, dynamic>,
+      );
+
+      return apiResponse;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return ApiResponse.fromJson(
+          e.response!.data as Map<String, dynamic>,
+          (data) => data as Map<String, dynamic>,
+        );
+      }
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Submit liveness check video/photo files with progress tracking
+  Future<ApiResponse<Map<String, dynamic>>> submitLiveness({
+    required String sessionId,
+    String? videoPath,
+    String? photoPath,
+    void Function(int sent, int total)? onSendProgress,
+  }) async {
+    try {
+      final formData = dio.FormData();
+
+      // Add session ID
+      formData.fields.add(MapEntry('session_id', sessionId));
+
+      // Add video file if provided
+      if (videoPath != null && videoPath.isNotEmpty) {
+        formData.files.add(
+          MapEntry(
+            'files',
+            await dio.MultipartFile.fromFile(
+              videoPath,
+              filename: videoPath.split('/').last,
+            ),
+          ),
+        );
+      }
+
+      // Add photo file if provided
+      if (photoPath != null && photoPath.isNotEmpty) {
+        formData.files.add(
+          MapEntry(
+            'files',
+            await dio.MultipartFile.fromFile(
+              photoPath,
+              filename: photoPath.split('/').last,
+            ),
+          ),
+        );
+      }
+
+      final response = await _apiService.userDio.post(
+        '/kyc/liveness/submit',
+        data: formData,
+        onSendProgress: onSendProgress,
+      );
+
+      final apiResponse = ApiResponse.fromJson(
+        response.data as Map<String, dynamic>,
+        (data) => data as Map<String, dynamic>,
+      );
+
+      return apiResponse;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return ApiResponse.fromJson(
+          e.response!.data as Map<String, dynamic>,
+          (data) => data as Map<String, dynamic>,
+        );
+      }
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
+  }
+}

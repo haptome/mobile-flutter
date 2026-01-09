@@ -72,14 +72,19 @@ class KycDocument {
   });
 
   factory KycDocument.fromJson(Map<String, dynamic> json) {
+    // Backend returns created_at, not uploaded_at
+    // Also handle uploaded_at for backward compatibility
+    final uploadedAtStr = json['uploaded_at'] as String? ??
+        json['created_at'] as String?;
+    
     return KycDocument(
-      id: json['id'] as String,
-      docType: json['doc_type'] as String,
-      fileName: json['file_name'] as String,
+      id: json['id'] as String? ?? json['document_id'] as String? ?? '',
+      docType: json['doc_type'] as String? ?? '',
+      fileName: json['file_name'] as String? ?? '',
       fileUrl: json['file_url'] as String?,
-      status: json['status'] as String,
-      uploadedAt: json['uploaded_at'] != null
-          ? DateTime.parse(json['uploaded_at'] as String)
+      status: json['status'] as String? ?? 'uploaded',
+      uploadedAt: uploadedAtStr != null
+          ? DateTime.parse(uploadedAtStr)
           : null,
       metadata: json['metadata'] as Map<String, dynamic>?,
     );

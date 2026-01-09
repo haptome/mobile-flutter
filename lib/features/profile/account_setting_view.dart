@@ -79,15 +79,6 @@ class AccountSettingView extends StatelessWidget {
                   onChanged: (value) => controller.phoneNumber.value = value,
                 ),
                 const SizedBox(height: 20),
-                // Registered ID
-                FormFieldWidget(
-                  label: 'registered_id'.tr,
-                  value: controller.registeredId.value,
-                  hintText: 'enter_registered_id'.tr,
-                  keyboardType: TextInputType.text,
-                  onChanged: (value) => controller.registeredId.value = value,
-                ),
-                const SizedBox(height: 20),
                 // Location
                 FormFieldWidget(
                   label: 'location'.tr,
@@ -97,11 +88,11 @@ class AccountSettingView extends StatelessWidget {
                   onTap: controller.onLocationTap,
                 ),
                 const SizedBox(height: 20),
-                // Occupation
+                // Work Status
                 FormFieldWidget(
-                  label: 'occupation'.tr,
-                  value: controller.occupation.value,
-                  hintText: 'select_occupation'.tr,
+                  label: 'work_status'.tr,
+                  value: controller.workStatus.value,
+                  hintText: 'select_work_status'.tr,
                   isDropdown: true,
                   onTap: controller.onOccupationTap,
                 ),

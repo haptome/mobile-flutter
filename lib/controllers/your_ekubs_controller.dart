@@ -29,7 +29,7 @@ class YourEkubsController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      
+
       final user = _authService.currentUser.value;
       if (user?.id == null) {
         errorMessage.value = 'User not authenticated';
@@ -42,7 +42,7 @@ class YourEkubsController extends GetxController {
         userId: user!.id,
         limit: 50,
       );
-      
+
       final inKindGroupsResponse = await _groupService.getUserInKindGroups();
 
       final List<Map<String, dynamic>> allGroups = [];
@@ -62,7 +62,7 @@ class YourEkubsController extends GetxController {
       }
 
       ekubs.value = allGroups;
-      
+
       if (allGroups.isEmpty) {
         errorMessage.value = 'You are not a member of any groups yet';
       }
@@ -84,8 +84,9 @@ class YourEkubsController extends GetxController {
   Map<String, dynamic> _groupToEkubMap(Group group) {
     // Calculate completed rounds (simplified - in real app, this would come from rotation service)
     final totalRounds = group.targetMembers;
-    final completedRounds = (group.currentMembers * 0.3).round(); // Placeholder calculation
-    
+    final completedRounds = (group.currentMembers * 0.3)
+        .round(); // Placeholder calculation
+
     return {
       'id': group.id,
       'title': group.name,
@@ -102,7 +103,7 @@ class YourEkubsController extends GetxController {
     final totalRounds = group.targetMembers;
     // InKindGroup doesn't have currentMembers, use targetMembers as placeholder
     final completedRounds = (group.targetMembers * 0.3).round();
-    
+
     return {
       'id': group.id,
       'title': group.name,
@@ -184,6 +185,11 @@ class YourEkubsController extends GetxController {
     }
   }
 
+  void onCreateEkub() {
+    // Navigate to Ekub creation page
+    Get.toNamed(AppRoutes.createGroup);
+  }
+
   void onBottomNavTap(int index) {
     switch (index) {
       case 0:
@@ -201,4 +207,3 @@ class YourEkubsController extends GetxController {
     }
   }
 }
-

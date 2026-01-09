@@ -58,8 +58,9 @@ class AuthController extends GetxController {
       final response = await _authService.register(registerRequest);
 
       if (response.success && response.data != null) {
-        // Registration successful - OTP was sent automatically
+        // Registration successful - check if OTP was sent
         final otpSent = response.data!['otp_sent'] == true;
+
         if (otpSent) {
           isOtpSent.value = true;
           // Navigate to OTP verification screen
@@ -71,11 +72,21 @@ class AuthController extends GetxController {
             },
           );
         } else {
-          errorMessage.value = 'Failed to send OTP. Please try again.';
+          // Registration succeeded but OTP sending failed
+          // Still allow user to proceed, perhaps with an option to resend OTP
+          isOtpSent.value = false;
           Get.snackbar(
-            'Error',
-            errorMessage.value,
+            'Warning',
+            'Account registered but OTP not sent. You can request OTP again.',
             snackPosition: SnackPosition.BOTTOM,
+          );
+          // Navigate to OTP screen anyway so user can request OTP manually
+          Get.toNamed(
+            AppRoutes.otp,
+            arguments: {
+              'phoneNumber': fullPhone,
+              'isFromLogin': false, // This is registration, not login
+            },
           );
         }
       } else {

@@ -3,10 +3,14 @@
 // Linked Spec Section: Verification - ID Card Capture
 
 import 'dart:ui';
+import 'package:et_digital_equb/core/services/permission_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:get/get.dart';
+import '../../core/services/permission_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import 'id_card_confirmation_view.dart';
@@ -14,10 +18,7 @@ import 'id_card_confirmation_view.dart';
 class IdCardCameraView extends StatefulWidget {
   final String verificationMethod;
 
-  const IdCardCameraView({
-    super.key,
-    required this.verificationMethod,
-  });
+  const IdCardCameraView({super.key, required this.verificationMethod});
 
   @override
   State<IdCardCameraView> createState() => _IdCardCameraViewState();
@@ -32,7 +33,36 @@ class _IdCardCameraViewState extends State<IdCardCameraView> {
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
+    _requestPermissionsAndInitializeCamera();
+  }
+
+  Future<void> _requestPermissionsAndInitializeCamera() async {
+    try {
+      // Use permission service to request necessary permissions
+      final permissionService = Get.find<PermissionService>();
+      final permissionsGranted = await permissionService.requestKycPermissions();
+      
+      if (!permissionsGranted) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Camera and storage permissions are required to take photos'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+      
+      // Initialize camera after permissions are granted
+      await _initializeCamera();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Permission error: ' + e.toString())),
+        );
+      }
+    }
   }
 
   Future<void> _initializeCamera() async {
@@ -83,7 +113,7 @@ class _IdCardCameraViewState extends State<IdCardCameraView> {
             ),
           ),
         );
-        
+
         // Return result to previous screen
         if (mounted && result != null) {
           Navigator.of(context).pop(result);
@@ -91,9 +121,9 @@ class _IdCardCameraViewState extends State<IdCardCameraView> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error capturing image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error capturing image: $e')));
       }
     }
   }
@@ -101,8 +131,33 @@ class _IdCardCameraViewState extends State<IdCardCameraView> {
   Future<void> _pickImageFromGallery() async {
     try {
       final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        // Note: ImagePicker doesn't support allowedExtensions directly
+        // The validation will be handled by the upload controller
+      );
+
       if (image != null && mounted) {
+        // Validate file extension before proceeding
+        final lastDotIndex = image.path.lastIndexOf('.');
+        final fileExtension = lastDotIndex == -1
+            ? ''
+            : image.path.substring(lastDotIndex + 1).toLowerCase();
+        final supportedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
+        if (!supportedExtensions.contains(fileExtension)) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Unsupported file format. Please select an image (JPG, PNG) or PDF file. Detected extension: .$fileExtension',
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
         final result = await Navigator.of(context).push<Map<String, dynamic>>(
           MaterialPageRoute(
             builder: (_) => IdCardConfirmationView(
@@ -111,7 +166,7 @@ class _IdCardCameraViewState extends State<IdCardCameraView> {
             ),
           ),
         );
-        
+
         // Return result to previous screen
         if (mounted && result != null) {
           Navigator.of(context).pop(result);
@@ -119,9 +174,9 @@ class _IdCardCameraViewState extends State<IdCardCameraView> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
       }
     }
   }
@@ -131,9 +186,7 @@ class _IdCardCameraViewState extends State<IdCardCameraView> {
       setState(() {
         _isFlashOn = !_isFlashOn;
       });
-      _controller!.setFlashMode(
-        _isFlashOn ? FlashMode.torch : FlashMode.off,
-      );
+      _controller!.setFlashMode(_isFlashOn ? FlashMode.torch : FlashMode.off);
     }
   }
 
@@ -144,7 +197,7 @@ class _IdCardCameraViewState extends State<IdCardCameraView> {
     final frameWidth = 342.0;
     final frameHeight = 305.0;
     final frameRadius = 32.0;
-    
+
     // Calculate frame position (centered in available space)
     final availableHeight = screenSize.height - safeArea.top - safeArea.bottom;
     final availableWidth = screenSize.width - safeArea.left - safeArea.right;
@@ -157,19 +210,15 @@ class _IdCardCameraViewState extends State<IdCardCameraView> {
         children: [
           // Full screen camera preview
           if (_isInitialized && _controller != null)
-            Positioned.fill(
-              child: CameraPreview(_controller!),
-            )
+            Positioned.fill(child: CameraPreview(_controller!))
           else
             Positioned.fill(
               child: Container(
                 color: AppColors.backgroundLightGray,
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                child: const Center(child: CircularProgressIndicator()),
               ),
             ),
-          
+
           // Blurred background overlay (everything except the frame)
           Positioned.fill(
             child: ClipPath(
@@ -182,13 +231,11 @@ class _IdCardCameraViewState extends State<IdCardCameraView> {
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  color: Colors.black.withOpacity(0.3),
-                ),
+                child: Container(color: Colors.black.withOpacity(0.3)),
               ),
             ),
           ),
-          
+
           // Frame border overlay
           Positioned(
             left: frameLeft,
@@ -198,14 +245,11 @@ class _IdCardCameraViewState extends State<IdCardCameraView> {
               height: frameHeight,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(frameRadius),
-                border: Border.all(
-                  color: AppColors.primary,
-                  width: 3,
-                ),
+                border: Border.all(color: AppColors.primary, width: 3),
               ),
             ),
           ),
-          
+
           // Header and controls overlay
           Positioned.fill(
             child: SafeArea(
@@ -213,7 +257,10 @@ class _IdCardCameraViewState extends State<IdCardCameraView> {
                 children: [
                   // Header
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 12.0,
+                    ),
                     child: Row(
                       children: [
                         IconButton(
@@ -319,7 +366,10 @@ class _IdCardCameraViewState extends State<IdCardCameraView> {
                   const Spacer(),
                   // Action buttons
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: 32.0,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -402,32 +452,20 @@ class _FrameClipper extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) {
-    final path = Path()
-      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
-    
+    final path = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+
     // Create rounded rectangle hole for the frame
     final frameRect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(
-        frameLeft,
-        frameTop,
-        frameWidth,
-        frameHeight,
-      ),
+      Rect.fromLTWH(frameLeft, frameTop, frameWidth, frameHeight),
       Radius.circular(frameRadius),
     );
-    
+
     // Subtract the frame area from the path
-    final framePath = Path()
-      ..addRRect(frameRect);
-    
-    return Path.combine(
-      PathOperation.difference,
-      path,
-      framePath,
-    );
+    final framePath = Path()..addRRect(frameRect);
+
+    return Path.combine(PathOperation.difference, path, framePath);
   }
 
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
-

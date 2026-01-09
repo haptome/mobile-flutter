@@ -28,7 +28,7 @@ class UserHeader extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.2),
+              color: AppColors.primary.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -54,31 +54,31 @@ class UserHeader extends StatelessWidget {
               ),
             ),
           ),
-          // Refresh button
+          // Create Group button
           if (onRefresh != null)
-            IconButton(
-              icon: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.lightBorder,
-                    width: 1,
-                  ),
+            TextButton(
+              onPressed: onRefresh,
+              style: TextButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child:  Icon(
-                  Icons.refresh,
-                  color:Theme.of(context).colorScheme.secondary,
-                  size: 20,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
                 ),
               ),
-              onPressed: onRefresh,
+              child: Text(
+                'Create Group',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
         ],
       ),
     );
   }
 }
-

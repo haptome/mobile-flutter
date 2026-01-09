@@ -9,6 +9,7 @@ import 'package:et_digital_equb/core/widgets/section_header.dart';
 import 'package:et_digital_equb/core/widgets/section_item.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../controllers/profile_controller.dart';
 
 class ProfileView extends StatefulWidget {
@@ -24,7 +25,7 @@ class _ProfileViewState extends State<ProfileView> {
     final controller = Get.find<ProfileController>();
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLightGray,
+      backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -50,6 +51,7 @@ class _ProfileViewState extends State<ProfileView> {
             ),
           ],
         ),
+        centerTitle: false,
       ),
       body: Column(
         children: [
@@ -78,21 +80,22 @@ class _ProfileViewState extends State<ProfileView> {
                       // Wallets Section
                       SectionHeader(title: 'wallets'.tr),
                       SectionItem(
-                        icon: Icons.wallet_outlined,
+                        icon: Iconsax.wallet_1,
                         label: 'wallet_and_payments'.tr,
                         onTap: controller.onWalletTap,
+                        off: false,
                       ),
                       // Profile Management Section
                       SectionHeader(title: 'profile_management'.tr),
                       SectionItem(
-                        icon: Icons.person_outline,
+                        icon: Iconsax.user,
                         label: 'account_setting'.tr,
                         onTap: () {
                           Navigator.of(context).pushNamed('/account-setting');
                         },
                       ),
                       SectionItem(
-                        icon: Icons.verified_user_outlined,
+                        icon: Iconsax.verify,
                         label: 'verification'.tr,
                         onTap: () {
                           Navigator.of(context).pushNamed('/verification');
@@ -101,12 +104,12 @@ class _ProfileViewState extends State<ProfileView> {
                       // Account and Security Section
                       SectionHeader(title: 'account_and_security'.tr),
                       SectionItem(
-                        icon: Icons.lock_outline,
+                        icon: Iconsax.lock,
                         label: 'set_password'.tr,
                         onTap: controller.onSetPasswordTap,
                       ),
                       SectionItem(
-                        icon: Icons.description_outlined,
+                        icon: Iconsax.document_text_1,
                         label: 'terms_conditions'.tr,
                         onTap: controller.onTermsConditionsTap,
                       ),

@@ -10,7 +10,7 @@ enum AppEnvironment { development, staging, production }
 class Env {
   // ========== Environment Configuration ==========
   // Change this to switch between environments
-  static const AppEnvironment _currentEnvironment = AppEnvironment.development;
+  static const AppEnvironment _currentEnvironment = AppEnvironment.staging;
 
   // ========== API Gateway Configuration ==========
   // All services route through the API Gateway
@@ -35,7 +35,7 @@ class Env {
         // - Other services via their respective path prefixes
         return 'http://localhost:3000/api/v1';
       case AppEnvironment.staging:
-        return 'https://staging-api.et-ekub.com/api/v1';
+        return 'http://188.245.198.252:3000/api/v1';
       case AppEnvironment.production:
         return 'https://api.et-ekub.com/api/v1';
     }

@@ -9,12 +9,14 @@ class SectionItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
+  final bool off;
 
   const SectionItem({
     super.key,
     required this.icon,
     required this.label,
     this.onTap,
+    this.off = true,
   });
 
   @override
@@ -22,7 +24,7 @@ class SectionItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.borderLightGray.withOpacity(0.2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Material(
@@ -31,11 +33,7 @@ class SectionItem extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
           child: ListTile(
-            leading: Icon(
-              icon,
-              color: AppColors.black,
-              size: 24,
-            ),
+            leading: Icon(icon, color: AppColors.black, size: 24),
             title: Text(
               label,
               style: const TextStyle(
@@ -44,9 +42,12 @@ class SectionItem extends StatelessWidget {
                 color: AppColors.black,
               ),
             ),
-            trailing: const Icon(
-              Icons.chevron_right_outlined,
-              color: AppColors.textLightGray,
+            trailing: Offstage(
+              offstage: off,
+              child: const Icon(
+                Icons.chevron_right_outlined,
+                color: AppColors.textLightGray,
+              ),
             ),
           ),
         ),
@@ -54,4 +55,3 @@ class SectionItem extends StatelessWidget {
     );
   }
 }
-

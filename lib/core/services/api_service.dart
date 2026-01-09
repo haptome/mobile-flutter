@@ -63,6 +63,13 @@ class ApiService extends GetxService {
   Dio get paymentDio => _dio; // Routes via /payments/* path
   Dio get rotationDio => _dio; // Routes via /rotations/* path
   Dio get notificationDio => _dio; // Routes via /notifications/* path
+
+  /// Get the current user ID from storage
+  Future<String?> getCurrentUserId() async {
+    final storage = StorageService.to;
+    final user = await storage.getUser();
+    return user?.id;
+  }
 }
 
 class _AuthInterceptor extends Interceptor {

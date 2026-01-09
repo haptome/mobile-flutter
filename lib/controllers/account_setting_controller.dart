@@ -12,9 +12,8 @@ class AccountSettingController extends GetxController {
   final RxString profileImageUrl = ''.obs;
   final RxString fullName = ''.obs;
   final RxString phoneNumber = ''.obs;
-  final RxString registeredId = ''.obs;
   final RxString location = ''.obs;
-  final RxString occupation = ''.obs;
+  final RxString workStatus = ''.obs;
   final RxBool isSaving = false.obs;
 
   @override
@@ -27,20 +26,16 @@ class AccountSettingController extends GetxController {
     final user = _authService.currentUser.value;
     if (user != null) {
       profileImageUrl.value = user.profilePicUrl ?? '';
-      fullName.value = user.fullName ?? 'Nibertu Birhanu';
+      fullName.value = user.fullName ?? '';
       phoneNumber.value = user.phone;
-      registeredId.value =
-          '1234-5678-9012'; // Not in UserModel, would come from API
-      location.value =
-          'Ethiopia, Addis Abeba'; // Not in UserModel, would come from API
-      occupation.value = user.workStatus ?? 'UI/UX Designer';
+      location.value = '';
+      workStatus.value = user.workStatus ?? '';
     } else {
       // Default values for demo
-      fullName.value = 'Nibertu Birhanu';
-      phoneNumber.value = '94 825 228 5';
-      registeredId.value = '1234-5678-9012';
-      location.value = 'Ethiopia, Addis Abeba';
-      occupation.value = 'UI/UX Designer';
+      fullName.value = '';
+      phoneNumber.value = '';
+      location.value = '';
+      workStatus.value = '';
     }
   }
 
@@ -54,22 +49,25 @@ class AccountSettingController extends GetxController {
   }
 
   void onLocationTap() {
-    // TODO: Show location picker dialog
     _showLocationDialog();
   }
 
   void onOccupationTap() {
-    // TODO: Show occupation picker dialog
     _showOccupationDialog();
   }
 
   void _showLocationDialog() {
     final locations = [
-      'Ethiopia, Addis Abeba',
+      'Ethiopia, Addis Ababa',
       'Ethiopia, Dire Dawa',
       'Ethiopia, Hawassa',
       'Ethiopia, Bahir Dar',
       'Ethiopia, Mekelle',
+      'Ethiopia, Adama',
+      'Ethiopia, Jimma',
+      'Ethiopia, Dessie',
+      'Ethiopia, Axum',
+      'Ethiopia, Gondar',
     ];
 
     Get.bottomSheet(
@@ -78,6 +76,7 @@ class AccountSettingController extends GetxController {
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
+        height: 300,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -90,19 +89,21 @@ class AccountSettingController extends GetxController {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            ListView.builder(
-              shrinkWrap: true,
-              itemCount: locations.length,
-              itemBuilder: (context, index) {
-                final loc = locations[index];
-                return ListTile(
-                  title: Text(loc),
-                  onTap: () {
-                    location.value = loc;
-                    Get.back();
-                  },
-                );
-              },
+            Expanded(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: locations.length,
+                itemBuilder: (context, index) {
+                  final loc = locations[index];
+                  return ListTile(
+                    title: Text(loc),
+                    onTap: () {
+                      location.value = loc;
+                      Get.back();
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -112,16 +113,11 @@ class AccountSettingController extends GetxController {
 
   void _showOccupationDialog() {
     final occupations = [
-      'UI/UX Designer',
-      'Software Developer',
-      'Business Analyst',
-      'Project Manager',
-      'Marketing Manager',
-      'Accountant',
-      'Teacher',
-      'Doctor',
-      'Engineer',
-      'Other',
+      'Employed',
+      'Self Employed',
+      'Student',
+      'Unemployed',
+      'Retired',
     ];
 
     Get.bottomSheet(
@@ -130,6 +126,7 @@ class AccountSettingController extends GetxController {
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
+        height: 250,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -142,24 +139,44 @@ class AccountSettingController extends GetxController {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            ListView.builder(
-              shrinkWrap: true,
-              itemCount: occupations.length,
-              itemBuilder: (context, index) {
-                final occ = occupations[index];
-                return ListTile(
-                  title: Text(occ),
-                  onTap: () {
-                    occupation.value = occ;
-                    Get.back();
-                  },
-                );
-              },
+            Expanded(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: occupations.length,
+                itemBuilder: (context, index) {
+                  final occ = occupations[index];
+                  return ListTile(
+                    title: Text(occ),
+                    onTap: () {
+                      workStatus.value = occ;
+                      Get.back();
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String? _convertToSnakeCase(String input) {
+    // Convert human-readable work status to snake_case for backend
+    switch (input.toLowerCase()) {
+      case 'employed':
+        return 'employed';
+      case 'self employed':
+        return 'self_employed';
+      case 'student':
+        return 'student';
+      case 'unemployed':
+        return 'unemployed';
+      case 'retired':
+        return 'retired';
+      default:
+        return input.toLowerCase().replaceAll(' ', '_');
+    }
   }
 
   Future<void> onSaveChanges() async {
@@ -175,23 +192,46 @@ class AccountSettingController extends GetxController {
     isSaving.value = true;
 
     try {
-      // TODO: Save to API
-      await Future.delayed(const Duration(seconds: 1));
+      // Call the update profile API
+      // Convert work status to snake_case format for backend
+      String? workStatusForBackend;
+      if (workStatus.value.isNotEmpty) {
+        workStatusForBackend = _convertToSnakeCase(workStatus.value);
+      }
 
-      Get.snackbar(
-        'success'.tr,
-        'account_updated'.tr,
-        snackPosition: SnackPosition.BOTTOM,
+      final response = await _authService.updateProfile(
+        fullName: fullName.value.isEmpty ? null : fullName.value,
+        workStatus: workStatusForBackend,
+        profilePicUrl: profileImageUrl.value.isEmpty
+            ? null
+            : profileImageUrl.value,
       );
 
-      // Update auth service user data
-      // await _authService.updateProfile(...);
+      if (response.success) {
+        Get.snackbar(
+          'success'.tr,
+          response.message ?? 'account_updated'.tr,
+          snackPosition: SnackPosition.BOTTOM,
+        );
 
-      Get.back();
+        // Refresh user data in auth service
+        await _authService.getProfile();
+
+        Future.delayed(Duration(seconds: 2), () {
+          Get.back();
+        });
+        Get.back();
+      } else {
+        Get.snackbar(
+          'error'.tr,
+          response.error?.message ?? 'update_failed'.tr,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
     } catch (e) {
       Get.snackbar(
         'error'.tr,
-        'update_failed'.tr,
+        e.toString(),
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {

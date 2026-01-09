@@ -3,13 +3,14 @@
 // Linked Spec Section: Your Ekubs Page
 
 import 'package:et_digital_equb/core/services/auth_service.dart';
-import 'package:et_digital_equb/core/widgets/action_grid.dart';
+import 'package:et_digital_equb/core/widgets/ekub_list_item_custom.dart';
 import 'package:et_digital_equb/core/widgets/ekub_progress_carousel.dart';
 import 'package:et_digital_equb/core/widgets/user_header.dart';
 import 'package:et_digital_equb/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/your_ekubs_controller.dart';
+import '../../models/group_model.dart';
 
 class YourEkubsView extends StatefulWidget {
   const YourEkubsView({super.key});
@@ -50,7 +51,7 @@ class _YourEkubsViewState extends State<YourEkubsView> {
                         return UserHeader(
                           userName: userName,
                           userInitials: initials,
-                          onRefresh: controller.onRefresh,
+                          onRefresh: controller.onCreateEkub,
                         );
                       }),
                       // Ekub Progress Carousel with Loading/Error States
@@ -80,10 +81,75 @@ class _YourEkubsViewState extends State<YourEkubsView> {
                           );
                         }),
                       ),
-                      const SizedBox(height: 32),
-                      // Action Grid
+                      const SizedBox(height: 16),
+                      // Ekub List
                       Expanded(
-                        child: ActionGrid(onActionTap: controller.onActionTap),
+                        child: Obx(() {
+                          if (controller.isLoading.value) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+
+                          if (controller.ekubs.isEmpty) {
+                            return const Center(
+                              child: Text('No ekubs to display'),
+                            );
+                          }
+
+                          return RefreshIndicator(
+                            onRefresh: () async {
+                              await controller.loadUserGroups();
+                            },
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                              ),
+                              itemCount: controller.ekubs.length,
+                              itemBuilder: (context, index) {
+                                final ekubData = controller.ekubs[index];
+                                final group = ekubData['group'];
+
+                                if (group is Group) {
+                                  return EkubListItemCustom.fromGroup(
+                                    group,
+                                    onTap: () =>
+                                        controller.onEkubTap(ekubData['id']),
+                                  );
+                                } else if (group is InKindGroup) {
+                                  // Convert InKindGroup to a format compatible with EkubListItem
+                                  final groupConverted = Group(
+                                    id: group.id,
+                                    name: group.name,
+                                    type: group.type,
+                                    contributionAmount:
+                                        group.contributionAmount,
+                                    frequency: group.frequency,
+                                    minMembers: group.minMembers,
+                                    targetMembers: group.targetMembers,
+                                    currentMembers:
+                                        0, // InKindGroup doesn't have currentMembers
+                                    rotationMethod: group.rotationMethod,
+                                    serviceChargePercent:
+                                        group.serviceChargePercent,
+                                    status: group.status,
+                                    createdAt: group.createdAt,
+                                    leaderId: group.leaderId,
+                                    categoryId: group.categoryId,
+                                    startDate: group.startDate,
+                                  );
+                                  return EkubListItemCustom.fromGroup(
+                                    groupConverted,
+                                    onTap: () =>
+                                        controller.onEkubTap(ekubData['id']),
+                                  );
+                                }
+
+                                return const SizedBox.shrink();
+                              },
+                            ),
+                          );
+                        }),
                       ),
                     ],
                   ),

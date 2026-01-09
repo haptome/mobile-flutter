@@ -1,6 +1,7 @@
 // Purpose: Category Detail page - shows groups in a category
 // Author: Auto-generated
 
+import 'package:et_digital_equb/core/app_assets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +10,10 @@ import '../../../../core/theme/app_sizes.dart';
 import '../../../../models/category_model.dart' as category_models;
 import '../../../../models/group_model.dart';
 import '../../../../controllers/category_detail_controller.dart';
+import '../../../../core/widgets/ekub_list_item.dart';
+import '../../../../core/routes/app_routes.dart';
+import 'package:et_digital_equb/core/services/auth_service.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 class CategoryDetailView extends StatelessWidget {
   const CategoryDetailView({super.key});
@@ -62,8 +67,42 @@ class CategoryDetailView extends StatelessWidget {
             ),
           ),
         ),
+        centerTitle: false,
       ),
-      body: Obx(() {
+      body:Stack(
+        children: [
+          // Background image with gradient overlay
+          Positioned.fill(
+            child: Stack(
+              children: [
+                Image.asset(
+                  AppAssets.authBackground,
+                  fit: BoxFit.cover,
+                  height: double.infinity,
+                  width: double.infinity,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(color: AppColors.lightBackground);
+                  },
+                ),
+                // Gradient overlay
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: const [0.0024, 0.2921, 0.5801, 0.8322],
+                      colors: [
+                        Colors.white,
+                        Colors.white.withOpacity(0.85),
+                        Colors.white.withOpacity(0.9),
+                        Colors.white,
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ), Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -99,96 +138,59 @@ class CategoryDetailView extends StatelessWidget {
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(AppSizes.paddingLarge),
-          itemCount: controller.groups.length,
-          itemBuilder: (context, index) {
-            final group = controller.groups[index];
-            return _buildGroupCard(group, controller);
-          },
-        );
-      }),
-    );
-  }
+        // Group groups by frequency
+        final Map<String, List<Group>> grouped = {};
+        for (var g in controller.groups) {
+          final key = (g.frequency ?? 'other').toLowerCase();
+          grouped.putIfAbsent(key, () => []).add(g);
+        }
 
-  Widget _buildGroupCard(Group group, CategoryDetailController controller) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppSizes.spacingMedium),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-      ),
-      child: InkWell(
-        onTap: () => controller.onGroupTap(group),
-        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-        child: Padding(
+        // Build a scrollable list with collapsible sections
+        return ListView(
           padding: const EdgeInsets.all(AppSizes.paddingLarge),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      group.name,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.splashBackground,
-                      ),
+          children: [
+          
+        
+
+            // Collapsible sections
+            for (var entry in grouped.entries)
+              Card(
+                margin: const EdgeInsets.only(bottom: AppSizes.spacingMedium),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+                color: AppColors.white,
+                child: ExpansionTile(
+                  tilePadding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingLarge),
+                  childrenPadding: const EdgeInsets.all(AppSizes.paddingLarge),
+                  initiallyExpanded: true,
+                  title: Text(
+                    entry.key[0].toUpperCase() + entry.key.substring(1),
+                    style: GoogleFonts.montserrat(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.splashBackground,
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: group.type == 'public'
-                          ? Colors.green
-                          : group.type == 'private'
-                          ? Colors.orange
-                          : Colors.blue,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      group.type.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSizes.spacingSmall),
-              Text(
-                '${group.contributionAmount.toStringAsFixed(0)} ETB / ${group.frequency}',
-                style: GoogleFonts.montserrat(
-                  fontSize: 14,
-                  color: AppColors.textLightGray,
+                  children: entry.value.map((g) {
+                    return EkubListItem.fromGroup(
+                      g,
+                      onJoin: () => controller.onJoinTap(g),
+                      onTap: () => controller.onGroupTap(g),
+                    );
+                  }).toList(),
                 ),
               ),
-              const SizedBox(height: AppSizes.spacingSmall),
-              Row(
-                children: [
-                  Icon(Icons.people, size: 16, color: AppColors.textLightGray),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${group.currentMembers} / ${group.targetMembers} members',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      color: AppColors.textLightGray,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+          ],
+        );
+      })],
+        
+      )
+    );
+  }
+  Widget _buildFilterChip(String label, bool selected) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) {},
     );
   }
 }

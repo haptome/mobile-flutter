@@ -47,5 +47,5 @@ class AppSizes {
   // Text field
   static const double textFieldHeight = 56.0;
   static const double textFieldBorderWidth = 1.0;
+  static const double sizedBoxWidth = 120.0;
 }
-

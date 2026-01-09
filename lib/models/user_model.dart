@@ -14,6 +14,7 @@ class UserModel {
   final bool isActive;
   final List<String> roles;
   final DateTime createdAt;
+  final bool hasPassword;
 
   UserModel({
     required this.id,
@@ -27,6 +28,7 @@ class UserModel {
     required this.isActive,
     required this.roles,
     required this.createdAt,
+    required this.hasPassword,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +44,7 @@ class UserModel {
       isActive: json['is_active'] as bool,
       roles: List<String>.from(json['roles'] ?? []),
       createdAt: DateTime.parse(json['created_at'] as String),
+      hasPassword: json['has_password'] as bool? ?? false,
     );
   }
 
@@ -58,7 +61,7 @@ class UserModel {
       'is_active': isActive,
       'roles': roles,
       'created_at': createdAt.toIso8601String(),
+      'has_password': hasPassword,
     };
   }
 }
-

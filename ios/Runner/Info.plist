@@ -45,7 +45,13 @@
 		<true/>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
-		<key>UIStatusBarHidden</key>
-		<false/>
-	</dict>
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to your camera to capture ID documents and record liveness verification videos.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>We need access to your microphone to record audio for liveness verification videos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to select documents for KYC verification.</string>
+</dict>
 </plist>

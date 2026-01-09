@@ -4,11 +4,13 @@
 import 'package:get/get.dart';
 import 'package:et_digital_equb/core/services/group_service.dart';
 import 'package:et_digital_equb/models/category_model.dart' as category_models;
+import 'package:et_digital_equb/core/routes/app_routes.dart';
 
 class EkubTypeController extends GetxController {
   final GroupService _groupService = GroupService.to;
 
-  final RxList<category_models.Category> categories = <category_models.Category>[].obs;
+  final RxList<category_models.Category> categories =
+      <category_models.Category>[].obs;
   final RxBool isLoading = true.obs;
   final RxString errorMessage = ''.obs;
 
@@ -41,6 +43,7 @@ class EkubTypeController extends GetxController {
   }
 
   void onCategoryTap(category_models.Category category) {
-    Get.toNamed('/category-detail', arguments: category);
+    // Navigate to Create Group page instead of category detail
+    Get.toNamed(AppRoutes.createGroup);
   }
 }
