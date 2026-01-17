@@ -44,6 +44,10 @@ class VerificationController extends GetxController {
   // Failed uploads for retry
   final RxList<FailedUpload> failedUploads = <FailedUpload>[].obs;
 
+  // KYC Status tracking
+  final Rxn<KycStatus> kycStatus = Rxn<KycStatus>();
+  final RxBool isCheckingKycStatus = false.obs;
+
   final _selectedVerificationMethod = ''.obs;
   final _verificationFile = Rxn<PlatformFile?>();
   final _uploadedFile = Rxn<PlatformFile?>();
@@ -63,6 +67,7 @@ class VerificationController extends GetxController {
   void onInit() {
     super.onInit();
     loadDocuments();
+    checkKycStatus();
   }
 
   Future<void> loadDocuments() async {
@@ -530,6 +535,36 @@ class VerificationController extends GetxController {
   Future<bool> requestStoragePermissions() async {
     final permissionService = PermissionService.to;
     return await permissionService.requestKycPermissions();
+  }
+
+  /// Check KYC status from the API
+  Future<void> checkKycStatus() async {
+    try {
+      isCheckingKycStatus.value = true;
+      final response = await _kycService.getKycStatus();
+      if (response.success && response.data != null) {
+        kycStatus.value = response.data;
+        update();
+      }
+    } catch (e) {
+      print('Error checking KYC status: $e');
+    } finally {
+      isCheckingKycStatus.value = false;
+    }
+  }
+
+  /// Check if user is in draft or pending status
+  bool get isDraftOrPending {
+    if (kycStatus.value == null) return false;
+    final status = kycStatus.value!.status.toLowerCase();
+    return status == 'draft' || status == 'pending';
+  }
+
+  /// Check if user is approved
+  bool get isApproved {
+    if (kycStatus.value == null) return false;
+    final status = kycStatus.value!.status.toLowerCase();
+    return status == 'approved' || status == 'verified';
   }
 
   /// Check if permissions are already granted

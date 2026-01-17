@@ -184,214 +184,163 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      body: Stack(
-        children: [
-          // Background image with gradient overlay
-          Positioned.fill(
-            child: Stack(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSizes.paddingLarge,
+            vertical: AppSizes.paddingMedium,
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.asset(
-                  AppAssets.authBackground,
-                  fit: BoxFit.cover,
-                  height: double.infinity,
-                  width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(color: AppColors.lightBackground);
-                  },
+                // Back button
+                SizedBox(height: screenHeight * 0.01),
+
+                // Title
+                Text(
+                  'Welcome back',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.splashBackground,
+                    height: 1.2,
+                  ),
                 ),
-                // Gradient overlay
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        stops: const [0.0024, 0.2921, 0.5801, 0.8322],
-                        colors: [
-                          Colors.white,
-                          Colors.white.withOpacity(0.85),
-                          Colors.white.withOpacity(0.9),
-                          Colors.white,
-                        ],
+                const SizedBox(height: AppSizes.spacingSmall),
+
+                // Subtitle
+                Text(
+                  'Enter your credential to continue',
+                  style: AppTextStyles.bodyMedium(
+                    color: AppColors.lightTextSecondary,
+                    isDark: false,
+                  ),
+                ),
+
+                SizedBox(height: screenHeight * 0.03),
+
+                // Phone input field
+                PhoneInputField(
+                  hint: '94 825 228 5',
+                  controller: _phoneController,
+                  validator: _validatePhone,
+                  onChanged: (value) {},
+                  onSubmitted: (_) {
+                    if (_usePasswordLogin) {
+                      // Move focus to password field when using password login
+                      FocusScope.of(context).nextFocus();
+                    } else {
+                      _handleLogin();
+                    }
+                  },
+                  maxLength: 9,
+                ),
+
+                SizedBox(height: screenHeight * 0.02),
+
+                // Password field (only shown when using password login)
+                AnimatedCrossFade(
+                  firstChild: Container(height: 0, width: 0),
+                  secondChild: AppTextField(
+                    hint: 'Password',
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    validator: _validatePassword,
+                    suffixIcon: _obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    onSuffixIconTap: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                    onSubmitted: (_) => _handleLogin(),
+                  ),
+                  crossFadeState: _usePasswordLogin
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  duration: const Duration(milliseconds: 300),
+                ),
+                SizedBox(height: screenHeight * 0.02),
+
+                // Toggle login method
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _usePasswordLogin = !_usePasswordLogin;
+                        // Clear password field when switching
+                        if (!_usePasswordLogin) {
+                          _passwordController.clear();
+                        }
+                      });
+                    },
+                    child: Text(
+                      _usePasswordLogin
+                          ? 'Use OTP instead'
+                          : 'Login with password',
+                      style: AppTextStyles.bodyMedium(
+                        color: AppColors.splashBackground,
+                        isDark: false,
                       ),
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: screenHeight * 0.02),
+
+                // Log in button
+                Center(
+                  child: AppButton(
+                    text: _usePasswordLogin ? 'Login with Password' : 'Log in',
+                    onPressed: _handleLogin,
+                    isLoading: _isLoading,
+                    isFullWidth: false,
+                    horizontalPadding: 62.2,
+                  ),
+                ),
+
+                SizedBox(height: screenHeight * 0.02),
+
+                // Sign up link
+                Center(
+                  child: RichText(
+                    text: TextSpan(
+                      style: AppTextStyles.bodyMedium(
+                        color: AppColors.lightTextSecondary,
+                        isDark: false,
+                      ),
+                      children: [
+                        const TextSpan(text: 'Don\'t have account? '),
+                        WidgetSpan(
+                          child: GestureDetector(
+                            onTap: () {
+                              // Navigate to signup screen
+                              Navigator.of(context).pushNamed('/signup');
+                            },
+                            child: Text(
+                              'Sign up',
+                              style:
+                                  AppTextStyles.bodyMedium(
+                                    color: AppColors.splashBackground,
+                                    isDark: false,
+                                  ).copyWith(
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: AppColors.splashBackground,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          // Content
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: AppSizes.paddingLarge,
-                vertical: AppSizes.paddingMedium,
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Back button
-                    IconButton(
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: AppColors.lightTextPrimary,
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-
-                    SizedBox(height: screenHeight * 0.01),
-
-                    // Title
-                    Text(
-                      'Welcome back',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.splashBackground,
-                        height: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.spacingSmall),
-
-                    // Subtitle
-                    Text(
-                      'Enter your credential to continue',
-                      style: AppTextStyles.bodyMedium(
-                        color: AppColors.lightTextSecondary,
-                        isDark: false,
-                      ),
-                    ),
-
-                    SizedBox(height: screenHeight * 0.03),
-
-                    // Phone input field
-                    PhoneInputField(
-                      hint: '94 825 228 5',
-                      controller: _phoneController,
-                      validator: _validatePhone,
-                      onChanged: (value) {},
-                      onSubmitted: (_) {
-                        if (_usePasswordLogin) {
-                          // Move focus to password field when using password login
-                          FocusScope.of(context).nextFocus();
-                        } else {
-                          _handleLogin();
-                        }
-                      },
-                      maxLength: 9,
-                    ),
-
-                    SizedBox(height: screenHeight * 0.02),
-
-                    // Password field (only shown when using password login)
-                    AnimatedCrossFade(
-                      firstChild: Container(height: 0, width: 0),
-                      secondChild: AppTextField(
-                        hint: 'Password',
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        validator: _validatePassword,
-                        suffixIcon: _obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                        onSuffixIconTap: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                        onSubmitted: (_) => _handleLogin(),
-                      ),
-                      crossFadeState: _usePasswordLogin
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      duration: const Duration(milliseconds: 300),
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-
-                    // Toggle login method
-                    Center(
-                      child: TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _usePasswordLogin = !_usePasswordLogin;
-                            // Clear password field when switching
-                            if (!_usePasswordLogin) {
-                              _passwordController.clear();
-                            }
-                          });
-                        },
-                        child: Text(
-                          _usePasswordLogin
-                              ? 'Use OTP instead'
-                              : 'Login with password',
-                          style: AppTextStyles.bodyMedium(
-                            color: AppColors.splashBackground,
-                            isDark: false,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: screenHeight * 0.02),
-
-                    // Log in button
-                    Center(
-                      child: AppButton(
-                        text: _usePasswordLogin
-                            ? 'Login with Password'
-                            : 'Log in',
-                        onPressed: _handleLogin,
-                        isLoading: _isLoading,
-                        isFullWidth: false,
-                        horizontalPadding: 62.2,
-                      ),
-                    ),
-
-                    SizedBox(height: screenHeight * 0.02),
-
-                    // Sign up link
-                    Center(
-                      child: RichText(
-                        text: TextSpan(
-                          style: AppTextStyles.bodyMedium(
-                            color: AppColors.lightTextSecondary,
-                            isDark: false,
-                          ),
-                          children: [
-                            const TextSpan(text: 'Don\'t have account? '),
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () {
-                                  // Navigate to signup screen
-                                  Navigator.of(context).pushNamed('/signup');
-                                },
-                                child: Text(
-                                  'Sign up',
-                                  style:
-                                      AppTextStyles.bodyMedium(
-                                        color: AppColors.splashBackground,
-                                        isDark: false,
-                                      ).copyWith(
-                                        decoration: TextDecoration.underline,
-                                        decorationColor:
-                                            AppColors.splashBackground,
-                                      ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

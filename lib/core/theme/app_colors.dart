@@ -15,7 +15,6 @@ class AppColors {
   static const Color lightBorder = Color(0xFFE0E0E0);
   static const Color textFieldBorder = Color(0xFFD8DADC);
   static const Color lightError = Color(0xFFD32F2F);
-  
 
   // Dark theme colors
   static const Color darkBackground = Color(0xFF121212);
@@ -25,7 +24,7 @@ class AppColors {
   static const Color darkBorder = Color(0xFF333333);
   static const Color darkError = Color(0xFFCF6679);
 
-   //text colors 
+  //text colors
   static const Color textLightGray = Color(0xFFA0A0A0);
 
   // Common colors
@@ -41,4 +40,3 @@ class AppColors {
   // Splash screen
   static const Color splashBackground = Color(0xFF024141); // Dark teal
 }
-

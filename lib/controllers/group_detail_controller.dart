@@ -18,8 +18,70 @@ class GroupDetailController extends GetxController {
   final RxBool showAllMembers = false.obs;
   final RxList<GroupMember> members = <GroupMember>[].obs;
   final RxBool isMembersLoading = false.obs;
+  final RxInt activeTab =
+      0.obs; // 0: Members, 1: Lottery, 2: Payments, 3: History
+  final RxBool isPaymentsLoading = false.obs;
+  final RxBool isHistoryLoading = false.obs;
+  final RxBool isLotteryLoading = false.obs;
+  final RxList<dynamic> payments = <dynamic>[].obs;
+  final RxList<dynamic> history = <dynamic>[].obs;
+  final RxList<dynamic> lottery = <dynamic>[].obs;
 
   GroupDetailController({required this.group});
+
+  void setActiveTab(int tabIndex) {
+    activeTab.value = tabIndex;
+    // Load data for the selected tab if needed
+    if (tabIndex == 2) {
+      // Payments tab
+      loadPayments();
+    } else if (tabIndex == 3) {
+      // History tab
+      loadHistory();
+    }
+  }
+
+  Future<void> loadPayments() async {
+    if (payments.isNotEmpty) return; // Don't reload if already loaded
+
+    try {
+      isPaymentsLoading.value = true;
+      // TODO: Implement API call to get group payments
+      // final response = await _groupService.getGroupPayments(group.id);
+      // For now, simulate loading with mock data
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to load payments: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isPaymentsLoading.value = false;
+    }
+  }
+
+  Future<void> loadHistory() async {
+    if (history.isNotEmpty) return; // Don't reload if already loaded
+
+    try {
+      isHistoryLoading.value = true;
+      // TODO: Implement API call to get group history
+      // final response = await _groupService.getGroupHistory(group.id);
+      // For now, simulate loading with mock data
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to load history: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isHistoryLoading.value = false;
+    }
+  }
 
   @override
   void onInit() {

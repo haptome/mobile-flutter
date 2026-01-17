@@ -61,123 +61,141 @@ class EkubListItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: AppSizes.spacingSmall),
-      padding: const EdgeInsets.all(AppSizes.paddingMedium),
-      decoration: BoxDecoration(
-        color: const Color(0xfff7f7e6),
-        borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Left: amount icon + amount + title
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconLabel(
-                      iconData: Icons.attach_money,
-                      iconColor: AppColors.splashBackground,
-                      label: amountLabel,
-                      labelStyle: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.splashBackground,
-                      ),
-                    ),
-                   
-                     IconLabel(
-                      iconData: Iconsax.money,
-                      iconColor: AppColors.splashBackground,
-                      label: title,
-                      labelStyle: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.splashBackground,
-                      ),
-                    ),
-                     IconLabel(
-                      iconData: Iconsax.timer_1,
-                      iconColor: AppColors.splashBackground,
-                      label: _prettyFrequency(frequency),
-                      labelStyle: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.splashBackground,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSizes.spacingSmall),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                     if (avatars != null && avatars!.isNotEmpty)
-            Flexible(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: AppSizes.spacingSmall),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: const Color(0xfff7f7e6),
+          borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Left: amount icon + amount + title
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ...avatars!,
-                  const SizedBox(width: AppSizes.spacingXSmall),
-                  Flexible(
-                    child: Text(
-                      '+${(currentMembers - (avatars?.length ?? 0)).clamp(0, 999)} Members',
-                      style: GoogleFonts.montserrat(fontSize: 12, color: AppColors.textLightGray),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconLabel(
+                        iconData: Icons.attach_money,
+                        iconColor: AppColors.splashBackground,
+                        label: amountLabel,
+                        labelStyle: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.splashBackground,
+                        ),
+                      ),
+
+                      IconLabel(
+                        iconData: Iconsax.money,
+                        iconColor: AppColors.splashBackground,
+                        label: title,
+                        labelStyle: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.splashBackground,
+                        ),
+                      ),
+                      IconLabel(
+                        iconData: Iconsax.timer_1,
+                        iconColor: AppColors.splashBackground,
+                        label: _prettyFrequency(frequency),
+                        labelStyle: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.splashBackground,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSizes.spacingSmall),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (avatars != null && avatars!.isNotEmpty)
+                        Flexible(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ...avatars!,
+                              const SizedBox(width: AppSizes.spacingXSmall),
+                              Flexible(
+                                child: Text(
+                                  '+${(currentMembers - (avatars?.length ?? 0)).clamp(0, 999)} Members',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 12,
+                                    color: AppColors.textLightGray,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        Flexible(
+                          child: Text(
+                            '+${currentMembers.clamp(0, 999)} Members',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              color: AppColors.textLightGray,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+
+                      const SizedBox(width: AppSizes.spacingSmall),
+
+                      // Join button constrained to a finite width
+                      if (showJoin)
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            minWidth: 72,
+                            maxWidth: 90,
+                          ),
+                          child: ElevatedButton(
+                            onPressed: onJoin,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: joinColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              joinLabel,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
-            )
-          else
-            Flexible(
-              child: Text(
-                '+${currentMembers.clamp(0, 999)} Members',
-                style: GoogleFonts.montserrat(fontSize: 12, color: AppColors.textLightGray),
-                overflow: TextOverflow.ellipsis,
-              ),
             ),
 
-          const SizedBox(width: AppSizes.spacingSmall),
-
-          // Join button constrained to a finite width
-          if (showJoin)
-            ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 72, maxWidth: 120),
-              child: ElevatedButton(
-                onPressed: onJoin,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: joinColor,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  elevation: 0,
-                ),
-                child: Text(joinLabel, style: const TextStyle(color: Colors.white)),
-              ),
-            ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-        
-
-          // avatars and members (shrinkable)
-       
-        ],
+            // avatars and members (shrinkable)
+          ],
+        ),
       ),
-    ));
+    );
   }
 
   String _prettyFrequency(String f) {

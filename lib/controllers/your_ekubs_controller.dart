@@ -15,6 +15,9 @@ class YourEkubsController extends GetxController {
 
   // Combined list of cash and in-kind groups
   final RxList<Map<String, dynamic>> ekubs = <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> completedEkubs =
+      <Map<String, dynamic>>[].obs;
+  final RxBool showCompletedEkubs = true.obs;
   final RxBool isLoading = false.obs;
   final RxString errorMessage = ''.obs;
   final RxBool isRefreshing = false.obs;
@@ -45,25 +48,44 @@ class YourEkubsController extends GetxController {
 
       final inKindGroupsResponse = await _groupService.getUserInKindGroups();
 
+      // Also fetch completed groups
+      final completedCashGroupsResponse = await _groupService.getGroups(
+        status: 'completed',
+        limit: 50,
+      );
+
       final List<Map<String, dynamic>> allGroups = [];
+
+      // Separate completed groups
+      final List<Map<String, dynamic>> activeGroups = [];
+      final List<Map<String, dynamic>> completedGroups = [];
 
       // Add cash groups
       if (cashGroupsResponse.success && cashGroupsResponse.data != null) {
         for (var group in cashGroupsResponse.data!) {
-          allGroups.add(_groupToEkubMap(group));
+          activeGroups.add(_groupToEkubMap(group));
         }
       }
 
       // Add in-kind groups
       if (inKindGroupsResponse.success && inKindGroupsResponse.data != null) {
         for (var group in inKindGroupsResponse.data!) {
-          allGroups.add(_inKindGroupToEkubMap(group));
+          activeGroups.add(_inKindGroupToEkubMap(group));
         }
       }
 
-      ekubs.value = allGroups;
+      // Add completed cash groups
+      if (completedCashGroupsResponse.success &&
+          completedCashGroupsResponse.data != null) {
+        for (var group in completedCashGroupsResponse.data!) {
+          completedGroups.add(_groupToCompletedEkubMap(group));
+        }
+      }
 
-      if (allGroups.isEmpty) {
+      ekubs.value = activeGroups;
+      completedEkubs.value = completedGroups;
+
+      if (activeGroups.isEmpty && completedGroups.isEmpty) {
         errorMessage.value = 'You are not a member of any groups yet';
       }
     } catch (e) {
@@ -116,6 +138,25 @@ class YourEkubsController extends GetxController {
     };
   }
 
+  Map<String, dynamic> _groupToCompletedEkubMap(Group group) {
+    // For completed groups, all rounds are completed
+    final totalRounds = group.targetMembers;
+    final completedRounds = totalRounds; // All rounds completed
+    final totalAmount = group.contributionAmount * totalRounds;
+
+    return {
+      'id': group.id,
+      'title': group.name,
+      'frequency': group.frequency,
+      'amount': '${group.contributionAmount.toStringAsFixed(0)} ETB',
+      'completedRounds': completedRounds,
+      'totalRounds': totalRounds,
+      'totalAmount': '${totalAmount.toStringAsFixed(0)} ETB',
+      'type': 'cash_completed',
+      'group': group,
+    };
+  }
+
   Future<void> onRefresh() async {
     try {
       isRefreshing.value = true;
@@ -138,11 +179,25 @@ class YourEkubsController extends GetxController {
   }
 
   void onEkubTap(String ekubId) {
-    // Find the group in the list
-    final ekub = ekubs.firstWhereOrNull((e) => e['id'] == ekubId);
+    // Find the group in the active ekubs list
+    var ekub = ekubs.firstWhereOrNull((e) => e['id'] == ekubId);
+
+    // If not found in active ekubs, search in completed ekubs
+    if (ekub == null) {
+      ekub = completedEkubs.firstWhereOrNull((e) => e['id'] == ekubId);
+    }
+
     if (ekub != null) {
       final group = ekub['group'];
-      if (group is Group) {
+      final type = ekub['type'];
+
+      if (type == 'cash_completed') {
+        // For completed ekubs, navigate to a completed group detail page
+        Get.toNamed(
+          '/group-detail',
+          arguments: group,
+        ); // Using same route but could have different handling
+      } else if (group is Group) {
         Get.toNamed('/group-detail', arguments: group);
       } else if (group is InKindGroup) {
         // TODO: Navigate to in-kind group detail when implemented
@@ -183,6 +238,10 @@ class YourEkubsController extends GetxController {
           snackPosition: SnackPosition.BOTTOM,
         );
     }
+  }
+
+  void toggleCompletedEkubs() {
+    showCompletedEkubs.value = !showCompletedEkubs.value;
   }
 
   void onCreateEkub() {

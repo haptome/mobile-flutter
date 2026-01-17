@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
+import 'package:et_digital_equb/models/kyc_models.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_sizes.dart';
@@ -27,6 +28,15 @@ class VerificationView extends StatefulWidget {
 class _VerificationViewState extends State<VerificationView> {
   final VerificationController _controller = Get.put(VerificationController());
 
+  @override
+  void initState() {
+    super.initState();
+    // Refresh KYC status when the view becomes active
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _controller.checkKycStatus();
+    });
+  }
+
   final List<String> _verificationMethods = const [
     'National ID',
     'Kebele ID',
@@ -37,47 +47,49 @@ class _VerificationViewState extends State<VerificationView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
-      body: Stack(
-        children: [
-          // Background image with gradient overlay
-          Positioned.fill(
-            child: Stack(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Obx(() {
+          // Check if user is in draft or pending status
+          if (_controller.isCheckingKycStatus.value) {
+            // Show loading state while checking KYC status
+            return _buildCheckingStatusScreen();
+          } else if (_controller.isDraftOrPending) {
+            // Show the checking status screen if user is in draft or pending status
+            return _buildCheckingStatusScreen();
+          } else if (_controller.isApproved) {
+            // Show the approved status screen if user is approved
+            return _buildApprovedStatusScreen();
+          } else {
+            // Show the regular verification form
+            return Column(
               children: [
-                Image.asset(
-                  AppAssets.authBackground,
-                  fit: BoxFit.cover,
-                  height: double.infinity,
-                  width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(color: AppColors.lightBackground);
-                  },
-                ),
-                // Gradient overlay
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        stops: const [0.0024, 0.2921, 0.5801, 0.8322],
-                        colors: [
-                          Colors.white,
-                          Colors.white.withOpacity(0.85),
-                          Colors.white.withOpacity(0.9),
-                          Colors.white,
-                        ],
+                // Header
+                Row(
+                  children: [
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: AppColors.lightTextPrimary,
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    Expanded(
+                      child: Text(
+                        'Account Verification',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.splashBackground,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 48), // Balance the back button
+                  ],
                 ),
-              ],
-            ),
-          ),
-          // Content
-          SafeArea(
-            child: Column(
-              children: [
+                const SizedBox(height: AppSizes.spacingLarge),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: EdgeInsets.symmetric(
@@ -87,34 +99,6 @@ class _VerificationViewState extends State<VerificationView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header
-                        Row(
-                          children: [
-                            IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: const Icon(
-                                Icons.arrow_back,
-                                color: AppColors.lightTextPrimary,
-                              ),
-                              onPressed: () => Navigator.of(context).pop(),
-                            ),
-                            Expanded(
-                              child: Text(
-                                'Account Verification',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.splashBackground,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 48,
-                            ), // Balance the back button
-                          ],
-                        ),
-                        const SizedBox(height: AppSizes.spacingLarge),
                         // Verify Your Identity Section
                         _buildVerifyIdentitySection(),
                         const SizedBox(height: AppSizes.spacingLarge),
@@ -134,35 +118,33 @@ class _VerificationViewState extends State<VerificationView> {
                     horizontal: AppSizes.paddingLarge,
                     vertical: AppSizes.paddingMedium,
                   ),
-                  child: Obx(
-                    () => AppButton(
-                      text: _controller.isLoading.value
-                          ? 'Submitting...'
-                          : 'Submit for Review',
-                      type: ButtonType.primary,
-                      onPressed: _controller.isLoading.value
-                          ? null
-                          : () {
-                              if (_controller.uploadedDocuments.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Please upload at least one document',
-                                    ),
-                                    backgroundColor: AppColors.lightError,
+                  child: AppButton(
+                    text: _controller.isLoading.value
+                        ? 'Submitting...'
+                        : 'Submit for Review',
+                    type: ButtonType.primary,
+                    onPressed: _controller.isLoading.value
+                        ? null
+                        : () {
+                            if (_controller.uploadedDocuments.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Please upload at least one document',
                                   ),
-                                );
-                                return;
-                              }
-                              _controller.submitDocuments();
-                            },
-                    ),
+                                  backgroundColor: AppColors.lightError,
+                                ),
+                              );
+                              return;
+                            }
+                            _controller.submitDocuments();
+                          },
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
+            );
+          }
+        }),
       ),
     );
   }
@@ -1115,6 +1097,203 @@ class _VerificationViewState extends State<VerificationView> {
   }
 }
 
+Widget _buildCheckingStatusScreen() {
+  return Container(
+    width: double.infinity,
+    height: double.infinity,
+    decoration: const BoxDecoration(color: Colors.white),
+    child: Column(
+      children: [
+        // Header
+        Row(
+          children: [
+            IconButton(
+              padding: EdgeInsets.zero,
+              icon: const Icon(
+                Icons.arrow_back,
+                color: AppColors.lightTextPrimary,
+              ),
+              onPressed: () => Navigator.of(Get.context!).pop(),
+            ),
+            Expanded(
+              child: Text(
+                'Account Verification',
+                style: GoogleFonts.montserrat(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.splashBackground,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(width: 48), // Balance the back button
+          ],
+        ),
+        const SizedBox(height: AppSizes.spacingLarge),
+        Expanded(
+          child: Stack(
+            children: [
+              // Top status bar placeholder
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 46,
+                child: Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 10,
+                  ),
+                  child: Text(
+                    "12:30",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 15.6,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+              // Main content
+              Positioned.fill(
+                top: 46,
+                child: Container(
+                  width: 390,
+                  height: 216,
+                  margin: const EdgeInsets.only(top: 0),
+                  decoration: const BoxDecoration(color: Color(0xFFEBF0F0)),
+                ),
+              ),
+              // Center content
+              Center(
+                child: Container(
+                  width: 342,
+                  margin: const EdgeInsets.only(top: 175),
+                  child: Column(
+                    children: [
+                      // Loading animation
+                      Container(
+                        width: 130,
+                        height: 130,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Stack(
+                          children: [
+                            Container(
+                              width: 64,
+                              height: 64,
+                              margin: const EdgeInsets.all(33),
+                              child: Stack(
+                                children: [
+                                  // Outer ring
+                                  Container(
+                                    width: 58,
+                                    height: 58,
+                                    margin: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: const Color(0xFFC7DDFF),
+                                        width: 8,
+                                      ),
+                                      borderRadius: BorderRadius.circular(50),
+                                    ),
+                                  ),
+                                  // Inner animated ring
+                                  Container(
+                                    width: 58,
+                                    height: 58,
+                                    margin: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: const Color(0xFF048080),
+                                        width: 8,
+                                      ),
+                                      borderRadius: BorderRadius.circular(50),
+                                    ),
+                                    child: RotationTransition(
+                                      turns: AlwaysStoppedAnimation(0.25),
+                                      child: Container(
+                                        width: 58,
+                                        height: 58,
+                                        margin: const EdgeInsets.all(3),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: const Color(0xFF048080),
+                                            width: 8,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            50,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Text content
+                      Column(
+                        children: [
+                          Text(
+                            "Checking! Please wait...",
+                            style: GoogleFonts.montserrat(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 11),
+                          Text(
+                            "Your account is being checked before ready to use.",
+                            style: const TextStyle(
+                              fontFamily: 'Roboto',
+                              fontSize: 14,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 20),
+                          // Refresh button
+                          ElevatedButton(
+                            onPressed: () {
+                              Get.find<VerificationController>()
+                                  .checkKycStatus();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text("Refresh Status"),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 // Custom painter for dashed border
 class DashedBorderPainter extends CustomPainter {
   final Color color;
@@ -1169,6 +1348,123 @@ class DashedBorderPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+Widget _buildApprovedStatusScreen() {
+  return Column(
+    children: [
+      // Header
+      Row(
+        children: [
+          IconButton(
+            padding: EdgeInsets.zero,
+            icon: const Icon(
+              Icons.arrow_back,
+              color: AppColors.lightTextPrimary,
+            ),
+            onPressed: () => Navigator.of(Get.context!).pop(),
+          ),
+          Expanded(
+            child: Text(
+              'Account Verification',
+              style: GoogleFonts.montserrat(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppColors.splashBackground,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(width: 48), // Balance the back button
+        ],
+      ),
+      const SizedBox(height: AppSizes.spacingLarge),
+      Expanded(
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(color: Colors.white),
+          child: Stack(
+            children: [
+              // Top status bar placeholder
+              // Main content
+              Positioned.fill(
+                top: 46,
+                child: Container(
+                  width: 390,
+                  height: 216,
+                  margin: const EdgeInsets.only(top: 0),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE3F4E1), // Light green background
+                  ),
+                ),
+              ),
+              // Center content
+              Center(
+                child: Container(
+                  width: 342,
+                  margin: const EdgeInsets.only(top: 175),
+                  child: Column(
+                    children: [
+                      // Checkmark icon
+                      Container(
+                        width: 130,
+                        height: 130,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF048080), // Teal color
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 50,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Text content
+                      Column(
+                        children: [
+                          Text(
+                            "Congratulations!",
+                            style: GoogleFonts.montserrat(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 11),
+                          Text(
+                            "Your account is ready to use. You will be redirected to the home page in a few seconds.",
+                            style: const TextStyle(
+                              fontFamily: 'Roboto',
+                              fontSize: 14,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  );
 }
 
 // Failed uploads section widget

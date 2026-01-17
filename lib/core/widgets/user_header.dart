@@ -2,6 +2,7 @@
 // Author: haptome H.
 // Linked Spec Section: Your Ekubs Page
 
+import 'package:et_digital_equb/core/theme/app_sizes.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
@@ -20,39 +21,46 @@ class UserHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: const EdgeInsets.all(AppSizes.paddingLarge),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Avatar
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                userInitials,
-                style: const TextStyle(
-                  color: AppColors.splashBackground,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    userInitials,
+                    style: const TextStyle(
+                      color: AppColors.splashBackground,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // User name
-          Expanded(
-            child: Text(
-              userName,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.black,
+              const SizedBox(width: 12),
+              // User name
+              SizedBox(
+                width: 100,
+                child: Text(
+                  userName,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.black,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
           // Create Group button
           if (onRefresh != null)

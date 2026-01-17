@@ -13,6 +13,7 @@ class CategorySectionCards extends StatelessWidget {
   final List<category_models.Category> categories;
   final VoidCallback? onViewAll;
   final Function(category_models.Category)? onCategoryTap;
+  final bool shadow;
 
   const CategorySectionCards({
     super.key,
@@ -20,6 +21,7 @@ class CategorySectionCards extends StatelessWidget {
     required this.categories,
     this.onViewAll,
     this.onCategoryTap,
+    this.shadow = false,
   });
 
   @override
@@ -46,6 +48,7 @@ class CategorySectionCards extends StatelessWidget {
                   onTap: onCategoryTap != null
                       ? () => onCategoryTap!(category)
                       : null,
+                  shadow: shadow,
                 );
               }),
               // Fill remaining slots if less than 3 categories

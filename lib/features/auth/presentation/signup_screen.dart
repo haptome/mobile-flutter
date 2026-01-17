@@ -25,7 +25,6 @@ class _SignupScreenState extends State<SignupScreen> {
   late final AuthController _authController;
   String? _workStatus;
   String? _location;
-  
 
   @override
   void initState() {
@@ -36,10 +35,7 @@ class _SignupScreenState extends State<SignupScreen> {
     } else {
       _authController = Get.find<AuthController>();
     }
-    
   }
-  
-  
 
   final List<String> _workStatuses = const [
     'Employed',
@@ -49,18 +45,18 @@ class _SignupScreenState extends State<SignupScreen> {
   ];
 
   final List<String> _locations = const [
-    'Ethiopia, Addis Abeba',
-    'Ethiopia, Dire Dawa',
-    'Ethiopia, Hawassa',
-    'Ethiopia, Bahir Dar',
-    'Ethiopia, Mekelle',
+    'Addis Abeba',
+    'Dire Dawa',
+    'Hawassa',
+    'Bahir Dar',
+    'Mekelle',
   ];
 
   @override
   void dispose() {
     _fullNameController.dispose();
     _phoneController.dispose();
-    
+
     super.dispose();
   }
 
@@ -73,7 +69,7 @@ class _SignupScreenState extends State<SignupScreen> {
       // The controller will add the country code when building the full phone
       _authController.phone.value = _phoneController.text.trim();
       _authController.fullName.value = _fullNameController.text.trim();
-      
+
       // Ensure country code is set to Ethiopia (default)
       // PhoneInputField uses +251, so we ensure controller matches
       if (_authController.selectedCountry.value.dialCode != '+251') {
@@ -84,7 +80,7 @@ class _SignupScreenState extends State<SignupScreen> {
           flag: '🇪🇹',
         );
       }
-      
+
       // Map work status to backend enum format
       // Backend expects: 'employed', 'self_employed', 'student', 'unemployed', 'retired'
       String? workStatusValue;
@@ -153,7 +149,6 @@ class _SignupScreenState extends State<SignupScreen> {
     }
     return null;
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -161,312 +156,296 @@ class _SignupScreenState extends State<SignupScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Stack(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSizes.paddingLarge,
+            vertical: AppSizes.paddingMedium,
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.asset(
-                  AppAssets.authBackground,
-                  fit: BoxFit.cover,
-                  height: double.infinity,
-                  width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(color: AppColors.lightBackground);
-                  },
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    color: AppColors.lightTextPrimary,
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        stops: const [0.0024, 0.2921, 0.5801, 0.8322],
-                        colors: [
-                          Colors.white,
-                          Colors.white.withOpacity(0.85),
-                          Colors.white.withOpacity(0.9),
-                          Colors.white,
-                        ],
+                SizedBox(height: screenHeight * 0.01),
+                Text(
+                  'Signup',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.splashBackground,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.spacingSmall),
+                Text(
+                  'Enter your credential to register',
+                  style: AppTextStyles.bodyMedium(
+                    color: AppColors.lightTextSecondary,
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.03),
+                AppTextField(
+                  hint: 'Full name',
+                  controller: _fullNameController,
+                  textInputAction: TextInputAction.next,
+                  validator: _validateName,
+                ),
+                SizedBox(height: screenHeight * 0.02),
+                PhoneInputField(
+                  hint: '94 825 228 5',
+                  controller: _phoneController,
+                  validator: _validatePhone,
+                  onSubmitted: (_) => _handleRegister(),
+                  maxLength: 9,
+                ),
+                SizedBox(height: screenHeight * 0.02),
+
+                SizedBox(height: screenHeight * 0.02),
+                DropdownButtonFormField<String>(
+                  value: _workStatus,
+                  dropdownColor: AppColors.white,
+                  style: const TextStyle(fontSize: 14, color: AppColors.black),
+                  items: _workStatuses
+                      .map(
+                        (status) => DropdownMenuItem<String>(
+                          value: status,
+                          child: Text(
+                            status,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.black,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _workStatus = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: AppColors.white,
+                    hintText: 'Work status',
+                    hintStyle: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.black,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.paddingMedium,
+                      vertical: AppSizes.paddingMedium,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppSizes.textFieldRadius,
                       ),
+                      borderSide: const BorderSide(
+                        color: AppColors.textFieldBorder,
+                        width: AppSizes.textFieldBorderWidth,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppSizes.textFieldRadius,
+                      ),
+                      borderSide: const BorderSide(
+                        color: AppColors.textFieldBorder,
+                        width: AppSizes.textFieldBorderWidth,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppSizes.textFieldRadius,
+                      ),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 2.0,
+                      ),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppSizes.textFieldRadius,
+                      ),
+                      borderSide: const BorderSide(
+                        color: AppColors.lightError,
+                        width: AppSizes.textFieldBorderWidth,
+                      ),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppSizes.textFieldRadius,
+                      ),
+                      borderSide: const BorderSide(
+                        color: AppColors.lightError,
+                        width: 2.0,
+                      ),
+                    ),
+                    constraints: const BoxConstraints(
+                      minHeight: AppSizes.textFieldHeight,
+                    ),
+                  ),
+                  validator: _validateWorkStatus,
+                ),
+                SizedBox(height: screenHeight * 0.02),
+                DropdownButtonFormField<String>(
+                  value: _location,
+                  dropdownColor: AppColors.white,
+                  style: const TextStyle(fontSize: 14, color: AppColors.black),
+                  items: _locations
+                      .map(
+                        (location) => DropdownMenuItem<String>(
+                          value: location,
+                          child: Text(
+                            location,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.black,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _location = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: AppColors.white,
+                    hintText: 'Location',
+                    hintStyle: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.black,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.paddingMedium,
+                      vertical: AppSizes.paddingMedium,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppSizes.textFieldRadius,
+                      ),
+                      borderSide: const BorderSide(
+                        color: AppColors.textFieldBorder,
+                        width: AppSizes.textFieldBorderWidth,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppSizes.textFieldRadius,
+                      ),
+                      borderSide: const BorderSide(
+                        color: AppColors.textFieldBorder,
+                        width: AppSizes.textFieldBorderWidth,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppSizes.textFieldRadius,
+                      ),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 2.0,
+                      ),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppSizes.textFieldRadius,
+                      ),
+                      borderSide: const BorderSide(
+                        color: AppColors.lightError,
+                        width: AppSizes.textFieldBorderWidth,
+                      ),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppSizes.textFieldRadius,
+                      ),
+                      borderSide: const BorderSide(
+                        color: AppColors.lightError,
+                        width: 2.0,
+                      ),
+                    ),
+                    constraints: const BoxConstraints(
+                      minHeight: AppSizes.textFieldHeight,
+                    ),
+                  ),
+                  validator: _validateLocation,
+                ),
+
+                SizedBox(height: screenHeight * 0.02),
+                Center(
+                  child: Obx(
+                    () => AppButton(
+                      text: 'Register',
+                      onPressed: _handleRegister,
+                      isLoading: _authController.isLoading.value,
+                      isFullWidth: false,
+                      horizontalPadding: 62.2,
+                    ),
+                  ),
+                ),
+                // Show error message if any
+                Obx(
+                  () => _authController.errorMessage.value.isNotEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.only(
+                            top: AppSizes.spacingSmall,
+                          ),
+                          child: Text(
+                            _authController.errorMessage.value,
+                            style: AppTextStyles.bodySmall(
+                              color: AppColors.lightError,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                SizedBox(height: screenHeight * 0.02),
+                Center(
+                  child: RichText(
+                    text: TextSpan(
+                      style: AppTextStyles.bodyMedium(
+                        color: AppColors.lightTextSecondary,
+                      ),
+                      children: [
+                        const TextSpan(text: 'Already have an account? '),
+                        WidgetSpan(
+                          child: GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Text(
+                              'Login',
+                              style:
+                                  AppTextStyles.bodyMedium(
+                                    color: AppColors.splashBackground,
+                                  ).copyWith(
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: AppColors.splashBackground,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: AppSizes.paddingLarge,
-                vertical: AppSizes.paddingMedium,
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    IconButton(
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: AppColors.lightTextPrimary,
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                    SizedBox(height: screenHeight * 0.01),
-                    Text(
-                      'Signup',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.splashBackground,
-                        height: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.spacingSmall),
-                    Text(
-                      'Enter your credential to register',
-                      style: AppTextStyles.bodyMedium(
-                        color: AppColors.lightTextSecondary,
-                      ),
-                    ),
-                    SizedBox(height: screenHeight * 0.03),
-                    AppTextField(
-                      hint: 'Full name',
-                      controller: _fullNameController,
-                      textInputAction: TextInputAction.next,
-                      validator: _validateName,
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-                    PhoneInputField(
-                      hint: '94 825 228 5',
-                      controller: _phoneController,
-                      validator: _validatePhone,
-                      onSubmitted: (_) => _handleRegister(),
-                      maxLength: 9,
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-                    
-                    SizedBox(height: screenHeight * 0.02),
-                    DropdownButtonFormField<String>(
-                      value: _workStatus,
-                      dropdownColor: AppColors.white,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.black,
-                      ),
-                      items: _workStatuses
-                          .map(
-                            (status) => DropdownMenuItem<String>(
-                              value: status,
-                              child: Text(
-                                status,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.black,
-                                ),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _workStatus = value;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: AppColors.white,
-                        hintText: 'Work status',
-                        hintStyle: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.black,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: AppSizes.paddingMedium,
-                          vertical: AppSizes.paddingMedium,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSizes.textFieldRadius),
-                          borderSide: const BorderSide(
-                            color: AppColors.textFieldBorder,
-                            width: AppSizes.textFieldBorderWidth,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSizes.textFieldRadius),
-                          borderSide: const BorderSide(
-                            color: AppColors.textFieldBorder,
-                            width: AppSizes.textFieldBorderWidth,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSizes.textFieldRadius),
-                          borderSide: const BorderSide(
-                            color: AppColors.primary,
-                            width: 2.0,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSizes.textFieldRadius),
-                          borderSide: const BorderSide(
-                            color: AppColors.lightError,
-                            width: AppSizes.textFieldBorderWidth,
-                          ),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSizes.textFieldRadius),
-                          borderSide: const BorderSide(
-                            color: AppColors.lightError,
-                            width: 2.0,
-                          ),
-                        ),
-                        constraints: const BoxConstraints(minHeight: AppSizes.textFieldHeight),
-                      ),
-                      validator: _validateWorkStatus,
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-                    DropdownButtonFormField<String>(
-                      value: _location,
-                      dropdownColor: AppColors.white,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.black,
-                      ),
-                      items: _locations
-                          .map(
-                            (location) => DropdownMenuItem<String>(
-                              value: location,
-                              child: Text(
-                                location,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.black,
-                                ),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _location = value;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: AppColors.white,
-                        hintText: 'Location',
-                        hintStyle: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.black,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: AppSizes.paddingMedium,
-                          vertical: AppSizes.paddingMedium,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSizes.textFieldRadius),
-                          borderSide: const BorderSide(
-                            color: AppColors.textFieldBorder,
-                            width: AppSizes.textFieldBorderWidth,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSizes.textFieldRadius),
-                          borderSide: const BorderSide(
-                            color: AppColors.textFieldBorder,
-                            width: AppSizes.textFieldBorderWidth,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSizes.textFieldRadius),
-                          borderSide: const BorderSide(
-                            color: AppColors.primary,
-                            width: 2.0,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSizes.textFieldRadius),
-                          borderSide: const BorderSide(
-                            color: AppColors.lightError,
-                            width: AppSizes.textFieldBorderWidth,
-                          ),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSizes.textFieldRadius),
-                          borderSide: const BorderSide(
-                            color: AppColors.lightError,
-                            width: 2.0,
-                          ),
-                        ),
-                        constraints: const BoxConstraints(minHeight: AppSizes.textFieldHeight),
-                      ),
-                      validator: _validateLocation,
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.02),
-                    Center(
-                      child: Obx(
-                        () => AppButton(
-                          text: 'Register',
-                          onPressed: _handleRegister,
-                          isLoading: _authController.isLoading.value,
-                          isFullWidth: false,
-                          horizontalPadding: 62.2,
-                        ),
-                      ),
-                    ),
-                    // Show error message if any
-                    Obx(
-                      () => _authController.errorMessage.value.isNotEmpty
-                          ? Padding(
-                              padding: const EdgeInsets.only(top: AppSizes.spacingSmall),
-                              child: Text(
-                                _authController.errorMessage.value,
-                                style: AppTextStyles.bodySmall(
-                                  color: AppColors.lightError,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-                    Center(
-                      child: RichText(
-                        text: TextSpan(
-                          style: AppTextStyles.bodyMedium(
-                            color: AppColors.lightTextSecondary,
-                          ),
-                          children: [
-                            const TextSpan(text: 'Already have an account? '),
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () => Navigator.of(context).pop(),
-                                child: Text(
-                                  'Login',
-                                  style: AppTextStyles.bodyMedium(
-                                    color: AppColors.splashBackground,
-                                  ).copyWith(
-                                    decoration: TextDecoration.underline,
-                                    decorationColor: AppColors.splashBackground,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
-

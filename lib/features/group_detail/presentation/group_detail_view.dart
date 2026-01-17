@@ -77,9 +77,11 @@ class GroupDetailView extends StatelessWidget {
           children: [
             // Hero image area
             SizedBox(
-              height: 160,
+              // height: 100,
               child: Center(
                 child: Card(
+                  color: AppColors.lightBackground,
+                  shadowColor: AppColors.black.withOpacity(0.4),
                   elevation: 2,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -167,10 +169,12 @@ class GroupDetailView extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 96),
+            const SizedBox(height: 10),
 
             // Progress Card
             Card(
+              color: AppColors.lightBackground,
+              shadowColor: AppColors.black.withOpacity(0.4),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -200,6 +204,8 @@ class GroupDetailView extends StatelessWidget {
                       children: [
                         Flexible(
                           child: LinearProgressIndicator(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(12),
                             value:
                                 (group.currentMembers /
                                     (group.targetMembers == 0
@@ -311,28 +317,29 @@ class GroupDetailView extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Tabs (Members, Lottery, Payments, History)
+            // Tabs (Members, Payments, History)
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildTab('Members', true),
-                  _buildTab('Lottery', false),
-                  _buildTab('Payments', false),
-                  _buildTab('History', false),
+                  _buildTab('Members', 0),
+                  _buildTab('Payments', 1),
+                  _buildTab('History', 2),
                 ],
               ),
             ),
 
             const SizedBox(height: 12),
 
-            // Members Card
+            // Tab Content
             Card(
+              color: AppColors.lightBackground,
+              shadowColor: AppColors.black.withOpacity(0.4),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -341,153 +348,345 @@ class GroupDetailView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Total Members - ${group.currentMembers}',
-                          style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(
-                          height: 36,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              controller.inviteToGroup();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xffc6c92a),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              minimumSize: const Size(80, 36),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                              ),
-                            ),
-                            child: const Text(
-                              'Invite',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Divider(),
-                    // Members list
+                    // Conditionally render content based on active tab
                     Obx(() {
-                      if (group == null) {
+                      if (!Get.isRegistered<GroupDetailController>()) {
                         return const SizedBox.shrink();
                       }
 
-                      final showAll = controller.showAllMembers.value;
-                      final allMembers = controller.members;
-                      final displayCount = showAll
-                          ? allMembers.length
-                          : (allMembers.length > 5 ? 5 : allMembers.length);
+                      final controller = Get.find<GroupDetailController>();
 
-                      return Column(
-                        children: [
-                          if (controller.isMembersLoading.value &&
-                              allMembers.isEmpty) ...[
-                            const Center(child: CircularProgressIndicator()),
-                          ] else ...[
-                            ...List.generate(displayCount, (i) {
-                              final member = allMembers[i];
-                              final statusColor =
-                                  member.status.toLowerCase() == 'active'
-                                  ? Colors.green
-                                  : member.status.toLowerCase() == 'pending'
-                                  ? Colors.orange
-                                  : Colors.red;
-                              final statusText =
-                                  member.status.toLowerCase() == 'active'
-                                  ? 'Active'
-                                  : member.status.toLowerCase() == 'pending'
-                                  ? 'Pending'
-                                  : 'Removed';
-
-                              return Column(
+                      switch (controller.activeTab.value) {
+                        case 0: // Members Tab
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  ListTile(
-                                    leading: CircleAvatar(
-                                      radius: 20,
-                                      backgroundColor: Colors.grey.shade200,
-                                      child:
-                                          member.user.profilePicUrl != null &&
-                                              member
-                                                  .user
-                                                  .profilePicUrl!
-                                                  .isNotEmpty
-                                          ? ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              child: Image.network(
-                                                member.user.profilePicUrl!,
-                                                width: 40,
-                                                height: 40,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            )
-                                          : Icon(
-                                              Icons.person,
-                                              color: Colors.black54,
-                                            ),
+                                  Text(
+                                    'Total Members - ${group?.currentMembers ?? 0}',
+                                    style: GoogleFonts.montserrat(
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    title: Text(
-                                      member.user.fullName,
-                                      style: GoogleFonts.montserrat(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      member.user.phone,
-                                      style: GoogleFonts.montserrat(
-                                        color: AppColors.textLightGray,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                    trailing: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20),
-                                        color: statusColor,
-                                      ),
-                                      child: Text(
-                                        statusText,
-                                        style: const TextStyle(
-                                          color: Colors.white,
+                                  ),
+                                  SizedBox(
+                                    height: 36,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        controller.inviteToGroup();
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xffc6c92a,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                        minimumSize: const Size(80, 36),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
                                         ),
                                       ),
+                                      child: const Text(
+                                        'Invite',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
                                     ),
                                   ),
-                                  const Divider(indent: 72),
                                 ],
-                              );
-                            }),
-                          ],
-                          if (allMembers.length > 5) ...[
-                            const SizedBox(height: 8),
-                            Center(
-                              child: TextButton(
-                                onPressed: controller.toggleShowAllMembers,
-                                child: Text(
-                                  controller.showAllMembers.value
-                                      ? 'View Less'
-                                      : 'View More',
-                                  style: GoogleFonts.montserrat(
-                                    color: const Color(0xffc6c92a),
-                                  ),
+                              ),
+                              Divider(color: Colors.grey[200]),
+                              // Members list
+                              Obx(() {
+                                if (group == null) {
+                                  return const SizedBox.shrink();
+                                }
+
+                                final showAll = controller.showAllMembers.value;
+                                final allMembers = controller.members;
+                                final displayCount = showAll
+                                    ? allMembers.length
+                                    : (allMembers.length > 5
+                                          ? 5
+                                          : allMembers.length);
+
+                                return Column(
+                                  children: [
+                                    if (controller.isMembersLoading.value &&
+                                        allMembers.isEmpty) ...[
+                                      const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ] else ...[
+                                      ...List.generate(displayCount, (i) {
+                                        final member = allMembers[i];
+                                        final statusColor =
+                                            member.status.toLowerCase() ==
+                                                'active'
+                                            ? Colors.green
+                                            : member.status.toLowerCase() ==
+                                                  'pending'
+                                            ? Colors.orange
+                                            : Colors.red;
+                                        final statusText =
+                                            member.status.toLowerCase() ==
+                                                'active'
+                                            ? 'Active'
+                                            : member.status.toLowerCase() ==
+                                                  'pending'
+                                            ? 'Pending'
+                                            : 'Removed';
+
+                                        return Column(
+                                          children: [
+                                            ListTile(
+                                              leading: CircleAvatar(
+                                                radius: 20,
+                                                backgroundColor:
+                                                    Colors.grey.shade200,
+                                                child:
+                                                    member.user.profilePicUrl !=
+                                                            null &&
+                                                        member
+                                                            .user
+                                                            .profilePicUrl!
+                                                            .isNotEmpty
+                                                    ? ClipRRect(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              20,
+                                                            ),
+                                                        child: Image.network(
+                                                          member
+                                                              .user
+                                                              .profilePicUrl!,
+                                                          width: 40,
+                                                          height: 40,
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      )
+                                                    : Icon(
+                                                        Icons.person,
+                                                        color: Colors.black54,
+                                                      ),
+                                              ),
+                                              title: Text(
+                                                member.user.fullName,
+                                                style: GoogleFonts.montserrat(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              subtitle: Text(
+                                                member.user.phone,
+                                                style: GoogleFonts.montserrat(
+                                                  color:
+                                                      AppColors.textLightGray,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              trailing: Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 6,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                  color: statusColor,
+                                                ),
+                                                child: Text(
+                                                  statusText,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            Divider(
+                                              color: Colors.grey[200],
+                                              indent: 72,
+                                            ),
+                                          ],
+                                        );
+                                      }),
+                                    ],
+                                    if (allMembers.length > 5) ...[
+                                      const SizedBox(height: 8),
+                                      Center(
+                                        child: TextButton(
+                                          onPressed:
+                                              controller.toggleShowAllMembers,
+                                          child: Text(
+                                            controller.showAllMembers.value
+                                                ? 'View Less'
+                                                : 'View More',
+                                            style: GoogleFonts.montserrat(
+                                              color: const Color(0xffc6c92a),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                );
+                              }),
+                            ],
+                          );
+                        case 1: // Payments Tab
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Group Payments',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ),
-                          ],
-                        ],
-                      );
+                              const Divider(),
+                              Obx(() {
+                                if (!Get.isRegistered<
+                                  GroupDetailController
+                                >()) {
+                                  return const SizedBox.shrink();
+                                }
+                                final controller =
+                                    Get.find<GroupDetailController>();
+
+                                if (controller.isPaymentsLoading.value &&
+                                    controller.payments.isEmpty) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+
+                                if (controller.payments.isEmpty) {
+                                  return const Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: Text('No payments found'),
+                                  );
+                                }
+
+                                return ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: controller.payments.length,
+                                  itemBuilder: (context, index) {
+                                    final payment = controller.payments[index];
+                                    final statusColor =
+                                        payment['status'].toLowerCase() ==
+                                            'paid'
+                                        ? Colors.green
+                                        : Colors.orange;
+
+                                    return Column(
+                                      children: [
+                                        ListTile(
+                                          title: Text(
+                                            'ETB ${payment['amount']}',
+                                          ),
+                                          subtitle: Text(payment['date']),
+                                          trailing: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 6,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              color: statusColor,
+                                            ),
+                                            child: Text(
+                                              payment['status'].toUpperCase(),
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Divider(
+                                          color: Colors.grey[200],
+
+                                          indent: 16,
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              }),
+                            ],
+                          );
+                        case 2: // History Tab
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Group History',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Divider(),
+                              Obx(() {
+                                if (!Get.isRegistered<
+                                  GroupDetailController
+                                >()) {
+                                  return const SizedBox.shrink();
+                                }
+                                final controller =
+                                    Get.find<GroupDetailController>();
+
+                                if (controller.isHistoryLoading.value &&
+                                    controller.history.isEmpty) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+
+                                if (controller.history.isEmpty) {
+                                  return const Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: Text('No history found'),
+                                  );
+                                }
+
+                                return ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: controller.history.length,
+                                  itemBuilder: (context, index) {
+                                    final event = controller.history[index];
+
+                                    return Column(
+                                      children: [
+                                        ListTile(
+                                          leading: const Icon(
+                                            Icons.history,
+                                            color: Color(0xffc6c92a),
+                                          ),
+                                          title: Text(event['action']),
+                                          subtitle: Text(
+                                            '${event['date']} - ${event['initiator']}',
+                                          ),
+                                        ),
+                                        Divider(
+                                          color: Colors.grey[200],
+                                          indent: 72,
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              }),
+                            ],
+                          );
+                        default:
+                          return const Text('Unknown tab');
+                      }
                     }),
                   ],
                 ),
@@ -522,21 +721,37 @@ class GroupDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildTab(String label, bool selected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: selected ? const Color(0xffc6c92a) : Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.montserrat(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: selected ? Colors.white : AppColors.textLightGray,
+  Widget _buildTab(String label, int tabIndex) {
+    return Obx(() {
+      bool isSelected = false;
+      if (Get.isRegistered<GroupDetailController>()) {
+        final controller = Get.find<GroupDetailController>();
+        isSelected = controller.activeTab.value == tabIndex;
+      }
+
+      return GestureDetector(
+        onTap: () {
+          if (Get.isRegistered<GroupDetailController>()) {
+            final controller = Get.find<GroupDetailController>();
+            controller.setActiveTab(tabIndex);
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xffc6c92a) : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isSelected ? Colors.white : AppColors.textLightGray,
+            ),
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }

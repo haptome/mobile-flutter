@@ -3,6 +3,7 @@
 // Linked Spec Section: Your Ekubs Page
 
 import 'package:et_digital_equb/core/services/auth_service.dart';
+import 'package:et_digital_equb/core/widgets/completed_ekub_card.dart';
 import 'package:et_digital_equb/core/widgets/ekub_list_item_custom.dart';
 import 'package:et_digital_equb/core/widgets/ekub_progress_carousel.dart';
 import 'package:et_digital_equb/core/widgets/user_header.dart';
@@ -27,137 +28,226 @@ class _YourEkubsViewState extends State<YourEkubsView> {
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: Column(
-                    children: [
-                      // User Header - Wrap only the user data in Obx
-                      Obx(() {
-                        final user = authService.currentUser.value;
-                        final userName = user?.fullName ?? 'User';
-                        final initials =
-                            user?.fullName
-                                ?.split(' ')
-                                .map((n) => n[0])
-                                .take(2)
-                                .join()
-                                .toUpperCase() ??
-                            'NB';
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: Column(
+                children: [
+                  // User Header - Wrap only the user data in Obx
+                  Obx(() {
+                    final user = authService.currentUser.value;
+                    final userName = user?.fullName ?? 'User';
+                    final initials =
+                        user?.fullName
+                            ?.split(' ')
+                            .map((n) => n[0])
+                            .take(2)
+                            .join()
+                            .toUpperCase() ??
+                        'NB';
 
-                        return UserHeader(
-                          userName: userName,
-                          userInitials: initials,
-                          onRefresh: controller.onCreateEkub,
-                        );
-                      }),
-                      // Ekub Progress Carousel with Loading/Error States
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Obx(() {
-                          if (controller.isLoading.value) {
-                            return _buildSkeletonLoader();
-                          }
+                    return UserHeader(
+                      userName: userName,
+                      userInitials: initials,
+                      onRefresh: controller.onCreateEkub,
+                    );
+                  }),
+                  // Ekub Progress Carousel with Loading/Error States
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Obx(() {
+                      if (controller.isLoading.value) {
+                        return _buildSkeletonLoader();
+                      }
 
-                          if (controller.errorMessage.value.isNotEmpty &&
-                              controller.ekubs.isEmpty) {
-                            return _buildErrorWidget(controller);
-                          }
+                      if (controller.errorMessage.value.isNotEmpty &&
+                          controller.ekubs.isEmpty) {
+                        return _buildErrorWidget(controller);
+                      }
 
-                          if (controller.ekubs.isEmpty) {
-                            return _buildEmptyState();
-                          }
+                      if (controller.ekubs.isEmpty) {
+                        return _buildEmptyState();
+                      }
 
-                          // Convert to List for the widget
-                          final ekubsList = List<Map<String, dynamic>>.from(
-                            controller.ekubs,
-                          );
-                          return EkubProgressCarousel(
-                            ekubs: ekubsList,
-                            onEkubTap: controller.onEkubTap,
-                          );
-                        }),
-                      ),
-                      const SizedBox(height: 16),
-                      // Ekub List
-                      Expanded(
-                        child: Obx(() {
-                          if (controller.isLoading.value) {
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          }
-
-                          if (controller.ekubs.isEmpty) {
-                            return const Center(
-                              child: Text('No ekubs to display'),
-                            );
-                          }
-
-                          return RefreshIndicator(
-                            onRefresh: () async {
-                              await controller.loadUserGroups();
-                            },
-                            child: ListView.builder(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                              ),
-                              itemCount: controller.ekubs.length,
-                              itemBuilder: (context, index) {
-                                final ekubData = controller.ekubs[index];
-                                final group = ekubData['group'];
-
-                                if (group is Group) {
-                                  return EkubListItemCustom.fromGroup(
-                                    group,
-                                    onTap: () =>
-                                        controller.onEkubTap(ekubData['id']),
-                                  );
-                                } else if (group is InKindGroup) {
-                                  // Convert InKindGroup to a format compatible with EkubListItem
-                                  final groupConverted = Group(
-                                    id: group.id,
-                                    name: group.name,
-                                    type: group.type,
-                                    contributionAmount:
-                                        group.contributionAmount,
-                                    frequency: group.frequency,
-                                    minMembers: group.minMembers,
-                                    targetMembers: group.targetMembers,
-                                    currentMembers:
-                                        0, // InKindGroup doesn't have currentMembers
-                                    rotationMethod: group.rotationMethod,
-                                    serviceChargePercent:
-                                        group.serviceChargePercent,
-                                    status: group.status,
-                                    createdAt: group.createdAt,
-                                    leaderId: group.leaderId,
-                                    categoryId: group.categoryId,
-                                    startDate: group.startDate,
-                                  );
-                                  return EkubListItemCustom.fromGroup(
-                                    groupConverted,
-                                    onTap: () =>
-                                        controller.onEkubTap(ekubData['id']),
-                                  );
-                                }
-
-                                return const SizedBox.shrink();
-                              },
-                            ),
-                          );
-                        }),
-                      ),
-                    ],
+                      // Convert to List for the widget
+                      final ekubsList = List<Map<String, dynamic>>.from(
+                        controller.ekubs,
+                      );
+                      return EkubProgressCarousel(
+                        ekubs: ekubsList,
+                        onEkubTap: controller.onEkubTap,
+                      );
+                    }),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  // Ekub List
+                  Expanded(
+                    child: Obx(() {
+                      if (controller.isLoading.value) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (controller.ekubs.isEmpty &&
+                          controller.completedEkubs.isEmpty) {
+                        return const Center(child: Text('No ekubs to display'));
+                      }
+
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          await controller.loadUserGroups();
+                        },
+                        child: ListView(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          children: [
+                            // Active Ekubs List
+                            if (controller.ekubs.isNotEmpty)
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                ),
+                                itemCount: controller.ekubs.length,
+                                itemBuilder: (context, index) {
+                                  final ekubData = controller.ekubs[index];
+                                  final group = ekubData['group'];
+
+                                  if (group is Group) {
+                                    return EkubListItemCustom.fromGroup(
+                                      group,
+                                      onTap: () =>
+                                          controller.onEkubTap(ekubData['id']),
+                                    );
+                                  } else if (group is InKindGroup) {
+                                    // Convert InKindGroup to a format compatible with EkubListItem
+                                    final groupConverted = Group(
+                                      id: group.id,
+                                      name: group.name,
+                                      type: group.type,
+                                      contributionAmount:
+                                          group.contributionAmount,
+                                      frequency: group.frequency,
+                                      minMembers: group.minMembers,
+                                      targetMembers: group.targetMembers,
+                                      currentMembers:
+                                          0, // InKindGroup doesn't have currentMembers
+                                      rotationMethod: group.rotationMethod,
+                                      serviceChargePercent:
+                                          group.serviceChargePercent,
+                                      status: group.status,
+                                      createdAt: group.createdAt,
+                                      leaderId: group.leaderId,
+                                      categoryId: group.categoryId,
+                                      startDate: group.startDate,
+                                    );
+                                    return EkubListItemCustom.fromGroup(
+                                      groupConverted,
+                                      onTap: () =>
+                                          controller.onEkubTap(ekubData['id']),
+                                    );
+                                  }
+
+                                  return const SizedBox.shrink();
+                                },
+                              ),
+
+                            // Completed Ekubs Collapsible Section
+                            if (controller.completedEkubs.isNotEmpty)
+                              Container(
+                                margin: const EdgeInsets.only(
+                                  left: 16.0,
+                                  right: 16.0,
+                                  top:
+                                      8.0, // Add small space between active ekubs and completed ekubs
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: ExpansionTile(
+                                  title: Text(
+                                    'Completed Ekubs (${controller.completedEkubs.length})',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.darkTextSecondary,
+                                    ),
+                                  ),
+                                  trailing: Obx(
+                                    () => Icon(
+                                      controller.showCompletedEkubs.value
+                                          ? Icons.expand_less
+                                          : Icons.expand_more,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                  children: [
+                                    ListView.builder(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      itemCount:
+                                          controller.completedEkubs.length,
+                                      itemBuilder: (context, index) {
+                                        final ekubData =
+                                            controller.completedEkubs[index];
+                                        // Calculate duration based on frequency and number of rounds
+                                        String duration;
+                                        if (ekubData['frequency']
+                                            .toLowerCase()
+                                            .contains('week')) {
+                                          duration =
+                                              '${(ekubData['totalRounds'] ~/ 4).toInt()} months';
+                                        } else if (ekubData['frequency']
+                                            .toLowerCase()
+                                            .contains('month')) {
+                                          duration =
+                                              '${ekubData['totalRounds']} months';
+                                        } else {
+                                          // daily
+                                          duration =
+                                              '${(ekubData['totalRounds'] ~/ 30).toInt()} months';
+                                        }
+
+                                        return CompletedEkubCard(
+                                          id: ekubData['id'],
+                                          name: ekubData['title'],
+                                          amount: ekubData['amount'],
+                                          round: ekubData['completedRounds'],
+                                          frequency: ekubData['frequency'],
+                                          duration: duration,
+                                          totalAmount: ekubData['totalAmount'],
+                                          onTap: () => controller.onEkubTap(
+                                            ekubData['id'],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                  onExpansionChanged: (bool expanded) {
+                                    controller.showCompletedEkubs.value =
+                                        expanded;
+                                  },
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

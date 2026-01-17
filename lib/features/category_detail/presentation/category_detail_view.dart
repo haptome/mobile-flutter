@@ -69,40 +69,7 @@ class CategoryDetailView extends StatelessWidget {
         ),
         centerTitle: false,
       ),
-      body:Stack(
-        children: [
-          // Background image with gradient overlay
-          Positioned.fill(
-            child: Stack(
-              children: [
-                Image.asset(
-                  AppAssets.authBackground,
-                  fit: BoxFit.cover,
-                  height: double.infinity,
-                  width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(color: AppColors.lightBackground);
-                  },
-                ),
-                // Gradient overlay
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: const [0.0024, 0.2921, 0.5801, 0.8322],
-                      colors: [
-                        Colors.white,
-                        Colors.white.withOpacity(0.85),
-                        Colors.white.withOpacity(0.9),
-                        Colors.white,
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ), Obx(() {
+      body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -147,20 +114,22 @@ class CategoryDetailView extends StatelessWidget {
 
         // Build a scrollable list with collapsible sections
         return ListView(
-          padding: const EdgeInsets.all(AppSizes.paddingLarge),
+          padding: const EdgeInsets.all(AppSizes.paddingMedium),
           children: [
-          
-        
-
             // Collapsible sections
             for (var entry in grouped.entries)
               Card(
-                margin: const EdgeInsets.only(bottom: AppSizes.spacingMedium),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+                margin: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
+                shape: RoundedRectangleBorder(
+                  side: BorderSide.none,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                ),
                 color: AppColors.white,
                 child: ExpansionTile(
-                  tilePadding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingLarge),
-                  childrenPadding: const EdgeInsets.all(AppSizes.paddingLarge),
+                  tilePadding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.paddingMedium,
+                  ),
+                  childrenPadding: const EdgeInsets.all(AppSizes.paddingMedium),
                   initiallyExpanded: true,
                   title: Text(
                     entry.key[0].toUpperCase() + entry.key.substring(1),
@@ -181,11 +150,10 @@ class CategoryDetailView extends StatelessWidget {
               ),
           ],
         );
-      })],
-        
-      )
+      }),
     );
   }
+
   Widget _buildFilterChip(String label, bool selected) {
     return ChoiceChip(
       label: Text(label),

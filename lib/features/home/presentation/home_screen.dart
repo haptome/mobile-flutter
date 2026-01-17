@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:et_digital_equb/controllers/your_ekubs_controller.dart';
+import 'package:et_digital_equb/core/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -62,313 +64,295 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = AuthService.to;
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background image with gradient overlay
-          Positioned.fill(
-            child: Stack(
-              children: [
-                Image.asset(
-                  AppAssets.authBackground,
-                  fit: BoxFit.cover,
-                  height: double.infinity,
-                  width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(color: AppColors.lightBackground);
-                  },
-                ),
-                // Gradient overlay
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: const [0.0024, 0.2921, 0.5801, 0.8322],
-                      colors: [
-                        Colors.white,
-                        Colors.white.withOpacity(0.85),
-                        Colors.white.withOpacity(0.9),
-                        Colors.white,
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Content
-          SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header
-                        _buildHeader(),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    _buildHeader(authService),
 
-                        // Warning Banner
-                        const WarningBanner(
+                    // Warning Banner
+                    Obx(() {
+                      return Offstage(
+                        offstage: _homeController.isAccountVerified.value,
+                        child: const WarningBanner(
                           message:
                               'You haven\'t yet verified your account. Verify now to access all features.',
                         ),
+                      );
+                    }),
+                    _buildAdBanner(),
 
-                        // Ekub Type Section - Show cash categories from API
-                        Obx(() {
-                          if (_homeController.isLoadingCategories.value) {
-                            return const Padding(
-                              padding: EdgeInsets.all(AppSizes.paddingLarge),
-                              child: Center(
-                                child: SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-                          return CategorySectionCards(
-                            title: 'Ekub Type',
-                            categories: _homeController.cashCategories,
-                            onViewAll: () {
-                              Get.toNamed('/ekub-type');
-                            },
-                            onCategoryTap: (category) {
-                              Get.toNamed(
-                                '/category-detail',
-                                arguments: category,
-                              );
-                            },
-                          );
-                        }),
+                    // Ekub Type Section - Show cash categories from API
+                    Obx(() {
+                      if (_homeController.isLoadingCategories.value) {
+                        return const Padding(
+                          padding: EdgeInsets.all(AppSizes.paddingLarge),
+                          child: Center(
+                            child: SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                      }
+                      return CategorySectionCards(
+                        title: 'Ekub For',
+                        shadow: false,
+                        categories: _homeController.cashCategories,
+                        onViewAll: () {
+                          Get.toNamed('/ekub-type');
+                        },
+                        onCategoryTap: (category) {
+                          Get.toNamed('/category-detail', arguments: category);
+                        },
+                      );
+                    }),
 
-                        // In-Kind Section - Show in-kind categories from API
-                        Obx(() {
-                          if (_homeController.isLoadingInKindCategories.value) {
-                            return const Padding(
-                              padding: EdgeInsets.all(AppSizes.paddingLarge),
-                              child: Center(
-                                child: SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-                          if (_homeController.inKindCategories.isEmpty) {
-                            return const SizedBox.shrink();
-                          }
-                          return CategorySectionCards(
-                            title: 'In-Kind',
-                            categories: _homeController.inKindCategories,
-                            onViewAll: _homeController.onViewAllInKind,
-                            onCategoryTap: _homeController.onInKindCategoryTap,
-                          );
-                        }),
+                    // In-Kind Section - Show in-kind categories from API
+                    Obx(() {
+                      if (_homeController.isLoadingInKindCategories.value) {
+                        return const Padding(
+                          padding: EdgeInsets.all(AppSizes.paddingLarge),
+                          child: Center(
+                            child: SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                      }
+                      if (_homeController.inKindCategories.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return CategorySectionCards(
+                        title: 'In-Kind',
+                        categories: _homeController.inKindCategories,
+                        onViewAll: _homeController.onViewAllInKind,
+                        onCategoryTap: _homeController.onInKindCategoryTap,
+                        shadow: true,
+                      );
+                    }),
 
-                        // Advertisement Banner
-                        _buildAdBanner(),
+                    // Advertisement Banner
 
-                        // Duration Section - Show groups by frequency
-                        Obx(() {
-                          if (_homeController.isLoadingDuration.value) {
-                            return const Padding(
-                              padding: EdgeInsets.all(AppSizes.paddingLarge),
-                              child: Center(
-                                child: SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-                          final frequencies = ['daily', 'weekly', 'monthly'];
-                          final availableFrequencies = frequencies
-                              .where((f) =>
-                                  (_homeController.durationGroupsCount[f] ?? 0) >
-                                  0)
-                              .toList();
+                    // Duration Section - Show groups by frequency
+                    Obx(() {
+                      if (_homeController.isLoadingDuration.value) {
+                        return const Padding(
+                          padding: EdgeInsets.all(AppSizes.paddingLarge),
+                          child: Center(
+                            child: SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                      }
+                      final frequencies = ['daily', 'weekly', 'monthly'];
+                      final availableFrequencies = frequencies
+                          .where(
+                            (f) =>
+                                (_homeController.durationGroupsCount[f] ?? 0) >
+                                0,
+                          )
+                          .toList();
 
-                          if (availableFrequencies.isEmpty) {
-                            return const SizedBox.shrink();
-                          }
+                      if (availableFrequencies.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
 
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SectionHeader(
-                                title: 'Duration',
-                                onViewAll: _homeController.onViewAllDuration,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSizes.paddingLarge,
-                                ),
-                                child: Row(
-                                  children: availableFrequencies
-                                      .take(3)
-                                      .map((frequency) {
-                                    final count = _homeController
-                                            .durationGroupsCount[frequency] ??
-                                        0;
-                                    final label = frequency[0].toUpperCase() +
-                                        frequency.substring(1);
-                                    return Expanded(
-                                      child: GestureDetector(
-                                        onTap: () =>
-                                            _homeController.onDurationTap(
-                                          frequency,
-                                        ),
-                                        child: Container(
-                                          margin: const EdgeInsets.symmetric(
-                                            horizontal: AppSizes.spacingSmall,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: AppSizes.paddingMedium,
-                                            horizontal: AppSizes.paddingSmall,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.white,
-                                            borderRadius: BorderRadius.circular(
-                                              AppSizes.radiusMedium,
-                                            ),
-                                            border: Border.all(
-                                              color: const Color(0x40000000),
-                                              width: 0.4,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: const Color(0x14000000),
-                                                blurRadius: 4,
-                                                spreadRadius: 0,
-                                                offset: const Offset(0, 4),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Container(
-                                                width: 50,
-                                                height: 50,
-                                                decoration: BoxDecoration(
-                                                  color: const Color(0xfff7f7e6),
-                                                  shape: BoxShape.circle,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: const Color(
-                                                          0x0F000000),
-                                                      blurRadius: 2,
-                                                      spreadRadius: 0,
-                                                      offset: const Offset(0, 2),
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: Center(
-                                                  child: Icon(
-                                                    Icons.calendar_today,
-                                                    size: AppSizes.iconMedium,
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .secondary,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(
-                                                height: AppSizes.spacingSmall,
-                                              ),
-                                              Text(
-                                                label,
-                                                textAlign: TextAlign.center,
-                                                style: GoogleFonts.montserrat(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: const Color(0xff232729),
-                                                ),
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              if (count > 0)
-                                                Text(
-                                                  '$count groups',
-                                                  textAlign: TextAlign.center,
-                                                  style: GoogleFonts.montserrat(
-                                                    fontSize: 10,
-                                                    color: AppColors.textLightGray,
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-                                        ),
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SectionHeader(
+                            title: 'Duration',
+                            onViewAll: _homeController.onViewAllDuration,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSizes.paddingLarge,
+                            ),
+                            child: Row(
+                              children: availableFrequencies.take(3).map((
+                                frequency,
+                              ) {
+                                final count =
+                                    _homeController
+                                        .durationGroupsCount[frequency] ??
+                                    0;
+                                final label =
+                                    frequency[0].toUpperCase() +
+                                    frequency.substring(1);
+                                return Expanded(
+                                  child: GestureDetector(
+                                    onTap: () => _homeController.onDurationTap(
+                                      frequency,
+                                    ),
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: AppSizes.spacingSmall,
                                       ),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                              const SizedBox(height: AppSizes.spacingMedium),
-                            ],
-                          );
-                        }),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: AppSizes.paddingMedium,
+                                        horizontal: AppSizes.paddingSmall,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.white,
+                                        borderRadius: BorderRadius.circular(
+                                          AppSizes.radiusMedium,
+                                        ),
+                                        border: Border.all(
+                                          color: const Color(0x40000000),
+                                          width: 0.4,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0x14000000),
+                                            blurRadius: 4,
+                                            spreadRadius: 0,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 50,
+                                            height: 50,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xfff7f7e6),
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(
+                                                    0x0F000000,
+                                                  ),
+                                                  blurRadius: 2,
+                                                  spreadRadius: 0,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Center(
+                                              child: Icon(
+                                                Icons.calendar_today,
+                                                size: AppSizes.iconMedium,
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.secondary,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            height: AppSizes.spacingSmall,
+                                          ),
+                                          Text(
+                                            label,
+                                            textAlign: TextAlign.center,
+                                            style: GoogleFonts.montserrat(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                              color: const Color(0xff232729),
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          if (count > 0)
+                                            Text(
+                                              '$count groups',
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.montserrat(
+                                                fontSize: 10,
+                                                color: AppColors.textLightGray,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.spacingMedium),
+                        ],
+                      );
+                    }),
 
-                        const SizedBox(height: AppSizes.spacingLarge),
-                      ],
-                    ),
-                  ),
+                    const SizedBox(height: AppSizes.spacingLarge),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(authService) {
     return Padding(
       padding: const EdgeInsets.all(AppSizes.paddingLarge),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    'NB',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.white,
+          Obx(() {
+            final user = authService.currentUser.value;
+            final userName = user?.fullName ?? 'User';
+            final initials =
+                user?.fullName
+                    ?.split(' ')
+                    .map((n) => n[0])
+                    .take(2)
+                    .join()
+                    .toUpperCase() ??
+                'NB';
+            return Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      initials,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.splashBackground,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: AppSizes.spacingSmall),
-              Text(
-                'Selam, Nibertu!',
-                style: AppTextStyles.h4(
-                  color: AppColors.black,
-                  isDark: false,
-                ).copyWith(fontSize: 14),
-              ),
-            ],
-          ),
+                const SizedBox(width: AppSizes.spacingSmall),
+                SizedBox(
+                  width: 200,
+                  child: Text(
+                    'Selam, ${userName}!',
+                    style: AppTextStyles.h4(
+                      color: const Color.fromARGB(255, 100, 80, 80),
+                      isDark: false,
+                    ).copyWith(fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            );
+          }),
           Row(
             children: [
               IconButton(

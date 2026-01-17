@@ -514,7 +514,8 @@ class GroupService extends GetxService {
     required double serviceChargePercent,
     String? startDate,
     required String leaderId,
-    required int durationMonths,
+    String? categoryId,
+    // required int durationMonths,
   }) async {
     try {
       final response = await _apiService.groupDio.post(
@@ -529,8 +530,9 @@ class GroupService extends GetxService {
           'rotation_method': rotationMethod,
           'service_charge_percent': serviceChargePercent,
           if (startDate != null) 'start_date': startDate,
-          'leader_id': leaderId,
-          'duration_months': durationMonths,
+          'leaderId': leaderId,
+          if (categoryId != null) 'category_id': categoryId,
+          // 'duration_months': durationMonths,
         },
       );
 

@@ -46,7 +46,7 @@ class ProfileUserCard extends StatelessWidget {
         children: [
           // Level badge
           Positioned(
-            top: 0,
+            bottom: 0,
             right: 0,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -104,10 +104,7 @@ class ProfileUserCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: AppColors.primary,
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.white,
-                            width: 2,
-                          ),
+                          border: Border.all(color: AppColors.white, width: 2),
                         ),
                         child: const Icon(
                           Icons.edit_outlined,
@@ -131,6 +128,7 @@ class ProfileUserCard extends StatelessWidget {
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: AppColors.black,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -178,4 +176,3 @@ class ProfileUserCard extends StatelessWidget {
     );
   }
 }
-

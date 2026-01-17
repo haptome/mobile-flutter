@@ -39,11 +39,13 @@ import '../../controllers/completed_ekubs_controller.dart';
 import '../../controllers/faq_controller.dart';
 import '../../controllers/set_password_controller.dart';
 import '../../controllers/create_group_controller.dart';
+import '../../controllers/terms_conditions_controller.dart';
 import '../../models/category_model.dart' as category_models;
 import '../../models/group_model.dart';
 import '../widgets/main_wrapper.dart';
 import '../../features/profile/set_password_view.dart';
 import '../../features/create_group/presentation/create_group_view.dart';
+import '../../features/terms/terms_conditions_view.dart';
 
 /// Application route names
 class AppRoutes {
@@ -74,6 +76,7 @@ class AppRoutes {
   static const String faq = '/faq';
   static const String setPassword = '/set-password';
   static const String createGroup = '/create-group';
+  static const String termsConditions = '/terms-conditions';
 }
 
 /// Route configuration for the app
@@ -282,6 +285,15 @@ class AppRouter {
       binding: BindingsBuilder(() {
         if (!Get.isRegistered<CreateGroupController>()) {
           Get.put(CreateGroupController());
+        }
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.termsConditions,
+      page: () => const TermsConditionsView(),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<TermsConditionsController>()) {
+          Get.put(TermsConditionsController());
         }
       }),
     ),

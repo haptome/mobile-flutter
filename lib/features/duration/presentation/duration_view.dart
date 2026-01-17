@@ -28,146 +28,105 @@ class _DurationViewState extends State<DurationView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      body: Stack(
-        children: [
-          // Background image with gradient overlay
-          Positioned.fill(
-            child: Stack(
-              children: [
-                Image.asset(
-                  AppAssets.authBackground,
-                  fit: BoxFit.cover,
-                  height: double.infinity,
-                  width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(color: AppColors.lightBackground);
-                  },
-                ),
-                // Gradient overlay
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        stops: const [0.0024, 0.2921, 0.5801, 0.8322],
-                        colors: [
-                          Colors.white,
-                          Colors.white.withOpacity(0.85),
-                          Colors.white.withOpacity(0.9),
-                          Colors.white,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Content
-          SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header
-                        _buildHeader(),
-                        // Frequency Filter Cards
-                        Obx(() => _buildFrequencyCards()),
-                        const SizedBox(height: AppSizes.spacingMedium),
-                        // Groups List
-                        Obx(() {
-                          if (_controller.isLoading.value) {
-                            return const Padding(
-                              padding: EdgeInsets.all(AppSizes.paddingLarge),
-                              child: Center(child: CircularProgressIndicator()),
-                            );
-                          }
-                          if (_controller.errorMessage.value.isNotEmpty) {
-                            return Padding(
-                              padding: const EdgeInsets.all(
-                                AppSizes.paddingLarge,
-                              ),
-                              child: Center(
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      _controller.errorMessage.value,
-                                      style: const TextStyle(color: Colors.red),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    ElevatedButton(
-                                      onPressed: () => _controller.loadGroups(),
-                                      child: const Text('Retry'),
-                                    ),
-                                  ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    _buildHeader(),
+                    // Frequency Filter Cards
+                    Obx(() => _buildFrequencyCards()),
+                    const SizedBox(height: AppSizes.spacingMedium),
+                    // Groups List
+                    Obx(() {
+                      if (_controller.isLoading.value) {
+                        return const Padding(
+                          padding: EdgeInsets.all(AppSizes.paddingLarge),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      if (_controller.errorMessage.value.isNotEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.all(AppSizes.paddingLarge),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Text(
+                                  _controller.errorMessage.value,
+                                  style: const TextStyle(color: Colors.red),
                                 ),
-                              ),
-                            );
-                          }
-                          if (_controller.filteredGroups.isEmpty) {
-                            return const Padding(
-                              padding: EdgeInsets.all(AppSizes.paddingLarge),
-                              child: Center(
-                                child: Text(
-                                  'No groups found for selected duration.',
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: () => _controller.loadGroups(),
+                                  child: const Text('Retry'),
                                 ),
-                              ),
-                            );
-                          }
-                          return _buildGroupsList();
-                        }),
-                        const SizedBox(height: AppSizes.spacingLarge),
-                      ],
-                    ),
-                  ),
-                ),
-                // Bottom Navigation
-                AppBottomNav(
-                  currentIndex: _currentNavIndex,
-                  onTap: (index) {
-                    if (index == _currentNavIndex) return;
-                    setState(() {
-                      _currentNavIndex = index;
-                    });
-                    final route = [
-                      AppRoutes.home,
-                      AppRoutes.ekubs,
-                      AppRoutes.transactions,
-                      AppRoutes.profile,
-                    ][index];
-                    Get.offAllNamed(route);
-                  },
-                  items: const [
-                    BottomNavItem(
-                      iconPath: AppAssets.homeIcon,
-                      label: 'Home',
-                      route: '/home',
-                    ),
-                    BottomNavItem(
-                      iconPath: AppAssets.personsIcon,
-                      label: 'Your Ekubs',
-                      route: '/ekubs',
-                    ),
-                    BottomNavItem(
-                      iconPath: AppAssets.transactionIcon,
-                      label: 'Transactions',
-                      route: '/transactions',
-                    ),
-                    BottomNavItem(
-                      iconPath: AppAssets.profileIcon,
-                      label: 'Profile',
-                      route: '/profile',
-                    ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                      if (_controller.filteredGroups.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.all(AppSizes.paddingLarge),
+                          child: Center(
+                            child: Text(
+                              'No groups found for selected duration.',
+                            ),
+                          ),
+                        );
+                      }
+                      return _buildGroupsList();
+                    }),
+                    const SizedBox(height: AppSizes.spacingLarge),
                   ],
                 ),
+              ),
+            ),
+            // Bottom Navigation
+            AppBottomNav(
+              currentIndex: _currentNavIndex,
+              onTap: (index) {
+                if (index == _currentNavIndex) return;
+                setState(() {
+                  _currentNavIndex = index;
+                });
+                final route = [
+                  AppRoutes.home,
+                  AppRoutes.ekubs,
+                  AppRoutes.transactions,
+                  AppRoutes.profile,
+                ][index];
+                Get.offAllNamed(route);
+              },
+              items: const [
+                BottomNavItem(
+                  iconPath: AppAssets.homeIcon,
+                  label: 'Home',
+                  route: '/home',
+                ),
+                BottomNavItem(
+                  iconPath: AppAssets.personsIcon,
+                  label: 'Your Ekubs',
+                  route: '/ekubs',
+                ),
+                BottomNavItem(
+                  iconPath: AppAssets.transactionIcon,
+                  label: 'Transactions',
+                  route: '/transactions',
+                ),
+                BottomNavItem(
+                  iconPath: AppAssets.profileIcon,
+                  label: 'Profile',
+                  route: '/profile',
+                ),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

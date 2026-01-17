@@ -208,169 +208,131 @@ class _SetPasswordViewState extends State<SetPasswordView> {
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      body: Stack(
-        children: [
-          // Background image with gradient overlay
-          Positioned.fill(
-            child: Stack(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSizes.paddingLarge,
+            vertical: AppSizes.paddingMedium,
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.asset(
-                  AppAssets.authBackground,
-                  fit: BoxFit.cover,
-                  height: double.infinity,
-                  width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(color: AppColors.lightBackground);
+                // Back button
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    color: AppColors.lightTextPrimary,
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+
+                SizedBox(height: screenHeight * 0.029),
+
+                // Title
+                Text(
+                  'Set Password',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.splashBackground,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.spacingSmall),
+
+                // Subtitle
+                Text(
+                  'Create a strong password for your account',
+                  style: AppTextStyles.bodyMedium(
+                    color: AppColors.lightTextSecondary,
+                    isDark: false,
+                  ),
+                ),
+
+                SizedBox(height: screenHeight * 0.03),
+
+                // Current Password Field (only shown if user has existing password)
+                AnimatedCrossFade(
+                  firstChild: Container(height: 0, width: 0),
+
+                  secondChild: Column(
+                    children: [
+                      AppTextField(
+                        hint: 'Current Password',
+                        controller: _currentPasswordController,
+                        obscureText: _obscureCurrentPassword,
+                        validator: _hasExistingPassword
+                            ? _validateCurrentPassword
+                            : null,
+                        suffixIcon: _obscureCurrentPassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        onSuffixIconTap: () {
+                          setState(() {
+                            _obscureCurrentPassword = !_obscureCurrentPassword;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: AppSizes.spacingMedium),
+                    ],
+                  ),
+                  crossFadeState: _hasExistingPassword
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  duration: const Duration(milliseconds: 300),
+                ),
+
+                // New Password Field
+                AppTextField(
+                  hint: 'New Password',
+                  controller: _newPasswordController,
+                  obscureText: _obscureNewPassword,
+                  validator: _validatePassword,
+                  suffixIcon: _obscureNewPassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  onSuffixIconTap: () {
+                    setState(() {
+                      _obscureNewPassword = !_obscureNewPassword;
+                    });
                   },
                 ),
-                // Gradient overlay
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: const [0.0024, 0.2921, 0.5801, 0.8322],
-                      colors: [
-                        Colors.white,
-                        Colors.white.withOpacity(0.85),
-                        Colors.white.withOpacity(0.9),
-                        Colors.white,
-                      ],
-                    ),
+                const SizedBox(height: AppSizes.spacingMedium),
+
+                // Confirm Password Field
+                AppTextField(
+                  hint: 'Confirm New Password',
+                  controller: _confirmPasswordController,
+                  obscureText: _obscureConfirmPassword,
+                  validator: _validateConfirmPassword,
+                  suffixIcon: _obscureConfirmPassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  onSuffixIconTap: () {
+                    setState(() {
+                      _obscureConfirmPassword = !_obscureConfirmPassword;
+                    });
+                  },
+                ),
+                const SizedBox(height: AppSizes.spacingMedium),
+
+                // Change Password button
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: AppButton(
+                    text: _hasExistingPassword
+                        ? 'Change Password'
+                        : 'Set Password',
+                    onPressed: _handleChangePassword,
                   ),
                 ),
               ],
             ),
           ),
-          // Content
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: AppSizes.paddingLarge,
-                vertical: AppSizes.paddingMedium,
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Back button
-                    IconButton(
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: AppColors.lightTextPrimary,
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-
-                    SizedBox(height: screenHeight * 0.029),
-
-                    // Title
-                    Text(
-                      'Set Password',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.splashBackground,
-                        height: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.spacingSmall),
-
-                    // Subtitle
-                    Text(
-                      'Create a strong password for your account',
-                      style: AppTextStyles.bodyMedium(
-                        color: AppColors.lightTextSecondary,
-                        isDark: false,
-                      ),
-                    ),
-
-                    SizedBox(height: screenHeight * 0.03),
-
-                    // Current Password Field (only shown if user has existing password)
-                    AnimatedCrossFade(
-                      firstChild: Container(height: 0, width: 0),
-                      secondChild: Column(
-                        children: [
-                          AppTextField(
-                            hint: 'Current Password',
-                            controller: _currentPasswordController,
-                            obscureText: _obscureCurrentPassword,
-                            validator: _hasExistingPassword
-                                ? _validateCurrentPassword
-                                : null,
-                            suffixIcon: _obscureCurrentPassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            onSuffixIconTap: () {
-                              setState(() {
-                                _obscureCurrentPassword =
-                                    !_obscureCurrentPassword;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: AppSizes.spacingMedium),
-                        ],
-                      ),
-                      crossFadeState: _hasExistingPassword
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      duration: const Duration(milliseconds: 300),
-                    ),
-
-                    // New Password Field
-                    AppTextField(
-                      hint: 'New Password',
-                      controller: _newPasswordController,
-                      obscureText: _obscureNewPassword,
-                      validator: _validatePassword,
-                      suffixIcon: _obscureNewPassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      onSuffixIconTap: () {
-                        setState(() {
-                          _obscureNewPassword = !_obscureNewPassword;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: AppSizes.spacingMedium),
-
-                    // Confirm Password Field
-                    AppTextField(
-                      hint: 'Confirm New Password',
-                      controller: _confirmPasswordController,
-                      obscureText: _obscureConfirmPassword,
-                      validator: _validateConfirmPassword,
-                      suffixIcon: _obscureConfirmPassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      onSuffixIconTap: () {
-                        setState(() {
-                          _obscureConfirmPassword = !_obscureConfirmPassword;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: AppSizes.spacingMedium),
-
-                    // Change Password button
-                    Center(
-                      child: AppButton(
-                        text: _hasExistingPassword
-                            ? 'Change Password'
-                            : 'Set Password',
-                        onPressed: _handleChangePassword,
-                        isFullWidth: false,
-                        horizontalPadding: 62.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

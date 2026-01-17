@@ -44,6 +44,6 @@ class EkubTypeController extends GetxController {
 
   void onCategoryTap(category_models.Category category) {
     // Navigate to Create Group page instead of category detail
-    Get.toNamed(AppRoutes.createGroup);
+    Get.toNamed(AppRoutes.categoryDetail);
   }
 }

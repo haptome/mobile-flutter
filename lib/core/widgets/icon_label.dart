@@ -26,7 +26,7 @@ class IconLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final usedIcon = icon ?? Icon(iconData, color: iconColor);
+    final usedIcon = icon ?? Icon(iconData, color: iconColor, size: 18);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

@@ -21,64 +21,25 @@ class EkubTypeView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      body: Stack(
-        children: [
-          // Background image with gradient overlay
-          Positioned.fill(
-            child: Stack(
-              children: [
-                Image.asset(
-                  AppAssets.authBackground,
-                  fit: BoxFit.cover,
-                  height: double.infinity,
-                  width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(color: AppColors.lightBackground);
-                  },
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    _buildHeader(context),
+                    // Categories Grid
+                    Obx(() => _buildCategoriesGrid(controller)),
+                    const SizedBox(height: AppSizes.spacingLarge),
+                  ],
                 ),
-                // Gradient overlay
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        stops: const [0.0024, 0.2921, 0.5801, 0.8322],
-                        colors: [
-                          Colors.white,
-                          Colors.white.withOpacity(0.85),
-                          Colors.white.withOpacity(0.9),
-                          Colors.white,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-          // Content
-          SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header
-                        _buildHeader(context),
-                        // Categories Grid
-                        Obx(() => _buildCategoriesGrid(controller)),
-                        const SizedBox(height: AppSizes.spacingLarge),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -170,8 +131,10 @@ class EkubTypeView extends StatelessWidget {
                           controller.categories[j].iconUrl ??
                           'material-symbols:category-outline',
                       label: controller.categories[j].name,
-                      onTap: () =>
-                          controller.onCategoryTap(controller.categories[j]),
+                      onTap: () => Get.toNamed(
+                        '/category-detail',
+                        arguments: controller.categories[j],
+                      ),
                     ),
                   // Fill remaining slots with empty space
                   if (controller.categories.length - i < 3)

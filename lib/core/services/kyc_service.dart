@@ -120,10 +120,7 @@ class KycService extends GetxService {
     } catch (e) {
       return ApiResponse<KycDocument>(
         success: false,
-        error: ApiError(
-          code: 'UPLOAD_ERROR',
-          message: e.toString(),
-        ),
+        error: ApiError(code: 'UPLOAD_ERROR', message: e.toString()),
       );
     }
   }
@@ -217,43 +214,57 @@ class KycService extends GetxService {
     }
   }
 
-  // Get KYC status (combines documents and user profile kyc_status)
+  // Get KYC status from the dedicated endpoint
   Future<ApiResponse<KycStatus>> getKycStatus() async {
     try {
-      // Get documents
-      final documentsResponse = await getDocuments();
+      final response = await _apiService.userDio.get('/kyc/status');
+      print('status++++++++++++++++++++++: $response');
 
-      // Get user profile to check kyc_status
-      String kycStatus = 'not_started';
+      // Directly parse the response since we know the structure
+      Map<String, dynamic> responseData = response.data as Map<String, dynamic>;
 
-      try {
-        // Try to get current user's kyc_status from AuthService
-        // This is a workaround - ideally we'd have a dedicated endpoint
-        final profileResponse = await _apiService.authDio.get('/auth/profile');
-        if (profileResponse.data['success'] == true &&
-            profileResponse.data['data'] != null) {
-          kycStatus =
-              profileResponse.data['data']['kyc_status'] ?? 'not_started';
-        }
-      } catch (e) {
-        // If profile fetch fails, use default
-        if (kDebugMode) {
-          print('Could not fetch user profile for KYC status: $e');
-        }
+      // Extract the inner data object
+      Map<String, dynamic>? innerData =
+          responseData['data'] as Map<String, dynamic>?;
+      print('responseData: $innerData');
+
+      if (innerData != null) {
+        // Extract kyc_status from the response
+        String status = innerData['kyc_status'] as String? ?? 'not_started';
+
+        // Get documents array
+        List<dynamic> documentsList =
+            innerData['documents'] as List<dynamic>? ?? [];
+
+        List<KycDocument> documents = documentsList
+            .map((doc) => KycDocument.fromJson(doc as Map<String, dynamic>))
+            .toList();
+
+        // Create and return the KycStatus object
+        KycStatus kycStatus = KycStatus(status: status, documents: documents);
+
+        // Create a successful ApiResponse with the parsed data
+        return ApiResponse<KycStatus>(
+          success: true,
+          data: kycStatus,
+          message: responseData['message'] as String?,
+        );
       }
 
-      final status = KycStatus(
-        status: kycStatus,
-        documents: documentsResponse.success && documentsResponse.data != null
-            ? documentsResponse.data!
-            : [],
+      // Fallback to default values if data is not available
+      return ApiResponse<KycStatus>(
+        success: false,
+        data: KycStatus(status: 'not_started', documents: []),
+        message: 'Unable to parse KYC status response',
       );
-
-      return ApiResponse(
-        success: true,
-        data: status,
-        message: 'KYC status retrieved successfully',
-      );
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return ApiResponse.fromJson(
+          e.response!.data as Map<String, dynamic>,
+          (data) => KycStatus(status: 'not_started', documents: []),
+        );
+      }
+      rethrow;
     } catch (e) {
       if (kDebugMode) {
         print('Error getting KYC status: $e');

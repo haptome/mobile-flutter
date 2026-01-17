@@ -6,6 +6,8 @@ import 'package:get/get.dart';
 import 'package:et_digital_equb/core/services/api_service.dart';
 import 'package:et_digital_equb/core/services/group_service.dart';
 import 'package:et_digital_equb/models/group_model.dart';
+import 'package:et_digital_equb/models/category_model.dart';
+import 'package:et_digital_equb/core/routes/app_routes.dart';
 
 class CreateGroupController extends GetxController {
   final GroupService _groupService = GroupService.to;
@@ -29,6 +31,9 @@ class CreateGroupController extends GetxController {
   final RxDouble serviceChargePercent = 4.76.obs; // Default service charge
   final Rx<DateTime?> startDate = Rx<DateTime?>(null); // Optional start date
   final RxInt durationInMonths = 0.obs;
+  final RxString selectedCategoryId = ''.obs;
+  final RxBool isLoadingCategories = false.obs;
+  final RxList<Category> categories = <Category>[].obs;
 
   // Validation states
   final RxBool isGroupNameValid = true.obs;
@@ -120,9 +125,10 @@ class CreateGroupController extends GetxController {
         'type': groupType.value, // private or invite (not public)
         'leader_id':
             'CURRENT_USER_ID', // This should be replaced with actual logged in user ID
-        'duration_months': calculatedDuration,
+        // 'duration_months': calculatedDuration,
       };
 
+      print(createGroupData);
       // Get the current user ID from the API service
       final apiService = ApiService.to;
       final currentUserId = await apiService.getCurrentUserId();
@@ -150,12 +156,28 @@ class CreateGroupController extends GetxController {
         serviceChargePercent: serviceChargePercent.value,
         startDate: startDate.value?.toIso8601String(),
         leaderId: currentUserId,
-        durationMonths: calculatedDuration,
+        categoryId: selectedCategoryId.value.isEmpty
+            ? null
+            : selectedCategoryId.value,
+        // durationMonths: calculatedDuration,
       );
 
       if (response.success) {
         // Reset form after successful creation
         resetForm();
+
+        // Navigate to ekubs tab after successful creation
+        // Navigate back to ekubs tab
+        Get.offAndToNamed(AppRoutes.ekubs); // Navigate directly to ekubs tab
+
+        Get.snackbar(
+          'Success',
+          'Group created successfully!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+
         return true;
       } else {
         // Handle API error
@@ -239,6 +261,26 @@ class CreateGroupController extends GetxController {
     startDate.value = date;
   }
 
+  // Update selected category
+  void updateSelectedCategory(String categoryId) {
+    selectedCategoryId.value = categoryId;
+  }
+
+  // Load categories
+  Future<void> loadCategories() async {
+    try {
+      isLoadingCategories.value = true;
+      final response = await _groupService.getCategories(categoryType: 'cash');
+      if (response.success && response.data != null) {
+        categories.assignAll(response.data!);
+      }
+    } catch (e) {
+      print('Error loading categories: \\$e');
+    } finally {
+      isLoadingCategories.value = false;
+    }
+  }
+
   // Calculate progress percentage
   double getProgressPercentage() {
     if (totalSteps <= 0) return 0.0;
@@ -293,5 +335,6 @@ class CreateGroupController extends GetxController {
   void onInit() {
     super.onInit();
     updateProgress();
+    loadCategories(); // Load categories when controller is initialized
   }
 }

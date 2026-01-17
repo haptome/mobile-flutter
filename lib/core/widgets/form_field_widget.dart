@@ -3,6 +3,7 @@
 // Linked Spec Section: Account Setting Page
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 
 class FormFieldWidget extends StatelessWidget {
@@ -36,69 +37,73 @@ class FormFieldWidget extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: GoogleFonts.montserrat(
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: AppColors.black,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         GestureDetector(
           onTap: isDropdown ? onTap : null,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: AppColors.borderLightGray,
-                width: 1,
-              ),
-            ),
+            decoration: isDropdown
+                ? BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.borderLightGray,
+                      width: 1,
+                    ),
+                  )
+                : null,
             child: Row(
               children: [
-                if (prefix != null) ...[
-                  prefix!,
-                  const SizedBox(width: 12),
-                ],
+                // if (prefix != null) ...[prefix!, const SizedBox(width: 12)],
                 Expanded(
                   child: isDropdown
                       ? Text(
                           value ?? hintText ?? '',
-                          style: TextStyle(
+                          style: GoogleFonts.montserrat(
                             fontSize: 16,
                             color: value != null
                                 ? AppColors.black
-                                : AppColors.textLightGray,
+                                : AppColors.black.withOpacity(0.5),
+                            fontWeight: FontWeight.w400,
                           ),
                         )
                       : TextField(
-                          key: ValueKey(value), // Force rebuild when value changes
+                          // key: ValueKey(
+                          //   value,
+                          // ), // Force rebuild when value changes
                           controller: TextEditingController(text: value)
                             ..selection = TextSelection.fromPosition(
                               TextPosition(offset: value?.length ?? 0),
                             ),
                           onChanged: onChanged,
                           keyboardType: keyboardType,
-                          style: const TextStyle(
+                          style: GoogleFonts.montserrat(
                             fontSize: 16,
                             color: AppColors.black,
+                            fontWeight: FontWeight.w400,
                           ),
                           decoration: InputDecoration(
                             hintText: hintText,
-                            hintStyle: const TextStyle(
-                              color: AppColors.textLightGray,
+                            hintStyle: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.black.withOpacity(0.5),
+                              fontWeight: FontWeight.w400,
                             ),
                             border: InputBorder.none,
-                            isDense: true,
+                            prefix: (prefix != null) ? prefix! : null,
+                            suffix: (suffix != null) ? suffix! : null,
+                            isDense: false,
                             contentPadding: EdgeInsets.zero,
                           ),
                         ),
                 ),
-                if (suffix != null) ...[
-                  const SizedBox(width: 12),
-                  suffix!,
-                ],
+                // if (suffix != null) ...[const SizedBox(width: 12), suffix!],
                 if (isDropdown && suffix == null)
                   const Icon(
                     Icons.keyboard_arrow_down,
@@ -113,4 +118,3 @@ class FormFieldWidget extends StatelessWidget {
     );
   }
 }
-

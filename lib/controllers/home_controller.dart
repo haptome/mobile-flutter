@@ -12,14 +12,15 @@ class HomeController extends GetxController {
   final GroupService _groupService = GroupService.to;
 
   final RxInt currentBottomNavIndex = 0.obs;
-  final RxBool isAccountVerified = false.obs; // Set to false to show banner
+  final RxBool isAccountVerified = true.obs; // Set to false to show banner
   final RxList<category_models.Category> cashCategories =
       <category_models.Category>[].obs;
   final RxList<category_models.Category> inKindCategories =
       <category_models.Category>[].obs;
   final RxBool isLoadingCategories = true.obs;
   final RxBool isLoadingInKindCategories = true.obs;
-  final RxMap<String, int> durationGroupsCount = <String, int>{}.obs; // frequency -> count
+  final RxMap<String, int> durationGroupsCount =
+      <String, int>{}.obs; // frequency -> count
   final RxBool isLoadingDuration = true.obs;
 
   @override
@@ -36,7 +37,7 @@ class HomeController extends GetxController {
       await _authService.getProfile();
       // Check verification status from user data
       final kycStatus = _authService.currentUser.value?.kycStatus;
-      isAccountVerified.value = kycStatus == 'verified';
+      isAccountVerified.value = kycStatus == 'approved';
     } catch (e) {
       // Silently handle error for UI-only mode
     }
@@ -131,13 +132,13 @@ class HomeController extends GetxController {
       if (response.success && response.data != null) {
         final groups = response.data!;
         final counts = <String, int>{};
-        
+
         // Count groups by frequency
         for (var group in groups) {
           final frequency = group.frequency.toLowerCase();
           counts[frequency] = (counts[frequency] ?? 0) + 1;
         }
-        
+
         durationGroupsCount.value = counts;
       }
     } catch (e) {

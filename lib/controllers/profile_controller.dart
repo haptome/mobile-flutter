@@ -85,7 +85,7 @@ class ProfileController extends GetxController {
   }
 
   void onTermsConditionsTap() {
-    Get.toNamed('/terms-conditions');
+    Get.toNamed(AppRoutes.termsConditions);
   }
 
   void onFaqTap() {

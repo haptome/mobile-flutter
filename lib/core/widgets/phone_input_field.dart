@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_sizes.dart';
 import '../theme/app_text_styles.dart';
@@ -29,7 +30,7 @@ class PhoneInputField extends StatelessWidget {
     this.autofocus = false,
     this.errorText,
     this.countryCode = '+251',
-    this.countryFlag = '🇪🇹',
+    this.countryFlag = 'assets/icons/ethiopia.svg',
     this.maxLength,
   });
 
@@ -52,9 +53,7 @@ class PhoneInputField extends StatelessWidget {
         FilteringTextInputFormatter.digitsOnly,
         if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
       ],
-      style: textStyle.copyWith(
-        color: AppColors.black,
-      ),
+      style: textStyle.copyWith(color: AppColors.black),
       decoration: InputDecoration(
         filled: true,
         fillColor: AppColors.white,
@@ -71,20 +70,18 @@ class PhoneInputField extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                countryFlag,
-                style: const TextStyle(fontSize: 20),
-              ),
+              SvgPicture.asset(countryFlag, width: 24, height: 24),
               const SizedBox(width: AppSizes.spacingSmall),
               Text(
                 countryCode,
                 style: AppTextStyles.bodyMedium(
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
                   isDark: isDark,
                 ),
               ),
               const SizedBox(width: AppSizes.spacingSmall),
-            
             ],
           ),
         ),
@@ -105,10 +102,7 @@ class PhoneInputField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.textFieldRadius),
-          borderSide: const BorderSide(
-            color: AppColors.primary,
-            width: 2.0,
-          ),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2.0),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.textFieldRadius),
@@ -119,10 +113,7 @@ class PhoneInputField extends StatelessWidget {
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.textFieldRadius),
-          borderSide: const BorderSide(
-            color: AppColors.lightError,
-            width: 2.0,
-          ),
+          borderSide: const BorderSide(color: AppColors.lightError, width: 2.0),
         ),
         errorText: errorText,
         counterText: '',
@@ -131,4 +122,3 @@ class PhoneInputField extends StatelessWidget {
     );
   }
 }
-

@@ -14,6 +14,7 @@ class CategorySmallCard extends StatelessWidget {
   final Color? iconBackgroundColor;
   final List<BoxShadow>? iconBoxShadow;
   final Color? iconColor;
+  final bool shadow;
 
   const CategorySmallCard({
     super.key,
@@ -23,6 +24,7 @@ class CategorySmallCard extends StatelessWidget {
     this.iconBackgroundColor,
     this.iconBoxShadow,
     this.iconColor,
+    this.shadow = false,
   });
 
   @override
@@ -43,14 +45,16 @@ class CategorySmallCard extends StatelessWidget {
               color: const Color(0x40000000), // #00000040
               width: 0.4,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0x14000000), // #00000014
-                blurRadius: 4,
-                spreadRadius: 0,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            boxShadow: shadow
+                ? [
+                    BoxShadow(
+                      color: const Color(0x14000000), // #00000014
+                      blurRadius: 4,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -79,7 +83,7 @@ class CategorySmallCard extends StatelessWidget {
                   color: const Color(0xff232729),
                   isDark: false,
                 ),
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
@@ -89,4 +93,3 @@ class CategorySmallCard extends StatelessWidget {
     );
   }
 }
-

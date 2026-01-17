@@ -103,7 +103,7 @@ class CreateGroupView extends StatelessWidget {
 
               // Progress indicator
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: EdgeInsets.symmetric(horizontal: 20),
                 margin: const EdgeInsets.only(bottom: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,6 +127,7 @@ class CreateGroupView extends StatelessWidget {
                     const SizedBox(height: 8),
                     Container(
                       height: 6,
+                      width: double.infinity, // Make it full width
                       decoration: BoxDecoration(
                         color: const Color(0xFFEAE7E1),
                         borderRadius: BorderRadius.circular(3),
@@ -137,11 +138,15 @@ class CreateGroupView extends StatelessWidget {
                             double progressWidth =
                                 constraints.maxWidth *
                                 controller.progressPercentage.value;
-                            return Container(
-                              width: progressWidth,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFBBBB32), // Primary color
-                                borderRadius: BorderRadius.circular(3),
+                            print(progressWidth);
+                            return LinearProgressIndicator(
+                              backgroundColor: const Color(0xFFEAE7E1),
+                              valueColor: AlwaysStoppedAnimation(
+                                const Color(0xFFBBBB32),
+                              ),
+                              value: controller.progressPercentage.value,
+                              borderRadius: BorderRadius.circular(
+                                AppSizes.radiusCircular,
                               ),
                             );
                           });
@@ -339,6 +344,83 @@ class CreateGroupView extends StatelessWidget {
               }
             },
           ),
+
+          // Category
+          const SizedBox(height: 12),
+          Text(
+            'Category *',
+            style: GoogleFonts.montserrat(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Obx(() {
+            if (controller.categories.isEmpty &&
+                controller.isLoadingCategories.value) {
+              return Container(
+                height: 56,
+                alignment: Alignment.center,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              );
+            }
+            return Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: const Color(0xFFD8DADC), width: 1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  value: controller.selectedCategoryId.value.isEmpty
+                      ? null
+                      : controller.selectedCategoryId.value,
+                  hint: Text(
+                    controller.isLoadingCategories.value
+                        ? 'Loading categories...'
+                        : 'Select category',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: controller.isLoadingCategories.value
+                          ? Colors.black.withOpacity(0.5)
+                          : Colors.black.withOpacity(0.5),
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  items: controller.categories.map((category) {
+                    return DropdownMenuItem<String>(
+                      value: category.id,
+                      child: Text(
+                        category.name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: controller.isLoadingCategories.value
+                      ? null
+                      : (String? newValue) {
+                          if (newValue != null) {
+                            controller.updateSelectedCategory(newValue);
+                          }
+                        },
+                  icon: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: Colors.black.withOpacity(0.5),
+                  ),
+                  iconSize: 14,
+                ),
+              ),
+            );
+          }),
 
           // Frequency
           const SizedBox(height: 12),

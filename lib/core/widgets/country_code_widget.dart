@@ -19,20 +19,13 @@ class CountryCodeWidget extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          flag,
-          style: const TextStyle(fontSize: 20),
-        ),
+        Text(flag, style: const TextStyle(fontSize: 20)),
         const SizedBox(width: 8),
         Text(
-          '($countryCode)',
-          style: const TextStyle(
-            fontSize: 16,
-            color: Colors.black87,
-          ),
+          '$countryCode',
+          style: const TextStyle(fontSize: 16, color: Colors.black87),
         ),
       ],
     );
   }
 }
-

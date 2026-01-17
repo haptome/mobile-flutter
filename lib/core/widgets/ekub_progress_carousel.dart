@@ -10,11 +10,7 @@ class EkubProgressCarousel extends StatefulWidget {
   final List<Map<String, dynamic>> ekubs;
   final Function(String ekubId)? onEkubTap;
 
-  const EkubProgressCarousel({
-    super.key,
-    required this.ekubs,
-    this.onEkubTap,
-  });
+  const EkubProgressCarousel({super.key, required this.ekubs, this.onEkubTap});
 
   @override
   State<EkubProgressCarousel> createState() => _EkubProgressCarouselState();
@@ -87,15 +83,15 @@ class _EkubProgressCarouselState extends State<EkubProgressCarousel> {
   Widget _buildDot(bool isActive) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: isActive ? 24 : 8,
+      width: 8,
       height: 8,
       decoration: BoxDecoration(
-        color: isActive
-            ? AppColors.primary
-            : AppColors.primary.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(4),
+        color: isActive ? AppColors.primary : Colors.transparent,
+        shape: BoxShape.circle,
+        border: isActive
+            ? null
+            : Border.all(color: AppColors.primary, width: 1),
       ),
     );
   }
 }
-
