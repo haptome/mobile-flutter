@@ -43,7 +43,7 @@ class CategorySectionCards extends StatelessWidget {
               ...categories.take(3).map((category) {
                 return CategorySmallCard(
                   iconUrl:
-                      category.iconUrl ?? 'material-symbols:category-outline',
+                      category.icon ?? 'material-symbols:category-outline',
                   label: category.name,
                   onTap: onCategoryTap != null
                       ? () => onCategoryTap!(category)

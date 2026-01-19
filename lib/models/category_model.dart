@@ -5,7 +5,7 @@ class Category {
   final String id;
   final String name;
   final String? description;
-  final String? iconUrl;
+  final String? icon; // Renamed from iconUrl for clarity
   final String categoryType; // 'cash' or 'in_kind'
   final bool isActive;
   final DateTime createdAt;
@@ -15,7 +15,7 @@ class Category {
     required this.id,
     required this.name,
     this.description,
-    this.iconUrl,
+    this.icon,
     required this.categoryType,
     required this.isActive,
     required this.createdAt,
@@ -27,7 +27,7 @@ class Category {
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String?,
-      iconUrl: json['icon_url'] as String?,
+      icon: json['icon_url'] as String?, // Updated to match API field
       categoryType: json['category_type'] as String,
       isActive: json['is_active'] as bool,
       createdAt: DateTime.parse(json['created_at'] as String),
@@ -40,7 +40,7 @@ class Category {
       'id': id,
       'name': name,
       'description': description,
-      'icon_url': iconUrl,
+      'icon_url': icon, // Updated to match API field
       'category_type': categoryType,
       'is_active': isActive,
       'created_at': createdAt.toIso8601String(),

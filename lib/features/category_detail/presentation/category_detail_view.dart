@@ -5,6 +5,7 @@ import 'package:et_digital_equb/core/app_assets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:iconify_design/iconify_design.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../models/category_model.dart' as category_models;
@@ -57,15 +58,24 @@ class CategoryDetailView extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: AppColors.lightTextPrimary),
           onPressed: () => Get.back(),
         ),
-        title: Obx(
-          () => Text(
-            controller.category.value.name,
-            style: GoogleFonts.montserrat(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.splashBackground,
+        title: Row(
+          children: [
+            if (controller.category.value.icon != null)
+              IconifyIcon(
+                icon: controller.category.value.icon!,
+                size: 24.0,
+                color: AppColors.splashBackground,
+              ),
+            const SizedBox(width: 8),
+            Text(
+              controller.category.value.name,
+              style: GoogleFonts.montserrat(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.splashBackground,
+              ),
             ),
-          ),
+          ],
         ),
         centerTitle: false,
       ),

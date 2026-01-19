@@ -128,7 +128,7 @@ class EkubTypeView extends StatelessWidget {
                   )
                     CategoryCard(
                       iconUrl:
-                          controller.categories[j].iconUrl ??
+                          controller.categories[j].icon ??
                           'material-symbols:category-outline',
                       label: controller.categories[j].name,
                       onTap: () => Get.toNamed(

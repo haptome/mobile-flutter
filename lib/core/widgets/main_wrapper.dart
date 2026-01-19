@@ -20,54 +20,46 @@ class MainWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        child,
-        // Bottom Navigation
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: AppBottomNav(
-            currentIndex: currentIndex,
-            onTap: (index) {
-              if (index == currentIndex)
-                return; // Don't navigate if already on this screen
+    return Scaffold(
+      body: child,
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: currentIndex,
+        onTap: (index) {
+          if (index == currentIndex)
+            return; // Don't navigate if already on this screen
 
-              final route = [
-                AppRoutes.home,
-                AppRoutes.ekubs,
-                AppRoutes.transactions,
-                AppRoutes.profile,
-              ][index];
+          final route = [
+            AppRoutes.home,
+            AppRoutes.ekubs,
+            AppRoutes.transactions,
+            AppRoutes.profile,
+          ][index];
 
-              Get.offAllNamed(route);
-            },
-            items: const [
-              BottomNavItem(
-                iconPath: AppAssets.homeIcon,
-                label: 'Home',
-                route: '/home',
-              ),
-              BottomNavItem(
-                iconPath: AppAssets.personsIcon,
-                label: 'Your Ekubs',
-                route: '/ekubs',
-              ),
-              BottomNavItem(
-                iconPath: AppAssets.transactionIcon,
-                label: 'Transactions',
-                route: '/transactions',
-              ),
-              BottomNavItem(
-                iconPath: AppAssets.profileIcon,
-                label: 'Profile',
-                route: '/profile',
-              ),
-            ],
+          Get.offAllNamed(route);
+        },
+        items: const [
+          BottomNavItem(
+            iconPath: AppAssets.homeIcon,
+            label: 'Home',
+            route: '/home',
           ),
-        ),
-      ],
+          BottomNavItem(
+            iconPath: AppAssets.personsIcon,
+            label: 'Your Ekubs',
+            route: '/ekubs',
+          ),
+          BottomNavItem(
+            iconPath: AppAssets.transactionIcon,
+            label: 'Transactions',
+            route: '/transactions',
+          ),
+          BottomNavItem(
+            iconPath: AppAssets.profileIcon,
+            label: 'Profile',
+            route: '/profile',
+          ),
+        ],
+      ),
     );
   }
 }

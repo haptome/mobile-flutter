@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:marqueer/marqueer.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_sizes.dart';
 import '../theme/app_text_styles.dart';
@@ -8,11 +9,7 @@ class WarningBanner extends StatelessWidget {
   final String message;
   final VoidCallback? onTap;
 
-  const WarningBanner({
-    super.key,
-    required this.message,
-    this.onTap,
-  });
+  const WarningBanner({super.key, required this.message, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -35,14 +32,15 @@ class WarningBanner extends StatelessWidget {
             ),
             const SizedBox(width: AppSizes.spacingSmall),
             Expanded(
-              child: Text(
-                message,
-                style: AppTextStyles.bodyMedium(
-                  color: AppColors.white,
-                  isDark: false,
-                ).copyWith(
-                  fontSize: 11,
+              child: Marqueer(
+                child: Text(
+                  message,
+                  style: AppTextStyles.bodyMedium(
+                    color: AppColors.white,
+                    isDark: false,
+                  ).copyWith(fontSize: 11),
                 ),
+                
               ),
             ),
           ],
@@ -51,4 +49,3 @@ class WarningBanner extends StatelessWidget {
     );
   }
 }
-

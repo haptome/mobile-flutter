@@ -2,6 +2,7 @@
 // Author: Auto-generated
 
 import 'package:flutter/material.dart';
+import 'package:iconify_design/iconify_design.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_sizes.dart';
@@ -68,8 +69,8 @@ class CategorySmallCard extends StatelessWidget {
                   boxShadow: iconBoxShadow,
                 ),
                 child: Center(
-                  child: Iconify(
-                    iconUrl,
+                  child: IconifyIcon(
+                    icon:iconUrl,
                     color: iconColor ?? AppColors.white,
                     size: AppSizes.iconMedium,
                   ),
@@ -79,9 +80,13 @@ class CategorySmallCard extends StatelessWidget {
               Text(
                 label,
                 textAlign: TextAlign.center,
+                
                 style: AppTextStyles.bodySmall(
                   color: const Color(0xff232729),
                   isDark: false,
+                ).copyWith(
+                  fontWeight: FontWeight.bold,
+                  
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
