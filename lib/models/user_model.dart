@@ -9,6 +9,7 @@ class UserModel {
   final String? fullName;
   final String? workStatus;
   final String? profilePicUrl;
+  final String? location;
   final int trustScore;
   final String kycStatus;
   final bool isActive;
@@ -23,6 +24,7 @@ class UserModel {
     this.fullName,
     this.workStatus,
     this.profilePicUrl,
+    this.location,
     required this.trustScore,
     required this.kycStatus,
     required this.isActive,
@@ -39,6 +41,7 @@ class UserModel {
       fullName: json['full_name'] as String?,
       workStatus: json['work_status'] as String?,
       profilePicUrl: json['profile_pic_url'] as String?,
+      location: json['location'] as String?,
       trustScore: json['trust_score'] as int,
       kycStatus: json['kyc_status'] as String,
       isActive: json['is_active'] as bool,
@@ -56,6 +59,7 @@ class UserModel {
       'full_name': fullName,
       'work_status': workStatus,
       'profile_pic_url': profilePicUrl,
+      'location': location,
       'trust_score': trustScore,
       'kyc_status': kycStatus,
       'is_active': isActive,

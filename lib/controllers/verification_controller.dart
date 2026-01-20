@@ -537,6 +537,85 @@ class VerificationController extends GetxController {
     return await permissionService.requestKycPermissions();
   }
 
+  /// Request specific permission type
+  Future<bool> requestSpecificPermission(PermissionType type) async {
+    final permissionService = PermissionService.to;
+    final statuses = await permissionService.requestPermissions(type);
+
+    // Check if all requested permissions were granted
+    bool allGranted = true;
+    for (final status in statuses.values) {
+      if (status != PermissionStatus.granted) {
+        allGranted = false;
+        break;
+      }
+    }
+
+    return allGranted;
+  }
+
+  /// Check specific permission status
+  Future<bool> checkSpecificPermission(PermissionType type) async {
+    final permissionService = PermissionService.to;
+    final statusMap = await permissionService.getKycPermissionStatus();
+
+    // Get the permissions relevant to the type
+    List<Permission> permissions = [];
+    switch (type) {
+      case PermissionType.kyc:
+        if (GetPlatform.isIOS) {
+          permissions = [
+            Permission.camera,
+            Permission.photos,
+            Permission.microphone,
+          ];
+        } else {
+          permissions = [
+            Permission.camera,
+            Permission.storage,
+            Permission.microphone,
+          ];
+        }
+        break;
+      case PermissionType.camera:
+        permissions = [Permission.camera];
+        break;
+      case PermissionType.storage:
+        if (GetPlatform.isIOS) {
+          permissions = [Permission.photos];
+        } else {
+          permissions = [Permission.storage];
+        }
+        break;
+      case PermissionType.microphone:
+        permissions = [Permission.microphone];
+        break;
+      default:
+        if (GetPlatform.isIOS) {
+          permissions = [
+            Permission.camera,
+            Permission.photos,
+            Permission.microphone,
+          ];
+        } else {
+          permissions = [
+            Permission.camera,
+            Permission.storage,
+            Permission.microphone,
+          ];
+        }
+        break;
+    }
+
+    // Check if all permissions of the requested type are granted
+    for (final permission in permissions) {
+      if (statusMap[permission] != PermissionStatus.granted) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   /// Check KYC status from the API
   Future<void> checkKycStatus() async {
     try {

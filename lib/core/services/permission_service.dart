@@ -5,6 +5,9 @@
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+/// Enum to define different permission types for various app features
+enum PermissionType { kyc, camera, storage, location, microphone }
+
 class PermissionService extends GetxService {
   static PermissionService get to => Get.find();
 
@@ -14,15 +17,14 @@ class PermissionService extends GetxService {
     return status == PermissionStatus.granted;
   }
 
-  /// Request storage permission (Android) or photos permission (iOS)
+  /// Request storage permission with platform-specific handling
   Future<bool> requestStoragePermission() async {
     late Permission permission;
 
     if (GetPlatform.isIOS) {
       permission = Permission.photos;
     } else {
-      // For Android 13+, we might need media library permission
-      // For older Android versions, we need storage permission
+      // For Android, use storage permission
       permission = Permission.storage;
     }
 
@@ -30,20 +32,46 @@ class PermissionService extends GetxService {
     return status == PermissionStatus.granted;
   }
 
-  /// Request multiple permissions at once
-  Future<Map<Permission, PermissionStatus>> requestMultiplePermissions() async {
-    final permissions = <Permission>[];
+  /// Request microphone permission (important for video recordings)
+  Future<bool> requestMicrophonePermission() async {
+    final status = await Permission.microphone.request();
+    return status == PermissionStatus.granted;
+  }
 
-    if (GetPlatform.isIOS) {
-      permissions.addAll([Permission.camera, Permission.photos]);
-    } else {
-      permissions.addAll([Permission.camera, Permission.storage]);
+  /// Request multiple permissions at once based on the feature type
+  Future<Map<Permission, PermissionStatus>> requestPermissions(
+    PermissionType type,
+  ) async {
+    List<Permission> permissions = [];
+
+    switch (type) {
+      case PermissionType.kyc:
+        permissions = _getKycPermissions();
+        break;
+      case PermissionType.camera:
+        permissions = [Permission.camera];
+        break;
+      case PermissionType.storage:
+        permissions = [Permission.storage, Permission.photos];
+        break;
+      case PermissionType.location:
+        permissions = [Permission.location];
+        break;
+      case PermissionType.microphone:
+        permissions = [Permission.microphone];
+        break;
     }
 
+    return await permissions.request();
+  }
+
+  /// Get the list of permissions required for KYC operations
+  List<Permission> _getKycPermissions() {
     if (GetPlatform.isIOS) {
-      return await [Permission.camera, Permission.photos].request();
+      return [Permission.camera, Permission.photos, Permission.microphone];
     } else {
-      return await [Permission.camera, Permission.storage].request();
+      // For Android, we use the general approach with fallback
+      return [Permission.camera, Permission.storage, Permission.microphone];
     }
   }
 
@@ -67,6 +95,12 @@ class PermissionService extends GetxService {
     return status == PermissionStatus.granted;
   }
 
+  /// Check if microphone permission is granted
+  Future<bool> isMicrophonePermissionGranted() async {
+    final status = await Permission.microphone.status;
+    return status == PermissionStatus.granted;
+  }
+
   /// Open app settings to allow user to manually grant permissions
   Future<void> openAppSettings() async {
     await openAppSettings();
@@ -85,19 +119,14 @@ class PermissionService extends GetxService {
   Future<bool> hasRequiredKycPermissions() async {
     final cameraGranted = await isCameraPermissionGranted();
     final storageGranted = await isStoragePermissionGranted();
+    final micGranted = await isMicrophonePermissionGranted();
 
-    return cameraGranted && storageGranted;
+    return cameraGranted && storageGranted && micGranted;
   }
 
   /// Request permissions required for KYC document upload
   Future<bool> requestKycPermissions() async {
-    Map<Permission, PermissionStatus> statuses;
-
-    if (GetPlatform.isIOS) {
-      statuses = await [Permission.camera, Permission.photos].request();
-    } else {
-      statuses = await [Permission.camera, Permission.storage].request();
-    }
+    final statuses = await requestPermissions(PermissionType.kyc);
 
     // Check if all required permissions were granted
     bool allGranted = true;
@@ -109,5 +138,34 @@ class PermissionService extends GetxService {
     }
 
     return allGranted;
+  }
+
+  /// Get detailed status of all permissions needed for KYC
+  Future<Map<Permission, PermissionStatus>> getKycPermissionStatus() async {
+    final permissions = _getKycPermissions();
+    final statusMap = <Permission, PermissionStatus>{};
+
+    for (final permission in permissions) {
+      statusMap[permission] = await permission.status;
+    }
+
+    return statusMap;
+  }
+
+  /// Check if any permission is permanently denied
+  bool hasAnyPermanentlyDenied(Map<Permission, PermissionStatus> statusMap) {
+    return statusMap.values.any(
+      (status) => status == PermissionStatus.permanentlyDenied,
+    );
+  }
+
+  /// Get list of permissions that need to be requested
+  List<Permission> getMissingPermissions(
+    Map<Permission, PermissionStatus> statusMap,
+  ) {
+    return statusMap.entries
+        .where((entry) => entry.value != PermissionStatus.granted)
+        .map((entry) => entry.key)
+        .toList();
   }
 }

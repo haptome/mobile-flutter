@@ -2,13 +2,15 @@
 // Author: haptome H.
 // Linked Spec Section: FR01-FR03
 
+import 'dart:io';
 import 'package:et_digital_equb/models/api_response.dart';
 import 'package:et_digital_equb/models/user_model.dart';
 import 'package:et_digital_equb/models/register_request.dart';
 import 'package:et_digital_equb/models/verify_otp_request.dart';
 import 'package:et_digital_equb/models/login_request.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide FormData, MultipartFile, Options;
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 
 import 'api_service.dart';
@@ -289,6 +291,45 @@ class AuthService extends GetxService {
     }
   }
 
+  // Upload profile image
+  Future<ApiResponse<Map<String, dynamic>>> uploadProfileImage(
+    File imageFile,
+  ) async {
+    try {
+      // Prepare form data for image upload
+      final formData = FormData.fromMap({
+        'profile_image': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: imageFile.path.split('/').last,
+        ),
+      });
+
+      final response = await _apiService.authDio.post(
+        '/auth/upload-profile-image',
+        data: formData,
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
+      );
+
+      final apiResponse = ApiResponse.fromJson(
+        response.data as Map<String, dynamic>,
+        (data) => data as Map<String, dynamic>,
+      );
+
+      return apiResponse;
+    } on DioException catch (e) {
+      // Handle Dio errors
+      if (e.response != null) {
+        return ApiResponse.fromJson(
+          e.response!.data as Map<String, dynamic>,
+          (data) => data as Map<String, dynamic>,
+        );
+      }
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // Resend OTP
   Future<ApiResponse<Map<String, dynamic>>> resendOtp(String phone) async {
     try {
@@ -417,6 +458,7 @@ class AuthService extends GetxService {
     String? fullName,
     String? email,
     String? workStatus,
+    String? location,
     String? profilePicUrl,
   }) async {
     try {
@@ -425,6 +467,7 @@ class AuthService extends GetxService {
       if (fullName != null) requestData['full_name'] = fullName;
       if (email != null) requestData['email'] = email;
       if (workStatus != null) requestData['work_status'] = workStatus;
+      if (location != null) requestData['location'] = location;
       if (profilePicUrl != null) requestData['profile_pic_url'] = profilePicUrl;
 
       final response = await _apiService.authDio.put(
