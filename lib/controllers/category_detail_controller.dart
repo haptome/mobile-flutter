@@ -15,9 +15,10 @@ class CategoryDetailController extends GetxController {
   final GroupService _groupService = GroupService.to;
 
   final Rx<category_models.Category> category;
-  final RxList<Group> groups = <Group>[].obs;
+  final RxList<dynamic> groups = <dynamic>[].obs;
   final RxBool isLoading = true.obs;
   final RxString errorMessage = ''.obs;
+  final RxBool isKindGroup = false.obs; // Track if we're showing in-kind groups
 
   CategoryDetailController({required category_models.Category category})
     : category = category.obs;
@@ -33,15 +34,34 @@ class CategoryDetailController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
 
-      final response = await _groupService.getGroups(
-        categoryId: category.value.id,
-        status: 'active', // Only show active groups
-      );
+      // Check if this is an in-kind category
+      if (category.value.categoryType == 'in_kind') {
+        isKindGroup.value = true;
+        // Load in-kind groups
+        final response = await _groupService.getInKindGroups(
+          categoryId: category.value.id,
+          status: 'active', // Only show active groups
+        );
 
-      if (response.success && response.data != null) {
-        groups.value = response.data!;
+        if (response.success && response.data != null) {
+          groups.value = response.data!;
+        } else {
+          errorMessage.value =
+              response.message ?? 'Failed to load in-kind groups';
+        }
       } else {
-        errorMessage.value = response.message ?? 'Failed to load groups';
+        isKindGroup.value = false;
+        // Load regular cash groups
+        final response = await _groupService.getGroups(
+          categoryId: category.value.id,
+          status: 'active', // Only show active groups
+        );
+
+        if (response.success && response.data != null) {
+          groups.value = response.data!;
+        } else {
+          errorMessage.value = response.message ?? 'Failed to load groups';
+        }
       }
     } catch (e) {
       errorMessage.value = 'Error loading groups: $e';
@@ -50,11 +70,11 @@ class CategoryDetailController extends GetxController {
     }
   }
 
-  void onGroupTap(Group group) {
+  void onGroupTap(dynamic group) {
     Get.toNamed(AppRoutes.groupDetail, arguments: group);
   }
 
-  Future<void> onJoinTap(Group group) async {
+  Future<void> onJoinTap(dynamic group) async {
     // Basic validation: ensure user is verified
     final auth = AuthService.to;
     final kyc = auth.currentUser.value?.kycStatus;
@@ -62,7 +82,8 @@ class CategoryDetailController extends GetxController {
       // Prompt user to verify account
       Get.defaultDialog(
         title: 'Verify Account',
-        middleText: 'You need to verify your account before joining an ekub. Verify now?',
+        middleText:
+            'You need to verify your account before joining an ekub. Verify now?',
         textConfirm: 'Verify',
         textCancel: 'Later',
         onConfirm: () {
@@ -79,8 +100,14 @@ class CategoryDetailController extends GetxController {
         title: const Text('Join Ekub'),
         content: Text('Are you sure you want to join "${group.name}"?'),
         actions: [
-          TextButton(onPressed: () => Get.back(result: false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Get.back(result: true), child: const Text('Join')),
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            child: const Text('Join'),
+          ),
         ],
       ),
     );
@@ -89,7 +116,9 @@ class CategoryDetailController extends GetxController {
 
     try {
       isLoading.value = true;
+
       final resp = await _groupService.joinGroup(group.id, acceptTerms: true);
+
       if (resp.success) {
         Get.snackbar('Joined', resp.message ?? 'Successfully joined group');
         // Navigate to group detail on success

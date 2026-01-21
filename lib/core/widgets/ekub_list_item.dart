@@ -39,16 +39,31 @@ class EkubListItem extends StatelessWidget {
 
   /// Compatibility constructor to build from a `Group` model
   factory EkubListItem.fromGroup(
-    Group group, {
+    dynamic group, {
     VoidCallback? onJoin,
     VoidCallback? onTap,
     bool showJoin = true,
   }) {
+    // Handle both Group and InKindGroup models
+    String title = group.name ?? 'Unknown';
+    double contributionAmount = group.contributionAmount ?? 0.0;
+    String frequency = group.frequency ?? '';
+    int currentMembers = 0;
+
+    // Try to get currentMembers for Group, or use targetMembers for InKindGroup as fallback
+    if (group is Group) {
+      currentMembers = group.currentMembers;
+    } else if (group is InKindGroup) {
+      // For InKindGroup, we'll use targetMembers as default, or 0 if not available
+      currentMembers =
+          0; // Since InKindGroup model doesn't have currentMembers field
+    }
+
     return EkubListItem(
-      title: group.name,
-      amountLabel: '${group.contributionAmount.toStringAsFixed(0)} ETB',
-      frequency: group.frequency,
-      currentMembers: group.currentMembers,
+      title: title,
+      amountLabel: '\${contributionAmount.toStringAsFixed(0)} ETB',
+      frequency: frequency,
+      currentMembers: currentMembers,
       avatars: null,
       onJoin: onJoin,
       onTap: onTap,
