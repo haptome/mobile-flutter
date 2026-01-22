@@ -502,6 +502,46 @@ class GroupService extends GetxService {
     }
   }
 
+  /// Get comprehensive group history
+  Future<ApiResponse<Map<String, dynamic>>> getGroupHistory(
+    String groupId,
+  ) async {
+    try {
+      final response = await _apiService.groupDio.get(
+        '/groups/$groupId/history',
+      );
+
+      if (response.data['success'] == true) {
+        return ApiResponse<Map<String, dynamic>>(
+          success: true,
+          data: response.data['data'] as Map<String, dynamic>?,
+          message:
+              response.data['message'] as String? ??
+              'Group history fetched successfully',
+        );
+      } else {
+        return ApiResponse<Map<String, dynamic>>(
+          success: false,
+          data: null,
+          message:
+              response.data['message'] as String? ??
+              'Failed to fetch group history',
+        );
+      }
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        print('Error fetching group history: ${e.message}');
+      }
+      return ApiResponse<Map<String, dynamic>>(
+        success: false,
+        data: null,
+        message:
+            e.response?.data['message'] as String? ??
+            'Failed to fetch group history',
+      );
+    }
+  }
+
   /// Create a new group
   Future<ApiResponse<void>> createGroup({
     required String name,

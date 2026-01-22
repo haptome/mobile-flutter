@@ -192,124 +192,139 @@ class GroupDetailView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      'Round ${1} of ${group.targetMembers}',
-                      style: GoogleFonts.montserrat(
-                        color: AppColors.textLightGray,
-                        fontSize: 12,
-                      ),
-                    ),
+                    Obx(() {
+                      final controller = Get.find<GroupDetailController>();
+                      final currentRound = controller.group.currentMembers;
+                      return Text(
+                        'Round ${currentRound} of ${group?.targetMembers ?? 0}',
+                        style: GoogleFonts.montserrat(
+                          color: AppColors.textLightGray,
+                          fontSize: 12,
+                        ),
+                      );
+                    }),
                     const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Flexible(
-                          child: LinearProgressIndicator(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(12),
-                            value:
-                                (group.currentMembers /
-                                    (group.targetMembers == 0
-                                        ? 1
-                                        : group.targetMembers)) *
-                                0.1,
-                            minHeight: 8,
-                            backgroundColor: Colors.purple.shade50,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.green,
+                    Obx(() {
+                      final controller = Get.find<GroupDetailController>();
+                      final progressValue = (group?.targetMembers ?? 1) > 0
+                          ? (controller.group.currentMembers /
+                                    (group?.targetMembers ?? 1))
+                                .toDouble()
+                          : 0.0;
+                      return Row(
+                        children: [
+                          Flexible(
+                            child: LinearProgressIndicator(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(12),
+                              value: progressValue,
+                              minHeight: 8,
+                              backgroundColor: Colors.purple.shade50,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.green,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${group.currentMembers}%',
-                          style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(width: 8),
+                          Text(
+                            '${(progressValue * 100).round()}%',
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      );
+                    }),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Rounds Completed',
-                              style: GoogleFonts.montserrat(
-                                color: AppColors.textLightGray,
-                                fontSize: 9,
+                    Obx(() {
+                      final controller = Get.find<GroupDetailController>();
+                      final roundsCompleted = controller.group.currentMembers;
+                      final roundsRemaining =
+                          ((group?.targetMembers ?? 0) -
+                                  controller.group.currentMembers)
+                              .clamp(0, group?.targetMembers ?? 0);
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Rounds Completed',
+                                style: GoogleFonts.montserrat(
+                                  color: AppColors.textLightGray,
+                                  fontSize: 9,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${group.currentMembers}',
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.bold,
+                              const SizedBox(height: 4),
+                              Text(
+                                '$roundsCompleted',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Rounds Remaining',
-                              style: GoogleFonts.montserrat(
-                                color: AppColors.textLightGray,
-                                fontSize: 9,
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Rounds Remaining',
+                                style: GoogleFonts.montserrat(
+                                  color: AppColors.textLightGray,
+                                  fontSize: 9,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${(group.targetMembers - group.currentMembers).clamp(0, group.targetMembers)}',
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.bold,
+                              const SizedBox(height: 4),
+                              Text(
+                                '$roundsRemaining',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Total Pool',
-                              style: GoogleFonts.montserrat(
-                                color: AppColors.textLightGray,
-                                fontSize: 9,
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Total Pool',
+                                style: GoogleFonts.montserrat(
+                                  color: AppColors.textLightGray,
+                                  fontSize: 9,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${(group.contributionAmount * group.targetMembers).toStringAsFixed(0)}',
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.bold,
+                              const SizedBox(height: 4),
+                              Text(
+                                '${((group?.contributionAmount ?? 0) * (group?.targetMembers ?? 0)).toStringAsFixed(0)}',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Next Draw',
-                              style: GoogleFonts.montserrat(
-                                color: AppColors.textLightGray,
-                                fontSize: 9,
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Next Draw',
+                                style: GoogleFonts.montserrat(
+                                  color: AppColors.textLightGray,
+                                  fontSize: 9,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${group.startDate != null ? '${group.startDate!.month}/${group.startDate!.day}' : 'Dec 15'}',
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.bold,
+                              const SizedBox(height: 4),
+                              Text(
+                                '${group?.startDate != null ? '${group!.startDate!.month}/${group.startDate!.day}' : 'Soon'}',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                            ],
+                          ),
+                        ],
+                      );
+                    }),
                   ],
                 ),
               ),
@@ -579,17 +594,24 @@ class GroupDetailView extends StatelessWidget {
                                     final payment = controller.payments[index];
                                     final statusColor =
                                         payment['status'].toLowerCase() ==
-                                            'paid'
+                                                'success' ||
+                                            payment['status'].toLowerCase() ==
+                                                'paid'
                                         ? Colors.green
+                                        : payment['status'].toLowerCase() ==
+                                              'failed'
+                                        ? Colors.red
                                         : Colors.orange;
 
                                     return Column(
                                       children: [
                                         ListTile(
                                           title: Text(
-                                            'ETB ${payment['amount']}',
+                                            'ETB ${payment['amount']} - ${payment['member']}',
                                           ),
-                                          subtitle: Text(payment['date']),
+                                          subtitle: Text(
+                                            '${payment['date']} | ${payment['status']}',
+                                          ),
                                           trailing: Container(
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 12,
@@ -601,7 +623,8 @@ class GroupDetailView extends StatelessWidget {
                                               color: statusColor,
                                             ),
                                             child: Text(
-                                              payment['status'].toUpperCase(),
+                                              payment['status']
+                                                  .toUpperCase(), // Display actual status value
                                               style: const TextStyle(
                                                 color: Colors.white,
                                               ),

@@ -18,8 +18,7 @@ class GroupDetailController extends GetxController {
   final RxBool showAllMembers = false.obs;
   final RxList<GroupMember> members = <GroupMember>[].obs;
   final RxBool isMembersLoading = false.obs;
-  final RxInt activeTab =
-      0.obs; // 0: Members, 1: Lottery, 2: Payments, 3: History
+  final RxInt activeTab = 0.obs; // 0: Members, 1: Payments, 2: History
   final RxBool isPaymentsLoading = false.obs;
   final RxBool isHistoryLoading = false.obs;
   final RxBool isLotteryLoading = false.obs;
@@ -32,10 +31,10 @@ class GroupDetailController extends GetxController {
   void setActiveTab(int tabIndex) {
     activeTab.value = tabIndex;
     // Load data for the selected tab if needed
-    if (tabIndex == 2) {
+    if (tabIndex == 1) {
       // Payments tab
       loadPayments();
-    } else if (tabIndex == 3) {
+    } else if (tabIndex == 2) {
       // History tab
       loadHistory();
     }
@@ -46,9 +45,37 @@ class GroupDetailController extends GetxController {
 
     try {
       isPaymentsLoading.value = true;
-      // TODO: Implement API call to get group payments
-      // final response = await _groupService.getGroupPayments(group.id);
-      // For now, simulate loading with mock data
+      final response = await _groupService.getGroupHistory(group.id);
+
+      if (response.success && response.data != null) {
+        final groupData = response.data!;
+        final paymentsData = groupData['payments'] as List<dynamic>?;
+
+        if (paymentsData != null) {
+          // Convert payment data to the expected format
+          final paymentList = <Map<String, dynamic>>[];
+          for (final payment in paymentsData) {
+            final paymentMap = payment as Map<String, dynamic>;
+            paymentList.add({
+              'amount': paymentMap['amount'],
+              'date': DateTime.parse(
+                paymentMap['created_at'],
+              ).toString().split(' ')[0],
+              'status': paymentMap['status'],
+              'member': paymentMap['user']?['full_name'] ?? 'Unknown',
+            });
+          }
+          payments.assignAll(paymentList);
+        }
+      } else {
+        Get.snackbar(
+          'Error',
+          response.message ?? 'Failed to load payments',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -67,9 +94,38 @@ class GroupDetailController extends GetxController {
 
     try {
       isHistoryLoading.value = true;
-      // TODO: Implement API call to get group history
-      // final response = await _groupService.getGroupHistory(group.id);
-      // For now, simulate loading with mock data
+      final response = await _groupService.getGroupHistory(group.id);
+
+      if (response.success && response.data != null) {
+        final groupData = response.data!;
+        final winnersData = groupData['winners'] as List<dynamic>?;
+
+        if (winnersData != null) {
+          // Convert winner data to the expected format
+          final historyList = <Map<String, dynamic>>[];
+          for (final winner in winnersData) {
+            final winnerMap = winner as Map<String, dynamic>;
+            historyList.add({
+              'action':
+                  'Winner Selected: ${winnerMap['user']?['full_name'] ?? 'Unknown'}',
+              'date': DateTime.parse(
+                winnerMap['drawn_at'],
+              ).toString().split(' ')[0],
+              'initiator': 'System',
+              'round': winnerMap['round_number'],
+            });
+          }
+          history.assignAll(historyList);
+        }
+      } else {
+        Get.snackbar(
+          'Error',
+          response.message ?? 'Failed to load history',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -87,6 +143,25 @@ class GroupDetailController extends GetxController {
   void onInit() {
     super.onInit();
     loadMembers();
+    loadGroupDetails();
+  }
+
+  Future<void> loadGroupDetails() async {
+    try {
+      final response = await _groupService.getGroupHistory(group.id);
+
+      if (response.success && response.data != null) {
+        final groupData = response.data!;
+
+        // Update group with actual data from history
+        if (groupData.containsKey('current_round')) {
+          // Note: We can't modify the immutable group object directly here
+          // This is just for future enhancement
+        }
+      }
+    } catch (e) {
+      // Silently handle errors since this is just for additional details
+    }
   }
 
   Future<void> joinGroup() async {
