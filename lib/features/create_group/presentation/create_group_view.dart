@@ -217,32 +217,44 @@ class CreateGroupView extends StatelessWidget {
                 child: Obx(() {
                   bool isLastStep = controller.currentStep.value == 2;
                   bool canProceed = controller.isCurrentStepValid();
+                  bool isLoading = controller.isLoading.value;
 
                   return SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: canProceed
+                      onPressed: (canProceed && !isLoading)
                           ? (isLastStep
                                 ? () => controller.createGroup()
                                 : () => controller.nextStep())
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: canProceed
+                        backgroundColor: (canProceed && !isLoading)
                             ? const Color(0xFFBBBB32)
                             : const Color(0xFFBBBB32).withOpacity(0.5),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: Text(
-                        isLastStep ? 'Create Group' : 'Continue',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                        ),
-                      ),
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : Text(
+                              isLastStep ? 'Create Group' : 'Continue',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
                   );
                 }),

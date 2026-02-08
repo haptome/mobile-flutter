@@ -38,11 +38,13 @@ class _HomeScreenState extends State<HomeScreen> {
       _homeController = Get.find<HomeController>();
     }
     _carouselController = PageController();
+    _carouselController!.addListener(_onPageChanged);
     _startCarouselTimer();
   }
 
   @override
   void dispose() {
+    _carouselController?.removeListener(_onPageChanged);
     _carouselController?.dispose();
     _carouselTimer?.cancel();
     super.dispose();
@@ -51,15 +53,37 @@ class _HomeScreenState extends State<HomeScreen> {
   void _startCarouselTimer() {
     _carouselTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (_carouselController != null && _carouselController!.hasClients) {
-        _currentCarouselIndex =
-            (_currentCarouselIndex + 1) % _bannerImages.length;
-        _carouselController!.animateToPage(
-          _currentCarouselIndex,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
+        // Only auto-scroll if user hasn't interacted recently
+        if (_carouselController!.page?.round() == _currentCarouselIndex) {
+          int nextIndex = (_currentCarouselIndex + 1) % _bannerImages.length;
+          _carouselController!
+              .animateToPage(
+                nextIndex,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              )
+              .then((_) {
+                // Update the current index only after animation completes
+                if (mounted) {
+                  setState(() {
+                    _currentCarouselIndex = nextIndex;
+                  });
+                }
+              });
+        }
       }
     });
+  }
+
+  void _onPageChanged() {
+    if (_carouselController != null && _carouselController!.hasClients) {
+      int currentPage = _carouselController!.page?.round() ?? 0;
+      if (currentPage != _currentCarouselIndex) {
+        setState(() {
+          _currentCarouselIndex = currentPage;
+        });
+      }
+    }
   }
 
   @override
@@ -340,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(width: AppSizes.spacingSmall),
                 SizedBox(
-                  width: 200,
+                  width: 150,
                   child: Text(
                     'Selam, ${userName}!',
                     style: AppTextStyles.h4(
@@ -416,9 +440,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: PageView.builder(
               controller: _carouselController,
               onPageChanged: (index) {
-                setState(() {
-                  _currentCarouselIndex = index;
-                });
+                _currentCarouselIndex = index;
               },
               itemCount: _bannerImages.length,
               itemBuilder: (context, index) {
