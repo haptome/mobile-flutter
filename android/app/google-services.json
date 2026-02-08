@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "121555299558",
+    "project_id": "et-ekub",
+    "storage_bucket": "et-ekub.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:121555299558:android:b24f1180a98a316a1d9f27",
+        "android_client_info": {
+          "package_name": "com.et_digital_equb"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHT3J4BrlAJ7Wvs3JNUTQ9iLFeJMePECM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -10,7 +10,7 @@ import '../../models/user_model.dart';
 
 class StorageService extends GetxService {
   static StorageService get to => Get.find();
-  
+
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   late SharedPreferences _prefs;
 
@@ -33,6 +33,18 @@ class StorageService extends GetxService {
 
   Future<String?> getRefreshToken() async {
     return await _secureStorage.read(key: 'refresh_token');
+  }
+
+  Future<void> saveFcmToken(String token) async {
+    await _secureStorage.write(key: 'fcm_token', value: token);
+  }
+
+  Future<String?> getFcmToken() async {
+    return await _secureStorage.read(key: 'fcm_token');
+  }
+
+  Future<void> clearFcmToken() async {
+    await _secureStorage.delete(key: 'fcm_token');
   }
 
   Future<void> clearTokens() async {
@@ -100,4 +112,3 @@ class StorageService extends GetxService {
     return getString('language');
   }
 }
-

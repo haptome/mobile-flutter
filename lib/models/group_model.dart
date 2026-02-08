@@ -41,22 +41,39 @@ class Group {
   });
 
   factory Group.fromJson(Map<String, dynamic> json) {
+    // helpers to safely parse numbers that may come as strings
+    double parseDouble(dynamic v) {
+      if (v == null) return 0.0;
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? 0.0;
+      return 0.0;
+    }
+
+    int parseInt(dynamic v) {
+      if (v == null) return 0;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String)
+        return int.tryParse(v) ?? (double.tryParse(v)?.toInt() ?? 0);
+      return 0;
+    }
+
     return Group(
       id: json['id'] as String,
       name: json['name'] as String,
       type: json['type'] as String,
       leaderId: json['leader_id'] as String?,
       categoryId: json['category_id'] as String?,
-      contributionAmount: (json['contribution_amount'] as num).toDouble(),
+      contributionAmount: parseDouble(json['contribution_amount']),
       frequency: json['frequency'] as String,
-      minMembers: json['min_members'] as int,
-      targetMembers: json['target_members'] as int,
-      currentMembers: json['current_members'] as int? ?? 0,
+      minMembers: parseInt(json['min_members']),
+      targetMembers: parseInt(json['target_members']),
+      currentMembers: parseInt(json['current_members']),
       startDate: json['start_date'] != null
           ? DateTime.parse(json['start_date'] as String)
           : null,
       rotationMethod: json['rotation_method'] as String,
-      serviceChargePercent: (json['service_charge_percent'] as num).toDouble(),
+      serviceChargePercent: parseDouble(json['service_charge_percent']),
       status: json['status'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
       category: json['category'] != null
@@ -95,6 +112,9 @@ class InKindGroup {
   final String name;
   final String? description;
   final String? imageUrl;
+  final String? inventoryItemId;
+  final String? inventoryItemName;
+  final String? inventoryItemImageUrl;
   final String type;
   final String? leaderId;
   final String? categoryId;
@@ -102,6 +122,7 @@ class InKindGroup {
   final String frequency;
   final int minMembers;
   final int targetMembers;
+  final int currentMembers;
   final DateTime? startDate;
   final String rotationMethod;
   final double serviceChargePercent;
@@ -114,6 +135,9 @@ class InKindGroup {
     required this.name,
     this.description,
     this.imageUrl,
+    this.inventoryItemId,
+    this.inventoryItemName,
+    this.inventoryItemImageUrl,
     required this.type,
     this.leaderId,
     this.categoryId,
@@ -121,6 +145,7 @@ class InKindGroup {
     required this.frequency,
     required this.minMembers,
     required this.targetMembers,
+    required this.currentMembers,
     this.startDate,
     required this.rotationMethod,
     required this.serviceChargePercent,
@@ -130,23 +155,43 @@ class InKindGroup {
   });
 
   factory InKindGroup.fromJson(Map<String, dynamic> json) {
+    double parseDouble(dynamic v) {
+      if (v == null) return 0.0;
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? 0.0;
+      return 0.0;
+    }
+
+    int parseInt(dynamic v) {
+      if (v == null) return 0;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String)
+        return int.tryParse(v) ?? (double.tryParse(v)?.toInt() ?? 0);
+      return 0;
+    }
+
     return InKindGroup(
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String?,
       imageUrl: json['image_url'] as String?,
+      inventoryItemId: json['inventory_item_id'] as String?,
+      inventoryItemName: json['inventory_item_name'] as String?,
+      inventoryItemImageUrl: json['inventory_item_image_url'] as String?,
       type: json['type'] as String,
       leaderId: json['leader_id'] as String?,
       categoryId: json['category_id'] as String?,
-      contributionAmount: (json['contribution_amount'] as num).toDouble(),
+      contributionAmount: parseDouble(json['contribution_amount']),
       frequency: json['frequency'] as String,
-      minMembers: json['min_members'] as int,
-      targetMembers: json['target_members'] as int,
+      minMembers: parseInt(json['min_members']),
+      targetMembers: parseInt(json['target_members']),
+      currentMembers: parseInt(json['current_members']),
       startDate: json['start_date'] != null
           ? DateTime.parse(json['start_date'] as String)
           : null,
       rotationMethod: json['rotation_method'] as String,
-      serviceChargePercent: (json['service_charge_percent'] as num).toDouble(),
+      serviceChargePercent: parseDouble(json['service_charge_percent']),
       status: json['status'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
       category: json['category'] != null

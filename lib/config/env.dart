@@ -10,7 +10,7 @@ enum AppEnvironment { development, staging, production }
 class Env {
   // ========== Environment Configuration ==========
   // Change this to switch between environments
-  static const AppEnvironment _currentEnvironment = AppEnvironment.development;
+  static const AppEnvironment _currentEnvironment = AppEnvironment.staging;
 
   // ========== API Gateway Configuration ==========
   // All services route through the API Gateway
