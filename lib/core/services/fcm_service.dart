@@ -33,8 +33,7 @@ class FcmService extends GetxService {
   /// Initialize Firebase and FCM
   Future<void> _initializeFcm() async {
     try {
-      // Initialize Firebase
-      await Firebase.initializeApp();
+      // Firebase is already initialized in main.dart, no need to initialize again
 
       // Request permission for iOS
       await _requestPermissions();
@@ -45,11 +44,6 @@ class FcmService extends GetxService {
       // Get FCM token
       await _getFcmToken();
 
-      // Setup background message handler
-      FirebaseMessaging.onBackgroundMessage(
-        _firebaseMessagingBackgroundHandler,
-      );
-
       // Setup foreground message handlers
       _setupForegroundHandlers();
 
@@ -57,6 +51,7 @@ class FcmService extends GetxService {
       print('FCM Service initialized successfully');
     } catch (e) {
       print('Error initializing FCM: $e');
+      _isInitialized.value = false;
     }
   }
 
@@ -138,6 +133,7 @@ class FcmService extends GetxService {
       }
     } catch (e) {
       print('Error sending FCM token to server: $e');
+      // Don't throw error, just log it - token will be sent on next app start
     }
   }
 
@@ -170,28 +166,36 @@ class FcmService extends GetxService {
     RemoteNotification? notification = message.notification;
     AndroidNotification? android = message.notification?.android;
 
-    if (notification != null && android != null) {
-      // _localNotifications.show(
-      //   notification.hashCode,
-      //   notification.title,
-      //   notification.body,
-      //   NotificationDetails(
-      //     android: AndroidNotificationDetails(
-      //       'equb_channel',
-      //       'Equb Notifications',
-      //       channelDescription: 'Notifications for ET Digital Equb',
-      //       importance: Importance.max,
-      //       priority: Priority.high,
-      //       icon: '@mipmap/ic_launcher',
-      //     ),
-      //     iOS: const DarwinNotificationDetails(badgeNumber: 1),
-      //   ),
-      //   payload: message.data.toString(),
-      // );
-    }
+    // if (notification != null) {
+    //   // Show notification for both Android and iOS
+    //   await _localNotifications.show(
+    //     notification.hashCode,
+    //     notification.title,
+    //     notification.body,
+    //     NotificationDetails(
+    //       android: AndroidNotificationDetails(
+    //         'equb_channel',
+    //         'Equb Notifications',
+    //         channelDescription: 'Notifications for ET Digital Equb',
+    //         importance: Importance.max,
+    //         priority: Priority.high,
+    //         icon: '@mipmap/ic_launcher',
+    //       ),
+    //       iOS: const DarwinNotificationDetails(
+    //         badgeNumber: 1,
+    //         presentAlert: true,
+    //         presentBadge: true,
+    //         presentSound: true,
+    //       ),
+    //     ),
+    //     payload: message.data.toString(), id: null,
+    //   );
+    // }
 
     // Handle data payload
-    _processNotificationData(message.data);
+    if (message.data.isNotEmpty) {
+      _processNotificationData(message.data);
+    }
   }
 
   /// Handle notification tap
@@ -218,11 +222,18 @@ class FcmService extends GetxService {
 
   /// Process notification data payload
   void _processNotificationData(Map<String, dynamic> data) {
+    if (data.isEmpty) return;
+    
     print('Processing notification data: $data');
 
     // Extract notification type and handle accordingly
     final type = data['type'] as String?;
     final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
+
+    if (type == null) {
+      print('No notification type specified');
+      return;
+    }
 
     switch (type) {
       case 'payment_success':
@@ -349,14 +360,16 @@ class FcmService extends GetxService {
 }
 
 /// Background message handler - must be a top-level function
+/// This is registered in main.dart before runApp()
 @pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Initialize dependencies if needed
-  await Firebase.initializeApp();
-
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Don't initialize Firebase here - it's already initialized in main.dart
   print('Handling background message: ${message.notification?.title}');
-
+  
   // Process the message data
   // Note: This runs in isolate, so GetX services may not be available
   // Store data locally or send to main isolate for processing
+  if (message.data.isNotEmpty) {
+    print('Background message data: ${message.data}');
+  }
 }

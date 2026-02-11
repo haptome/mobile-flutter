@@ -2,12 +2,15 @@
 // Author: Auto-generated
 
 import 'package:get/get.dart';
+import 'package:et_digital_equb/core/services/auth_service.dart';
 import 'package:et_digital_equb/core/services/group_service.dart';
+import 'package:et_digital_equb/core/services/storage_service.dart';
 import 'package:et_digital_equb/models/category_model.dart' as category_models;
 import 'package:et_digital_equb/core/routes/app_routes.dart';
 
 class EkubTypeController extends GetxController {
   final GroupService _groupService = GroupService.to;
+  final AuthService _authService = AuthService.to;
 
   final RxList<category_models.Category> categories =
       <category_models.Category>[].obs;
@@ -17,7 +20,20 @@ class EkubTypeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadCategories();
+    
+    // Listen to authentication state changes
+    ever(_authService.isAuthenticated, (isAuth) {
+      if (isAuth) {
+        loadCategories();
+      } else {
+        categories.clear();
+      }
+    });
+    
+    // Also load data immediately if already authenticated
+    if (_authService.isAuthenticated.value) {
+      loadCategories();
+    }
   }
 
   Future<void> loadCategories() async {

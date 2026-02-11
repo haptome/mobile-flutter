@@ -4,13 +4,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/widgets/app_bottom_nav.dart';
 import '../../../../core/widgets/category_card.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
-import '../../../../core/app_assets.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../controllers/ekub_type_controller.dart';
+import '../../../../core/widgets/scaffold_with_bottom_bar.dart';
 
 class EkubTypeView extends StatelessWidget {
   const EkubTypeView({super.key});
@@ -19,7 +17,7 @@ class EkubTypeView extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(EkubTypeController());
 
-    return Scaffold(
+    return ScaffoldWithBottomBar(
       backgroundColor: AppColors.lightBackground,
       body: SafeArea(
         child: Column(
@@ -61,7 +59,7 @@ class EkubTypeView extends StatelessWidget {
               ),
               const SizedBox(width: AppSizes.spacingSmall),
               Text(
-                'Ekub Type',
+                'main_ekub'.tr,
                 style: GoogleFonts.montserrat(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,

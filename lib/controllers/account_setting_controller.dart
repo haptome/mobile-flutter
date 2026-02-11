@@ -4,14 +4,15 @@
 
 import 'dart:io';
 import 'package:et_digital_equb/core/services/auth_service.dart';
+import 'package:et_digital_equb/core/services/cloudinary_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../core/services/permission_service.dart';
 
 class AccountSettingController extends GetxController {
   final AuthService _authService = AuthService.to;
+  final CloudinaryService _cloudinaryService = Get.find<CloudinaryService>();
 
   final RxString profileImageUrl = ''.obs;
   final RxString fullName = ''.obs;
@@ -127,29 +128,49 @@ class AccountSettingController extends GetxController {
     try {
       isSaving.value = true;
 
-      final File imageFile = File(imagePath);
+      // Read file bytes for web compatibility
+      final file = File(imagePath);
+      final fileBytes = await file.readAsBytes();
 
-      // Upload the image to the server via the auth service
-      final response = await _authService.uploadProfileImage(imageFile);
+      // Upload to Cloudinary with pre-loaded bytes
+      final uploadResult = await _cloudinaryService.uploadImage(
+        filePath: imagePath,
+        folder: 'profile_photos',
+        fileBytes: fileBytes,
+      );
 
-      if (response.success && response.data != null) {
-        // Update the profile image URL with the server URL
-        final imageUrl = response.data!["imageUrl"] as String? ?? "";
-        profileImageUrl.value = imageUrl;
+      if (uploadResult.success) {
+        final imageUrl = uploadResult.secureUrl;
 
-        Get.snackbar(
-          'Success',
-          'Profile image updated successfully',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+        // Update user profile with new photo URL
+        final updateResult = await _authService.updateProfile(
+          profilePicUrl: imageUrl,
         );
+
+        if (updateResult.success) {
+          // Update local profile image URL
+          profileImageUrl.value = imageUrl ?? '';
+
+          Get.snackbar(
+            'Success',
+            'Profile image updated successfully',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
+        } else {
+          Get.snackbar(
+            'Update Failed',
+            updateResult.message ?? 'Failed to update profile',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+        }
       } else {
         Get.snackbar(
           'Upload Failed',
-          response.error?.message ??
-              response.message ??
-              'Failed to upload profile image',
+          uploadResult.error?.userMessage ?? 'Failed to upload profile image',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red,
           colorText: Colors.white,
@@ -158,7 +179,7 @@ class AccountSettingController extends GetxController {
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Failed to upload profile image: \$e',
+        'Failed to upload profile image: $e',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,

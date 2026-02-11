@@ -6,8 +6,10 @@ import 'package:et_digital_equb/core/services/kyc_service.dart';
 import 'package:et_digital_equb/core/services/permission_service.dart';
 import 'package:et_digital_equb/models/kyc_models.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
+import '../features/profile/id_card_camera_view.dart';
+import '../features/profile/liveness_video_view.dart';
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 
 // Failed upload model for retry functionality
@@ -366,6 +368,7 @@ class VerificationController extends GetxController {
         await loadDocuments();
         // Navigate back or to a success screen
         Get.back();
+        Get.back();
       } else {
         errorMessage.value =
             response.error?.message ?? 'Failed to submit documents';
@@ -533,86 +536,19 @@ class VerificationController extends GetxController {
 
   /// Request necessary permissions before file operations
   Future<bool> requestStoragePermissions() async {
-    final permissionService = PermissionService.to;
-    return await permissionService.requestKycPermissions();
+    // Permissions removed: always allow storage operations.
+    return true;
   }
 
   /// Request specific permission type
   Future<bool> requestSpecificPermission(PermissionType type) async {
-    final permissionService = PermissionService.to;
-    final statuses = await permissionService.requestPermissions(type);
-
-    // Check if all requested permissions were granted
-    bool allGranted = true;
-    for (final status in statuses.values) {
-      if (status != PermissionStatus.granted) {
-        allGranted = false;
-        break;
-      }
-    }
-
-    return allGranted;
+    // Permissions removed — always allow requested permission.
+    return true;
   }
 
   /// Check specific permission status
   Future<bool> checkSpecificPermission(PermissionType type) async {
-    final permissionService = PermissionService.to;
-    final statusMap = await permissionService.getKycPermissionStatus();
-
-    // Get the permissions relevant to the type
-    List<Permission> permissions = [];
-    switch (type) {
-      case PermissionType.kyc:
-        if (GetPlatform.isIOS) {
-          permissions = [
-            Permission.camera,
-            Permission.photos,
-            Permission.microphone,
-          ];
-        } else {
-          permissions = [
-            Permission.camera,
-            Permission.storage,
-            Permission.microphone,
-          ];
-        }
-        break;
-      case PermissionType.camera:
-        permissions = [Permission.camera];
-        break;
-      case PermissionType.storage:
-        if (GetPlatform.isIOS) {
-          permissions = [Permission.photos];
-        } else {
-          permissions = [Permission.storage];
-        }
-        break;
-      case PermissionType.microphone:
-        permissions = [Permission.microphone];
-        break;
-      default:
-        if (GetPlatform.isIOS) {
-          permissions = [
-            Permission.camera,
-            Permission.photos,
-            Permission.microphone,
-          ];
-        } else {
-          permissions = [
-            Permission.camera,
-            Permission.storage,
-            Permission.microphone,
-          ];
-        }
-        break;
-    }
-
-    // Check if all permissions of the requested type are granted
-    for (final permission in permissions) {
-      if (statusMap[permission] != PermissionStatus.granted) {
-        return false;
-      }
-    }
+    // Permissions removed — always report granted status.
     return true;
   }
 
@@ -648,7 +584,77 @@ class VerificationController extends GetxController {
 
   /// Check if permissions are already granted
   Future<bool> checkPermissions() async {
-    final permissionService = PermissionService.to;
-    return await permissionService.hasRequiredKycPermissions();
+    try {
+      // Ensure PermissionService is available
+      PermissionService permissionService;
+      if (Get.isRegistered<PermissionService>()) {
+        permissionService = Get.find<PermissionService>();
+      } else {
+        // If not registered, try to get it via the 'to' pattern which may trigger lazy loading
+        permissionService = PermissionService.to;
+      }
+      return await permissionService.hasRequiredKycPermissions();
+    } catch (e) {
+      print('Error getting permission service: $e');
+      // If there's an error, try to register and get it again
+      if (!Get.isRegistered<PermissionService>()) {
+        Get.put(PermissionService(), permanent: true);
+      }
+      final permissionService = PermissionService.to;
+      return await permissionService.hasRequiredKycPermissions();
+    }
+  }
+
+  /// Intent-based helper: capture ID photo via camera flow
+  Future<void> captureIdPhoto() async {
+    // Permissions removed — directly open camera view.
+    final result = await Get.to<Map<String, dynamic>>(
+      () => IdCardCameraView(
+        verificationMethod: _selectedVerificationMethod.value,
+      ),
+    );
+
+    if (result != null && result['imagePath'] != null) {
+      await uploadVerificationFile(result['imagePath']);
+    }
+  }
+
+  /// Intent-based helper: pick ID/image from gallery
+  Future<void> pickIdFromGallery() async {
+    // Permissions removed — open gallery picker directly.
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      await uploadVerificationFile(image.path);
+    }
+  }
+
+  /// Intent-based helper: record liveness video
+  Future<void> recordLivenessVideo() async {
+    // Permissions removed — open liveness view directly.
+    final result = await Get.to<Map<String, dynamic>>(
+      () => const LivenessVideoView(),
+    );
+
+    if (result != null && result['videoPath'] != null) {
+      await submitLivenessVideo(result['videoPath']);
+    }
+  }
+
+  /// Intent-based helper: pick a document (PDF / image)
+  Future<void> pickDocument() async {
+    // Permissions removed — open file picker directly.
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+    );
+
+    if (result != null && result.files.isNotEmpty) {
+      final path = result.files.first.path;
+      if (path != null) {
+        await uploadDocumentFile(path);
+      }
+    }
   }
 }

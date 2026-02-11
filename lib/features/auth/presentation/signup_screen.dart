@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/phone_input_field.dart';
@@ -9,6 +10,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/app_assets.dart';
+import '../../../../core/services/fcm_service.dart';
+import '../../../../core/utils/device_info.dart';
 import '../../../../controllers/auth_controller.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -104,10 +107,21 @@ class _SignupScreenState extends State<SignupScreen> {
       }
       _authController.workStatus.value = workStatusValue ?? '';
 
+      // Get FCM token (only on mobile platforms)
+      String? fcmToken;
+      if (!kIsWeb && DeviceInfo.isMobile()) {
+        try {
+          final fcmService = FcmService.to;
+          fcmToken = fcmService.fcmToken.isNotEmpty ? fcmService.fcmToken : null;
+        } catch (e) {
+          print('FCM service not available: $e');
+        }
+      }
+
       // Call registration API
       await _authController.register(
-        fcmToken: null, // TODO: Add FCM token when Firebase is set up
-        deviceId: null, // Will use DeviceInfo.getDeviceId() from controller
+        fcmToken: fcmToken,
+        deviceId: DeviceInfo.getDeviceId(),
       );
 
       // Check if registration was successful
@@ -118,34 +132,34 @@ class _SignupScreenState extends State<SignupScreen> {
 
   String? _validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter your full name';
+      return 'please_enter_name'.tr;
     }
     if (value.trim().length < 3) {
-      return 'Name must be at least 3 characters';
+      return 'name_min_length'.tr;
     }
     return null;
   }
 
   String? _validatePhone(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your phone number';
+      return 'please_enter_phone'.tr;
     }
     if (value.length != 9) {
-      return 'Please enter a valid phone number';
+      return 'please_enter_valid_phone'.tr;
     }
     return null;
   }
 
   String? _validateWorkStatus(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please select your work status';
+      return 'please_select_work_status'.tr;
     }
     return null;
   }
 
   String? _validateLocation(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please select your location';
+      return 'please_select_location'.tr;
     }
     return null;
   }
@@ -177,7 +191,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 SizedBox(height: screenHeight * 0.01),
                 Text(
-                  'Signup',
+                  'signup'.tr,
                   style: GoogleFonts.montserrat(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -187,14 +201,14 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: AppSizes.spacingSmall),
                 Text(
-                  'Enter your credential to register',
+                  'enter_credential_register'.tr,
                   style: AppTextStyles.bodyMedium(
                     color: AppColors.lightTextSecondary,
                   ),
                 ),
                 SizedBox(height: screenHeight * 0.03),
                 AppTextField(
-                  hint: 'Full name',
+                  hint: 'full_name'.tr,
                   controller: _fullNameController,
                   textInputAction: TextInputAction.next,
                   validator: _validateName,
@@ -236,7 +250,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: AppColors.white,
-                    hintText: 'Work status',
+                    hintText: 'work_status'.tr,
                     hintStyle: const TextStyle(
                       fontSize: 14,
                       color: AppColors.black,
@@ -323,7 +337,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: AppColors.white,
-                    hintText: 'Location',
+                    hintText: 'location'.tr,
                     hintStyle: const TextStyle(
                       fontSize: 14,
                       color: AppColors.black,
@@ -388,7 +402,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 Center(
                   child: Obx(
                     () => AppButton(
-                      text: 'Register',
+                      text: 'register'.tr,
                       onPressed: _handleRegister,
                       isLoading: _authController.isLoading.value,
                       isFullWidth: false,
@@ -421,12 +435,12 @@ class _SignupScreenState extends State<SignupScreen> {
                         color: AppColors.lightTextSecondary,
                       ),
                       children: [
-                        const TextSpan(text: 'Already have an account? '),
+                        TextSpan(text: 'already_have_account'.tr),
                         WidgetSpan(
                           child: GestureDetector(
                             onTap: () => Navigator.of(context).pop(),
                             child: Text(
-                              'Login',
+                              'login'.tr,
                               style:
                                   AppTextStyles.bodyMedium(
                                     color: AppColors.splashBackground,

@@ -54,29 +54,7 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      body: Stack(
-        children: [
-          // Background pattern image (no gradient overlay for confirmation screen)
-          Positioned.fill(
-            child: Image.asset(
-              AppAssets.authBackground,
-              fit: BoxFit.cover,
-              height: double.infinity,
-              width: double.infinity,
-              repeat: ImageRepeat.repeat,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: Colors.white,
-                  decoration: BoxDecoration(
-                    // Fallback pattern if image fails
-                    color: Colors.grey.shade50,
-                  ),
-                );
-              },
-            ),
-          ),
-          // Content
-          SafeArea(
+      body:  SafeArea(
             child: Column(
               children: [
                 Expanded(
@@ -121,7 +99,9 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 48), // Balance the back button
+                            const SizedBox(
+                              width: 48,
+                            ), // Balance the back button
                           ],
                         ),
                         const SizedBox(height: AppSizes.spacingLarge),
@@ -129,9 +109,7 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
                         Center(
                           child: Container(
                             width: double.infinity,
-                            constraints: const BoxConstraints(
-                              maxHeight: 400,
-                            ),
+                            constraints: const BoxConstraints(maxHeight: 400),
                             decoration: BoxDecoration(
                               color: AppColors.white,
                               borderRadius: BorderRadius.circular(12),
@@ -154,58 +132,63 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
                                       ),
                                     )
                                   : _imageExists
-                                      ? Image.file(
-                                          File(widget.imagePath),
-                                          fit: BoxFit.contain,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return Container(
-                                              height: 400,
-                                              color: AppColors.backgroundLightGray,
-                                              child: Center(
-                                                child: Column(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  children: [
-                                                    const Icon(
-                                                      Icons.error_outline,
-                                                      size: 48,
-                                                      color: AppColors.textLightGray,
-                                                    ),
-                                                    const SizedBox(height: 8),
-                                                    Text(
-                                                      'Failed to load image',
-                                                      style: AppTextStyles.bodyMedium(
-                                                        color: AppColors.textLightGray,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        )
-                                      : Container(
+                                  ? Image.file(
+                                      File(widget.imagePath),
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Container(
                                           height: 400,
                                           color: AppColors.backgroundLightGray,
                                           child: Center(
                                             child: Column(
-                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               children: [
                                                 const Icon(
-                                                  Icons.image_not_supported,
+                                                  Icons.error_outline,
                                                   size: 48,
-                                                  color: AppColors.textLightGray,
+                                                  color:
+                                                      AppColors.textLightGray,
                                                 ),
                                                 const SizedBox(height: 8),
                                                 Text(
-                                                  'Image file not found',
-                                                  style: AppTextStyles.bodyMedium(
-                                                    color: AppColors.textLightGray,
-                                                  ),
+                                                  'Failed to load image',
+                                                  style:
+                                                      AppTextStyles.bodyMedium(
+                                                        color: AppColors
+                                                            .textLightGray,
+                                                      ),
                                                 ),
                                               ],
                                             ),
                                           ),
+                                        );
+                                      },
+                                    )
+                                  : Container(
+                                      height: 400,
+                                      color: AppColors.backgroundLightGray,
+                                      child: Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(
+                                              Icons.image_not_supported,
+                                              size: 48,
+                                              color: AppColors.textLightGray,
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              'Image file not found',
+                                              style: AppTextStyles.bodyMedium(
+                                                color: AppColors.textLightGray,
+                                              ),
+                                            ),
+                                          ],
                                         ),
+                                      ),
+                                    ),
                             ),
                           ),
                         ),
@@ -236,7 +219,8 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
                                   // Return result to verification view
                                   Navigator.of(context).pop({
                                     'imagePath': widget.imagePath,
-                                    'verificationMethod': widget.verificationMethod,
+                                    'verificationMethod':
+                                        widget.verificationMethod,
                                   });
                                 },
                               ),
@@ -251,9 +235,6 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
               ],
             ),
           ),
-        ],
-      ),
     );
   }
 }
-

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:get/get.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/phone_input_field.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -9,7 +11,10 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/app_assets.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/fcm_service.dart';
+import '../../../../core/utils/device_info.dart';
 import '../../../../models/login_request.dart';
+import '../../../../controllers/language_controller.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -77,13 +82,24 @@ class _LoginScreenState extends State<LoginScreen> {
         // Password-based login
         final fullPhone = '+251${_phoneController.text}';
 
+        // Get FCM token (only on mobile platforms)
+        String? fcmToken;
+        if (!kIsWeb && DeviceInfo.isMobile()) {
+          try {
+            final fcmService = FcmService.to;
+            fcmToken = fcmService.fcmToken.isNotEmpty ? fcmService.fcmToken : null;
+          } catch (e) {
+            print('FCM service not available: $e');
+          }
+        }
+
         final loginRequest = LoginRequest(
           phone: fullPhone,
           password: _passwordController.text,
           otp: null, // Not using OTP for password login
-          fcmToken: null, // TODO: Add FCM token when Firebase is set up
-          deviceId: null, // Will be handled by AuthService
-          deviceType: null, // Will be handled by AuthService
+          fcmToken: fcmToken,
+          deviceId: DeviceInfo.getDeviceId(),
+          deviceType: DeviceInfo.getDeviceType(),
         );
 
         final response = await _authService.login(loginRequest);
@@ -93,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
             // Login successful
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Login successful!'),
+                content: Text('login_successful'.tr),
                 backgroundColor: AppColors.primary,
               ),
             );
@@ -104,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  response.error?.message ?? 'Login failed. Please try again.',
+                  response.error?.message ?? 'login_failed'.tr,
                 ),
                 backgroundColor: AppColors.lightError,
               ),
@@ -132,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SnackBar(
                 content: Text(
                   response.error?.message ??
-                      'Failed to send OTP. Please try again.',
+                      'failed_resend_otp'.tr,
                 ),
                 backgroundColor: AppColors.lightError,
               ),
@@ -144,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Network error: ${e.toString()}'),
+            content: Text('network_error'.tr + ': ${e.toString()}'),
             backgroundColor: AppColors.lightError,
           ),
         );
@@ -160,20 +176,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
   String? _validatePhone(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your phone number';
+      return 'please_enter_phone'.tr;
     }
     if (value.length != 9) {
-      return 'Please enter a valid phone number';
+      return 'please_enter_valid_phone'.tr;
     }
     return null;
   }
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your password';
+      return 'please_enter_password'.tr;
     }
     if (value.length < 6) {
-      return 'Password must be at least 6 characters';
+      return 'password_min_length'.tr;
     }
     return null;
   }
@@ -195,12 +211,54 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Back button
+                // Back button and Language toggle
                 SizedBox(height: screenHeight * 0.01),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    // Language toggle button
+                    Obx(() {
+                      final languageController = Get.find<LanguageController>();
+                      return InkWell(
+                        onTap: () => languageController.toggleLanguage(),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: AppColors.primary,
+                              width: 1.5,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                languageController.getCurrentLanguageFlag(),
+                                style: const TextStyle(fontSize: 18),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                languageController.isEnglish() ? 'አማ' : 'EN',
+                                style: AppTextStyles.bodySmall(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
 
                 // Title
                 Text(
-                  'Welcome back',
+                  'welcome_back'.tr,
                   style: GoogleFonts.montserrat(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -212,7 +270,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // Subtitle
                 Text(
-                  'Enter your credential to continue',
+                  'enter_credential_continue'.tr,
                   style: AppTextStyles.bodyMedium(
                     color: AppColors.lightTextSecondary,
                     isDark: false,
@@ -244,7 +302,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 AnimatedCrossFade(
                   firstChild: Container(height: 0, width: 0),
                   secondChild: AppTextField(
-                    hint: 'Password',
+                    hint: 'password'.tr,
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     validator: _validatePassword,
@@ -279,8 +337,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                     child: Text(
                       _usePasswordLogin
-                          ? 'Use OTP instead'
-                          : 'Login with password',
+                          ? 'use_otp_instead'.tr
+                          : 'login_with_password'.tr,
                       style: AppTextStyles.bodyMedium(
                         color: AppColors.splashBackground,
                         isDark: false,
@@ -294,7 +352,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Log in button
                 Center(
                   child: AppButton(
-                    text: _usePasswordLogin ? 'Login with Password' : 'Log in',
+                    text: _usePasswordLogin ? 'login_with_password'.tr : 'login'.tr,
                     onPressed: _handleLogin,
                     isLoading: _isLoading,
                     isFullWidth: false,
@@ -313,7 +371,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         isDark: false,
                       ),
                       children: [
-                        const TextSpan(text: 'Don\'t have account? '),
+                        TextSpan(text: 'dont_have_account'.tr),
                         WidgetSpan(
                           child: GestureDetector(
                             onTap: () {
@@ -321,7 +379,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Navigator.of(context).pushNamed('/signup');
                             },
                             child: Text(
-                              'Sign up',
+                              'sign_up'.tr,
                               style:
                                   AppTextStyles.bodyMedium(
                                     color: AppColors.splashBackground,

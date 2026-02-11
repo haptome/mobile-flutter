@@ -90,7 +90,7 @@ class _YourEkubsViewState extends State<YourEkubsView> {
 
                       if (controller.ekubs.isEmpty &&
                           controller.completedEkubs.isEmpty) {
-                        return const Center(child: Text('No ekubs to display'));
+                        return Center(child: Text('no_ekubs_to_display'.tr));
                       }
 
                       return RefreshIndicator(
@@ -174,7 +174,7 @@ class _YourEkubsViewState extends State<YourEkubsView> {
                                 ),
                                 child: ExpansionTile(
                                   title: Text(
-                                    'Completed Ekubs (${controller.completedEkubs.length})',
+                                    '${'completed_ekubs'.tr} (${controller.completedEkubs.length})',
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -205,16 +205,16 @@ class _YourEkubsViewState extends State<YourEkubsView> {
                                             .toLowerCase()
                                             .contains('week')) {
                                           duration =
-                                              '${(ekubData['totalRounds'] ~/ 4).toInt()} months';
+                                              '${(ekubData['totalRounds'] ~/ 4).toInt()} ${'months'.tr}';
                                         } else if (ekubData['frequency']
                                             .toLowerCase()
                                             .contains('month')) {
                                           duration =
-                                              '${ekubData['totalRounds']} months';
+                                              '${ekubData['totalRounds']} ${'months'.tr}';
                                         } else {
                                           // daily
                                           duration =
-                                              '${(ekubData['totalRounds'] ~/ 30).toInt()} months';
+                                              '${(ekubData['totalRounds'] ~/ 30).toInt()} ${'months'.tr}';
                                         }
 
                                         return CompletedEkubCard(
@@ -334,7 +334,7 @@ class _YourEkubsViewState extends State<YourEkubsView> {
           ElevatedButton.icon(
             onPressed: () => controller.loadUserGroups(),
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: const Text('retry'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red[400],
               foregroundColor: Colors.white,
@@ -354,7 +354,7 @@ class _YourEkubsViewState extends State<YourEkubsView> {
           Icon(Icons.group_outlined, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
-            'No Groups Yet',
+            'no_groups_yet'.tr,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -363,7 +363,7 @@ class _YourEkubsViewState extends State<YourEkubsView> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Join a group to get started!',
+            'join_group_to_start'.tr,
             style: TextStyle(color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),

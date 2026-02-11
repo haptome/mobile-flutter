@@ -1,5 +1,5 @@
 # Uncomment this line to define a global platform for your project
-# platform :ios, '13.0'
+platform :ios, '15.5'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -27,6 +27,9 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 
 flutter_ios_podfile_setup
 
+# ML Kit Face Detection requires iOS 15.5 or newer
+$iOSVersion = '15.5'
+
 target 'Runner' do
   use_frameworks!
 
@@ -37,7 +40,21 @@ target 'Runner' do
 end
 
 post_install do |installer|
+  # ML Kit Face Detection configuration
+  installer.pods_project.build_configurations.each do |config|
+    # Exclude 32-bit architectures (armv7) as ML Kit only supports 64-bit
+    config.build_settings["EXCLUDED_ARCHS[sdk=*]"] = "armv7"
+    config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = $iOSVersion
+  end
+  
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    
+    # Ensure all pods meet minimum iOS deployment target
+    target.build_configurations.each do |config|
+      if Gem::Version.new($iOSVersion) > Gem::Version.new(config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'])
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = $iOSVersion
+      end
+    end
   end
 end

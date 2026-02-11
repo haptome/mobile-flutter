@@ -17,6 +17,16 @@ class TransactionsView extends StatefulWidget {
 
 class _TransactionsViewState extends State<TransactionsView> {
   @override
+  void initState() {
+    super.initState();
+    // Load transactions when view is first created
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final controller = Get.find<TransactionsController>();
+      controller.loadTransactionsIfNeeded();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final controller = Get.find<TransactionsController>();
 
@@ -54,6 +64,16 @@ class _TransactionsViewState extends State<TransactionsView> {
                 // Transactions list
                 Expanded(
                   child: Obx(() {
+                    // Show loading indicator
+                    if (controller.isLoading.value) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
+                      );
+                    }
+
+                    // Show empty state
                     if (controller.transactions.isEmpty) {
                       return Center(
                         child: Text(
@@ -66,6 +86,7 @@ class _TransactionsViewState extends State<TransactionsView> {
                       );
                     }
 
+                    // Show transactions list
                     return ListView.builder(
                       padding: const EdgeInsets.only(
                         top: 8.0,

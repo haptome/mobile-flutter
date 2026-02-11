@@ -1,4 +1,4 @@
-package com.example.et_digital_equb
+package com.et_digital_equb
 
 import io.flutter.embedding.android.FlutterActivity
 

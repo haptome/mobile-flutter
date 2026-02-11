@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:et_digital_equb/core/services/api_service.dart';
 import 'package:et_digital_equb/core/services/group_service.dart';
-import 'package:et_digital_equb/models/group_model.dart';
 import 'package:et_digital_equb/models/category_model.dart';
 import 'package:et_digital_equb/core/routes/app_routes.dart';
 
@@ -34,6 +33,8 @@ class CreateGroupController extends GetxController {
   final RxString selectedCategoryId = ''.obs;
   final RxBool isLoadingCategories = false.obs;
   final RxList<Category> categories = <Category>[].obs;
+  final RxString groupRules = ''.obs; // Group rules text
+  final RxBool termsAccepted = false.obs; // Terms acceptance checkbox
 
   // Validation states
   final RxBool isGroupNameValid = true.obs;
@@ -51,13 +52,17 @@ class CreateGroupController extends GetxController {
       isAmountValid.isTrue &&
       isTargetValid.isTrue;
   bool get isStep3Valid =>
-      true; // Step 3 is always valid since it's just confirmation
+      termsAccepted.value; // Step 3 requires terms acceptance
 
   // Move to next step
   void nextStep() {
     if (currentStep.value < 2) {
       currentStep.value++;
       updateProgress();
+      // Auto-generate group rules when entering Step 3
+      if (currentStep.value == 2) {
+        generateGroupRules();
+      }
     } else {
       // Final step - create group
       createGroup();
@@ -74,8 +79,8 @@ class CreateGroupController extends GetxController {
           minMembers.value > 0 &&
           targetMembers.value >= minMembers.value; // Validate target >= min
     } else {
-      // Step 2 is always valid to proceed (final review step)
-      return true;
+      // Step 3 requires terms acceptance
+      return termsAccepted.value;
     }
   }
 
@@ -105,17 +110,6 @@ class CreateGroupController extends GetxController {
     try {
       isLoading.value = true;
 
-      // Calculate duration in months based on frequency
-      int calculatedDuration = 0;
-      if (frequency.value == 'weekly') {
-        // For weekly groups: duration = targetMembers / 4 (approx weeks in a month)
-        calculatedDuration = (targetMembers.value ~/ 4);
-        if (targetMembers.value % 4 != 0) calculatedDuration++; // Round up
-      } else {
-        // For monthly groups: duration = targetMembers
-        calculatedDuration = targetMembers.value;
-      }
-
       // Prepare the group data
       final createGroupData = {
         'name': groupName.value,
@@ -125,7 +119,6 @@ class CreateGroupController extends GetxController {
         'type': groupType.value, // private or invite (not public)
         'leader_id':
             'CURRENT_USER_ID', // This should be replaced with actual logged in user ID
-        // 'duration_months': calculatedDuration,
       };
 
       print(createGroupData);
@@ -206,6 +199,8 @@ class CreateGroupController extends GetxController {
     targetMembers.value = 0;
     groupType.value = 'private';
     durationInMonths.value = 0;
+    groupRules.value = '';
+    termsAccepted.value = false;
 
     // Reset validations
     isGroupNameValid.value = true;
@@ -264,6 +259,84 @@ class CreateGroupController extends GetxController {
   // Update selected category
   void updateSelectedCategory(String categoryId) {
     selectedCategoryId.value = categoryId;
+  }
+
+  // Generate group rules based on the group settings
+  void generateGroupRules() {
+    String rules = '';
+    
+    // Contribution details
+    rules += '1. Contribution Amount: ETB ${contributionAmount.value}\n';
+    rules += '   - Each member must contribute ETB ${contributionAmount.value} ${frequency.value}.\n\n';
+    
+    // Frequency
+    String frequencyText = frequency.value == 'weekly' ? 'every week' : 'every month';
+    rules += '2. Contribution Frequency: ${frequency.value.capitalize}\n';
+    rules += '   - Contributions are due $frequencyText.\n\n';
+    
+    // Service charge
+    rules += '3. Service Charge: ${serviceChargePercent.value}%\n';
+    rules += '   - A service charge of ${serviceChargePercent.value}% will be applied to each payout.\n\n';
+    
+    // Rotation method
+    rules += '4. Rotation Method: ${_getRotationMethodName()}\n';
+    rules += '   - ${_getRotationMethodDescription()}\n\n';
+    
+    // Target and minimum members
+    rules += '5. Group Size:\n';
+    rules += '   - Target members: ${targetMembers.value}\n';
+    rules += '   - Minimum members to start: ${minMembers.value}\n\n';
+    
+    // Additional rules
+    rules += '6. General Rules:\n';
+    rules += '   - Late payments may result in penalties as decided by the group.\n';
+    rules += '   - All members must maintain transparency and honesty.\n';
+    rules += '   - Disputes will be resolved through group consensus.\n';
+    rules += '   - Members who miss payments may be removed from the group.';
+    
+    groupRules.value = rules;
+  }
+
+  // Get formatted rotation method name
+  String _getRotationMethodName() {
+    switch (rotationMethod.value) {
+      case 'me_first':
+        return 'Me First';
+      case 'random':
+        return 'Random';
+      case 'sequential':
+        return 'Sequential';
+      case 'bidding':
+        return 'Bidding';
+      default:
+        return rotationMethod.value.capitalize ?? 'Unknown';
+    }
+  }
+
+  // Get rotation method description
+  String _getRotationMethodDescription() {
+    switch (rotationMethod.value) {
+      case 'me_first':
+        return 'The group creator will receive the first payout. After that, the remaining members will be selected randomly for subsequent rounds.';
+      case 'random':
+        return 'The payout order will be determined randomly through a draw. Each member has an equal chance of being selected for each round.';
+      case 'sequential':
+        return 'Members will receive payouts in a predetermined sequential order based on when they joined the group.';
+      case 'bidding':
+        return 'Members can bid for their turn to receive the payout. The highest bidder for each round will receive the payout for that round.';
+      default:
+        return 'The rotation method will determine the order in which members receive payouts.';
+    }
+  }
+
+  // Update group rules
+  void updateGroupRules(String rules) {
+    groupRules.value = rules;
+  }
+
+  // Update terms acceptance
+  void updateTermsAccepted(bool accepted) {
+    termsAccepted.value = accepted;
   }
 
   // Load categories

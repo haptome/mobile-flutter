@@ -8,11 +8,9 @@ import 'package:et_digital_equb/core/widgets/search_bar_widget.dart';
 import 'package:et_digital_equb/core/widgets/tab_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../controllers/faq_controller.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_sizes.dart';
-import '../../../../core/widgets/main_wrapper.dart';
+import '../../../../core/widgets/scaffold_with_bottom_bar.dart';
 
 class FaqView extends StatelessWidget {
   const FaqView({super.key});
@@ -21,135 +19,132 @@ class FaqView extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<FaqController>();
 
-    return MainWrapper(
-      currentIndex: 1, // Your Ekubs tab
-      child: Scaffold(
-        backgroundColor: AppColors.lightBackground,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: const CustomBackButton(),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'faq'.tr,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.lightTextPrimary,
-                ),
+    return ScaffoldWithBottomBar(
+      backgroundColor: AppColors.lightBackground,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: const CustomBackButton(),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'faq'.tr,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.lightTextPrimary,
               ),
-              Text(
-                'explore_faq'.tr,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textLightGray,
-                  fontWeight: FontWeight.normal,
-                ),
+            ),
+            Text(
+              'explore_faq'.tr,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textLightGray,
+                fontWeight: FontWeight.normal,
               ),
-            ],
-          ),
-          centerTitle: false,
+            ),
+          ],
         ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              // Tab selector
-              Obx(
-                () => TabSelector(
-                  tabs: controller.tabs,
-                  selectedIndex: controller.selectedTabIndex.value,
-                  onTabSelected: controller.onTabSelected,
-                ),
+        centerTitle: false,
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Tab selector
+            Obx(
+              () => TabSelector(
+                tabs: controller.tabs,
+                selectedIndex: controller.selectedTabIndex.value,
+                onTabSelected: controller.onTabSelected,
               ),
-              // Search section
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'how_can_we_help'.tr,
+            ),
+            // Search section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'how_can_we_help'.tr,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.lightTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SearchBarWidget(
+                    hintText: 'search'.tr,
+                    onChanged: controller.onSearchChanged,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Top Questions section header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'top_questions'.tr,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.lightTextPrimary,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: controller.onViewAll,
+                    child: Text(
+                      'view_all'.tr,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // FAQ list
+            Expanded(
+              child: Obx(() {
+                if (controller.filteredFaqs.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'no_faqs_found'.tr,
                       style: const TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.lightTextPrimary,
+                        color: AppColors.textLightGray,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    SearchBarWidget(
-                      hintText: 'search'.tr,
-                      onChanged: controller.onSearchChanged,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Top Questions section header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'top_questions'.tr,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.lightTextPrimary,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: controller.onViewAll,
-                      child: Text(
-                        'view_all'.tr,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // FAQ list
-              Expanded(
-                child: Obx(() {
-                  if (controller.filteredFaqs.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'no_faqs_found'.tr,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: AppColors.textLightGray,
-                        ),
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    itemCount: controller.filteredFaqs.length,
-                    itemBuilder: (context, index) {
-                      final faq = controller.filteredFaqs[index];
-                      return FaqItem(
-                        id: faq['id'] ?? '',
-                        question: faq['question'] ?? '',
-                        answer: faq['answer'] ?? '',
-                        usersAsked: faq['usersAsked'] ?? 0,
-                        userAvatars: faq['userAvatars'] != null
-                            ? List<String>.from(faq['userAvatars'] as List)
-                            : null,
-                      );
-                    },
                   );
-                }),
-              ),
-            ],
-          ),
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  itemCount: controller.filteredFaqs.length,
+                  itemBuilder: (context, index) {
+                    final faq = controller.filteredFaqs[index];
+                    return FaqItem(
+                      id: faq['id'] ?? '',
+                      question: faq['question'] ?? '',
+                      answer: faq['answer'] ?? '',
+                      usersAsked: faq['usersAsked'] ?? 0,
+                      userAvatars: faq['userAvatars'] != null
+                          ? List<String>.from(faq['userAvatars'] as List)
+                          : null,
+                    );
+                  },
+                );
+              }),
+            ),
+          ],
         ),
       ),
     );

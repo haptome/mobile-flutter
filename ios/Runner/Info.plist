@@ -48,10 +48,12 @@
 	<key>UIStatusBarHidden</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>We need access to your camera to capture ID documents and record liveness verification videos.</string>
+	<string>We need access to your camera to capture ID documents with auto-detection and perform face liveness verification for KYC.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>We need access to your microphone to record audio for liveness verification videos.</string>
+	<string>We need access to your microphone for liveness verification.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We need access to your photo library to select documents for KYC verification.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need access to save captured ID documents to your photo library.</string>
 </dict>
 </plist>

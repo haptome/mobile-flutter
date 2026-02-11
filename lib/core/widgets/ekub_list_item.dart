@@ -61,7 +61,7 @@ class EkubListItem extends StatelessWidget {
 
     return EkubListItem(
       title: title,
-      amountLabel: '\${contributionAmount.toStringAsFixed(0)} ETB',
+      amountLabel: '${contributionAmount.toStringAsFixed(0)} ETB',
       frequency: frequency,
       currentMembers: currentMembers,
       avatars: null,

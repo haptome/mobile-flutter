@@ -5,13 +5,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/widgets/app_bottom_nav.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/app_assets.dart';
 import '../../../../core/theme/app_sizes.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../controllers/duration_controller.dart';
 import '../../../../models/group_model.dart';
+import '../../../../core/widgets/scaffold_with_bottom_bar.dart';
 
 class DurationView extends StatefulWidget {
   const DurationView({super.key});
@@ -21,12 +19,11 @@ class DurationView extends StatefulWidget {
 }
 
 class _DurationViewState extends State<DurationView> {
-  int _currentNavIndex = 0;
   final DurationController _controller = Get.put(DurationController());
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ScaffoldWithBottomBar(
       backgroundColor: AppColors.lightBackground,
       body: SafeArea(
         child: Column(
@@ -86,45 +83,7 @@ class _DurationViewState extends State<DurationView> {
                 ),
               ),
             ),
-            // Bottom Navigation
-            AppBottomNav(
-              currentIndex: _currentNavIndex,
-              onTap: (index) {
-                if (index == _currentNavIndex) return;
-                setState(() {
-                  _currentNavIndex = index;
-                });
-                final route = [
-                  AppRoutes.home,
-                  AppRoutes.ekubs,
-                  AppRoutes.transactions,
-                  AppRoutes.profile,
-                ][index];
-                Get.offAllNamed(route);
-              },
-              items: const [
-                BottomNavItem(
-                  iconPath: AppAssets.homeIcon,
-                  label: 'Home',
-                  route: '/home',
-                ),
-                BottomNavItem(
-                  iconPath: AppAssets.personsIcon,
-                  label: 'Your Ekubs',
-                  route: '/ekubs',
-                ),
-                BottomNavItem(
-                  iconPath: AppAssets.transactionIcon,
-                  label: 'Transactions',
-                  route: '/transactions',
-                ),
-                BottomNavItem(
-                  iconPath: AppAssets.profileIcon,
-                  label: 'Profile',
-                  route: '/profile',
-                ),
-              ],
-            ),
+          
           ],
         ),
       ),

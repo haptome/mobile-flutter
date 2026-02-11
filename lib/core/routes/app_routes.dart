@@ -18,8 +18,10 @@ import '../../features/in_kind/presentation/in_kind_view.dart';
 import '../../features/duration/presentation/duration_view.dart';
 import '../../features/category_detail/presentation/category_detail_view.dart';
 import '../../features/group_detail/presentation/group_detail_view.dart';
+import '../../features/in_kind_detail/presentation/in_kind_detail_view.dart';
 import '../../features/payment/presentation/select_payment_method_view.dart';
 import '../../features/payment/presentation/upcoming_payments_view.dart';
+import '../../features/payment/presentation/payment_webview.dart';
 import '../../features/lottery/presentation/lottery_view.dart';
 import '../../features/completed_ekubs/presentation/completed_ekubs_view.dart';
 import '../../features/faq/presentation/faq_view.dart';
@@ -32,6 +34,7 @@ import '../../controllers/in_kind_controller.dart';
 import '../../controllers/duration_controller.dart';
 import '../../controllers/category_detail_controller.dart';
 import '../../controllers/group_detail_controller.dart';
+import '../../controllers/in_kind_detail_controller.dart';
 import '../../controllers/payment_controller.dart';
 import '../../controllers/upcoming_payments_controller.dart';
 import '../../controllers/lottery_controller.dart';
@@ -40,6 +43,7 @@ import '../../controllers/faq_controller.dart';
 import '../../controllers/set_password_controller.dart';
 import '../../controllers/create_group_controller.dart';
 import '../../controllers/terms_conditions_controller.dart';
+import '../../core/services/permission_service.dart';
 import '../../models/category_model.dart' as category_models;
 import '../../models/group_model.dart';
 import '../widgets/main_wrapper.dart';
@@ -71,12 +75,14 @@ class AppRoutes {
   static const String groupDetail = '/group-detail';
   static const String selectPaymentMethod = '/select-payment-method';
   static const String upcomingPayments = '/upcoming-payments';
+  static const String paymentWebview = '/payment-webview';
   static const String lottery = '/lottery';
   static const String completedEkubs = '/completed-ekubs';
   static const String faq = '/faq';
   static const String setPassword = '/set-password';
   static const String createGroup = '/create-group';
   static const String termsConditions = '/terms-conditions';
+  static const String inKindDetail = '/in-kind-detail';
 }
 
 /// Route configuration for the app
@@ -97,34 +103,19 @@ class AppRouter {
     ),
     GetPage(
       name: AppRoutes.home,
-      page: () => const MainWrapper(currentIndex: 0, child: HomeScreen()),
+      page: () => const MainWrapper(initialIndex: 0),
     ),
     GetPage(
       name: AppRoutes.ekubs,
-      page: () => const MainWrapper(currentIndex: 1, child: YourEkubsView()),
-      binding: BindingsBuilder(() {
-        if (!Get.isRegistered<YourEkubsController>()) {
-          Get.put(YourEkubsController());
-        }
-      }),
+      page: () => const MainWrapper(initialIndex: 1),
     ),
     GetPage(
       name: AppRoutes.transactions,
-      page: () => const MainWrapper(currentIndex: 2, child: TransactionsView()),
-      binding: BindingsBuilder(() {
-        if (!Get.isRegistered<TransactionsController>()) {
-          Get.put(TransactionsController());
-        }
-      }),
+      page: () => const MainWrapper(initialIndex: 2),
     ),
     GetPage(
       name: AppRoutes.profile,
-      page: () => const MainWrapper(currentIndex: 3, child: ProfileView()),
-      binding: BindingsBuilder(() {
-        if (!Get.isRegistered<ProfileController>()) {
-          Get.put(ProfileController());
-        }
-      }),
+      page: () => const MainWrapper(initialIndex: 3),
     ),
     GetPage(
       name: AppRoutes.accountSetting,
@@ -205,6 +196,24 @@ class AppRouter {
       },
     ),
     GetPage(
+      name: AppRoutes.inKindDetail,
+      page: () {
+        final group = Get.arguments as InKindGroup?;
+        if (group == null) {
+          return const Scaffold(
+            body: Center(child: Text('In-kind group not found')),
+          );
+        }
+        if (!Get.isRegistered<InKindDetailController>()) {
+          Get.put(InKindDetailController(group: group));
+        } else {
+          Get.delete<InKindDetailController>();
+          Get.put(InKindDetailController(group: group));
+        }
+        return const InKindDetailView();
+      },
+    ),
+    GetPage(
       name: AppRoutes.groupDetail,
       page: () {
         final group = Get.arguments as Group?;
@@ -240,6 +249,10 @@ class AppRouter {
       }),
     ),
     GetPage(
+      name: AppRoutes.paymentWebview,
+      page: () => const PaymentWebView(),
+    ),
+    GetPage(
       name: AppRoutes.lottery,
       page: () => const LotteryView(),
       binding: BindingsBuilder(() {
@@ -266,19 +279,7 @@ class AppRouter {
         }
       }),
     ),
-    GetPage(
-      name: AppRoutes.setPassword,
-      page: () {
-        final args = Get.arguments as Map<String, dynamic>?;
-        final hasExistingPassword = args?['hasExistingPassword'] ?? false;
-        return SetPasswordView(hasExistingPassword: hasExistingPassword);
-      },
-      binding: BindingsBuilder(() {
-        if (!Get.isRegistered<SetPasswordController>()) {
-          Get.put(SetPasswordController());
-        }
-      }),
-    ),
+
     GetPage(
       name: AppRoutes.createGroup,
       page: () => const CreateGroupView(),

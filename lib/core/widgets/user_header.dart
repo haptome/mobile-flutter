@@ -69,7 +69,7 @@ class UserHeader extends StatelessWidget {
               style: TextButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(80),
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,

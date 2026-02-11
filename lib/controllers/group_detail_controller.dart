@@ -25,6 +25,8 @@ class GroupDetailController extends GetxController {
   final RxList<dynamic> payments = <dynamic>[].obs;
   final RxList<dynamic> history = <dynamic>[].obs;
   final RxList<dynamic> lottery = <dynamic>[].obs;
+  final RxList<dynamic> membersWithPaymentStatus = <dynamic>[].obs;
+  final RxMap<String, dynamic> groupHistoryData = <String, dynamic>{}.obs;
 
   GroupDetailController({required this.group});
 
@@ -49,7 +51,10 @@ class GroupDetailController extends GetxController {
 
       if (response.success && response.data != null) {
         final groupData = response.data!;
+        groupHistoryData.value = groupData;
+
         final paymentsData = groupData['payments'] as List<dynamic>?;
+        final membersData = groupData['members'] as List<dynamic>?;
 
         if (paymentsData != null) {
           // Convert payment data to the expected format
@@ -57,15 +62,23 @@ class GroupDetailController extends GetxController {
           for (final payment in paymentsData) {
             final paymentMap = payment as Map<String, dynamic>;
             paymentList.add({
+              'id': paymentMap['id'],
+              'user_id': paymentMap['user_id'],
               'amount': paymentMap['amount'],
               'date': DateTime.parse(
                 paymentMap['created_at'],
               ).toString().split(' ')[0],
               'status': paymentMap['status'],
-              'member': paymentMap['user']?['full_name'] ?? 'Unknown',
+              'member': paymentMap['user_name'] ?? 'Unknown',
+              'cycle_number': paymentMap['cycle_number'],
             });
           }
           payments.assignAll(paymentList);
+        }
+
+        // Store members with payment status for detailed display
+        if (membersData != null) {
+          membersWithPaymentStatus.assignAll(membersData);
         }
       } else {
         Get.snackbar(
@@ -98,7 +111,10 @@ class GroupDetailController extends GetxController {
 
       if (response.success && response.data != null) {
         final groupData = response.data!;
+        groupHistoryData.value = groupData;
+
         final winnersData = groupData['winners'] as List<dynamic>?;
+        final membersData = groupData['members'] as List<dynamic>?;
 
         if (winnersData != null) {
           // Convert winner data to the expected format
@@ -106,16 +122,22 @@ class GroupDetailController extends GetxController {
           for (final winner in winnersData) {
             final winnerMap = winner as Map<String, dynamic>;
             historyList.add({
-              'action':
-                  'Winner Selected: ${winnerMap['user']?['full_name'] ?? 'Unknown'}',
+              'action': 'Winner: ${winnerMap['user_name'] ?? 'Unknown'}',
               'date': DateTime.parse(
-                winnerMap['drawn_at'],
+                winnerMap['payout_date'],
               ).toString().split(' ')[0],
               'initiator': 'System',
-              'round': winnerMap['round_number'],
+              'cycle_number': winnerMap['cycle_number'],
+              'amount': winnerMap['amount'],
+              'turn_position': winnerMap['turn_position'],
             });
           }
           history.assignAll(historyList);
+        }
+
+        // Store members with payment status for detailed display
+        if (membersData != null) {
+          membersWithPaymentStatus.assignAll(membersData);
         }
       } else {
         Get.snackbar(
@@ -148,18 +170,74 @@ class GroupDetailController extends GetxController {
 
   Future<void> loadGroupDetails() async {
     try {
+      print('GroupDetailController.loadGroupDetails - Loading group history for ${group.id}');
       final response = await _groupService.getGroupHistory(group.id);
 
       if (response.success && response.data != null) {
         final groupData = response.data!;
-
-        // Update group with actual data from history
-        if (groupData.containsKey('current_round')) {
-          // Note: We can't modify the immutable group object directly here
-          // This is just for future enhancement
+        print('GroupDetailController.loadGroupDetails - Success, updating groupHistoryData');
+        
+        // Store the complete group history data
+        groupHistoryData.value = groupData;
+        
+        // Also store members with payment status for the Members tab
+        final membersData = groupData['members'] as List<dynamic>?;
+        if (membersData != null) {
+          print('GroupDetailController.loadGroupDetails - Found ${membersData.length} members with payment status');
+          membersWithPaymentStatus.assignAll(membersData);
         }
+        
+        // Pre-populate payments data (so it's available when switching tabs)
+        final paymentsData = groupData['payments'] as List<dynamic>?;
+        if (paymentsData != null) {
+          print('GroupDetailController.loadGroupDetails - Found ${paymentsData.length} payments');
+          final paymentList = <Map<String, dynamic>>[];
+          for (final payment in paymentsData) {
+            final paymentMap = payment as Map<String, dynamic>;
+            paymentList.add({
+              'id': paymentMap['id'],
+              'user_id': paymentMap['user_id'],
+              'amount': paymentMap['amount'],
+              'date': DateTime.parse(
+                paymentMap['created_at'],
+              ).toString().split(' ')[0],
+              'status': paymentMap['status'],
+              'member': paymentMap['user_name'] ?? 'Unknown',
+              'cycle_number': paymentMap['cycle_number'],
+            });
+          }
+          payments.assignAll(paymentList);
+        }
+        
+        // Pre-populate history data (so it's available when switching tabs)
+        final winnersData = groupData['winners'] as List<dynamic>?;
+        if (winnersData != null) {
+          print('GroupDetailController.loadGroupDetails - Found ${winnersData.length} winners');
+          final historyList = <Map<String, dynamic>>[];
+          for (final winner in winnersData) {
+            final winnerMap = winner as Map<String, dynamic>;
+            historyList.add({
+              'action': 'Winner: ${winnerMap['user_name'] ?? 'Unknown'}',
+              'date': DateTime.parse(
+                winnerMap['payout_date'],
+              ).toString().split(' ')[0],
+              'initiator': 'System',
+              'cycle_number': winnerMap['cycle_number'],
+              'amount': winnerMap['amount'],
+              'turn_position': winnerMap['turn_position'],
+            });
+          }
+          history.assignAll(historyList);
+        }
+        
+        print('GroupDetailController.loadGroupDetails - Data loaded successfully');
+        print('GroupDetailController.loadGroupDetails - current_round: ${groupData['current_round']}');
+        print('GroupDetailController.loadGroupDetails - rounds_remaining: ${groupData['rounds_remaining']}');
+      } else {
+        print('GroupDetailController.loadGroupDetails - Failed: ${response.message}');
       }
     } catch (e) {
+      print('GroupDetailController.loadGroupDetails - Error: $e');
       // Silently handle errors since this is just for additional details
     }
   }

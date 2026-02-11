@@ -1,3 +1,4 @@
+import 'package:et_digital_equb/core/widgets/text_marquee.dart';
 import 'package:flutter/material.dart';
 import 'package:marqueer/marqueer.dart';
 import '../theme/app_colors.dart';
@@ -32,15 +33,13 @@ class WarningBanner extends StatelessWidget {
             ),
             const SizedBox(width: AppSizes.spacingSmall),
             Expanded(
-              child: Marqueer(
-                child: Text(
-                  message,
-                  style: AppTextStyles.bodyMedium(
-                    color: AppColors.white,
-                    isDark: false,
-                  ).copyWith(fontSize: 11),
+              child: TextMarquee(
+                text: message,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.white,
                 ),
-                
               ),
             ),
           ],

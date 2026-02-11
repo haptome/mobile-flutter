@@ -2,10 +2,12 @@
 // Author: haptome H.
 // Linked Spec Section: FR02-FR03
 
-import 'package:dio/dio.dart' hide FormData, MultipartFile;
-import 'package:dio/dio.dart' as dio show FormData, MultipartFile;
+import 'package:dio/dio.dart';
+import 'package:et_digital_equb/core/services/cloudinary_service.dart';
+import 'package:et_digital_equb/core/services/auth_service.dart';
 import 'package:et_digital_equb/models/api_response.dart';
 import 'package:et_digital_equb/models/kyc_models.dart';
+import 'package:et_digital_equb/models/queued_upload.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'api_service.dart';
@@ -23,32 +25,64 @@ class KycService extends GetxService {
     void Function(int sent, int total)? onSendProgress,
   }) async {
     try {
-      final formData = dio.FormData.fromMap({
-        'file': await dio.MultipartFile.fromFile(
-          filePath,
-          filename: filePath.split('/').last,
-        ),
-        'doc_type': docType.value,
-        if (metadata != null) 'metadata': metadata,
-      });
-
+      // Import CloudinaryService and AuthService
+      final cloudinaryService = Get.find<CloudinaryService>();
+      final authService = Get.find<AuthService>();
+      
+      // Step 1: Validate file using CloudinaryService
+      final validation = cloudinaryService.validateFile(filePath, FileType.image);
+      if (!validation.isValid) {
+        return ApiResponse<KycDocument>(
+          success: false,
+          error: ApiError(
+            code: 'VALIDATION_ERROR',
+            message: validation.errorMessage!,
+          ),
+        );
+      }
+      
+      // Step 2: Get userId and generate folder
+      final userId = authService.currentUser.value?.id ?? 'unknown';
+      final folder = cloudinaryService.generateKycFolder(userId, docType.value);
+      
+      // Step 3: Upload to Cloudinary
+      final cloudinaryResponse = await cloudinaryService.uploadImage(
+        filePath: filePath,
+        folder: folder,
+        metadata: metadata,
+        onProgress: onSendProgress,
+      );
+      
+      if (!cloudinaryResponse.success) {
+        return ApiResponse<KycDocument>(
+          success: false,
+          error: ApiError(
+            code: cloudinaryResponse.error!.code,
+            message: cloudinaryResponse.error!.message,
+          ),
+        );
+      }
+      
+      // Step 4: Send URL to backend
       final response = await _apiService.userDio.post(
         '/kyc/documents/upload',
-        data: formData,
-        onSendProgress: onSendProgress,
+        data: {
+          'file_url': cloudinaryResponse.secureUrl,
+          'storage_provider': 'cloudinary',
+          'public_id': cloudinaryResponse.publicId,
+          'doc_type': docType.value,
+          'file_name': filePath.split('/').last,
+          if (metadata != null) 'metadata': metadata,
+        },
       );
 
       final apiResponse = ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
         (data) {
-          // Backend returns {document_id, file_url, storage_key}
-          // We need to fetch the full document or construct a partial one
           if (data is Map<String, dynamic>) {
-            // If backend returns full document, use it
             if (data.containsKey('id')) {
               return KycDocument.fromJson(data);
             }
-            // If backend returns data with nested document, use that
             if (data.containsKey('data') &&
                 data['data'] is Map<String, dynamic>) {
               final dataMap = data['data'] as Map<String, dynamic>;
@@ -56,14 +90,13 @@ class KycService extends GetxService {
                 return KycDocument.fromJson(dataMap);
               }
             }
-            // Otherwise, construct from upload response
             return KycDocument(
               id: data['document_id'] as String? ?? data['id'] as String? ?? '',
               docType: data['doc_type'] as String? ?? docType.value,
               fileName:
                   data['file_name'] as String? ?? filePath.split('/').last,
               fileUrl:
-                  data['file_url'] as String? ?? data['file_url'] as String?,
+                  data['file_url'] as String? ?? cloudinaryResponse.secureUrl,
               status: data['status'] as String? ?? 'uploaded',
               uploadedAt: DateTime.now(),
               metadata: metadata,
@@ -76,10 +109,8 @@ class KycService extends GetxService {
       return apiResponse;
     } on DioException catch (e) {
       if (e.response != null) {
-        // Handle error response from server
         final responseData = e.response!.data;
         if (responseData is Map<String, dynamic>) {
-          // If the error response has a document in the data field
           if (responseData.containsKey('data') &&
               responseData['data'] is Map<String, dynamic>) {
             try {
@@ -88,7 +119,6 @@ class KycService extends GetxService {
                 (data) => KycDocument.fromJson(data as Map<String, dynamic>),
               );
             } catch (parseError) {
-              // If parsing fails, return error response
               return ApiResponse<KycDocument>(
                 success: false,
                 error: ApiError(
@@ -103,7 +133,6 @@ class KycService extends GetxService {
           }
         }
 
-        // Return error response
         return ApiResponse<KycDocument>(
           success: false,
           error: ApiError(
@@ -310,41 +339,66 @@ class KycService extends GetxService {
     void Function(int sent, int total)? onSendProgress,
   }) async {
     try {
-      final formData = dio.FormData();
-
-      // Add session ID
-      formData.fields.add(MapEntry('session_id', sessionId));
-
-      // Add video file if provided
+      final cloudinaryService = Get.find<CloudinaryService>();
+      final authService = Get.find<AuthService>();
+      final userId = authService.currentUser.value?.id ?? 'unknown';
+      
+      String? videoUrl;
+      String? photoUrl;
+      
+      // Upload video if provided
       if (videoPath != null && videoPath.isNotEmpty) {
-        formData.files.add(
-          MapEntry(
-            'files',
-            await dio.MultipartFile.fromFile(
-              videoPath,
-              filename: videoPath.split('/').last,
-            ),
-          ),
+        final folder = cloudinaryService.generateLivenessVideoFolder(userId);
+        final response = await cloudinaryService.uploadVideo(
+          filePath: videoPath,
+          folder: folder,
+          onProgress: onSendProgress,
         );
+        
+        if (!response.success) {
+          return ApiResponse<Map<String, dynamic>>(
+            success: false,
+            error: ApiError(
+              code: response.error!.code,
+              message: response.error!.message,
+            ),
+          );
+        }
+        
+        videoUrl = response.secureUrl;
       }
-
-      // Add photo file if provided
+      
+      // Upload photo if provided
       if (photoPath != null && photoPath.isNotEmpty) {
-        formData.files.add(
-          MapEntry(
-            'files',
-            await dio.MultipartFile.fromFile(
-              photoPath,
-              filename: photoPath.split('/').last,
-            ),
-          ),
+        final folder = cloudinaryService.generateLivenessPhotoFolder(userId);
+        final response = await cloudinaryService.uploadImage(
+          filePath: photoPath,
+          folder: folder,
+          onProgress: onSendProgress,
         );
+        
+        if (!response.success) {
+          return ApiResponse<Map<String, dynamic>>(
+            success: false,
+            error: ApiError(
+              code: response.error!.code,
+              message: response.error!.message,
+            ),
+          );
+        }
+        
+        photoUrl = response.secureUrl;
       }
-
+      
+      // Send URLs to backend
       final response = await _apiService.userDio.post(
         '/kyc/liveness/submit',
-        data: formData,
-        onSendProgress: onSendProgress,
+        data: {
+          'session_id': sessionId,
+          'storage_provider': 'cloudinary',
+          if (videoUrl != null) 'video_url': videoUrl,
+          if (photoUrl != null) 'photo_url': photoUrl,
+        },
       );
 
       final apiResponse = ApiResponse.fromJson(
@@ -363,6 +417,150 @@ class KycService extends GetxService {
       rethrow;
     } catch (e) {
       rethrow;
+    }
+  }
+
+  // Upload KYC images (ID front, back, liveness) with progress tracking
+  Future<ApiResponse<Map<String, dynamic>>> uploadKYCImages({
+    required String idFrontPath,
+    String? idBackPath,
+    required String livenessImagePath,
+    required String idType,
+    void Function(int sent, int total)? onSendProgress,
+  }) async {
+    try {
+      final cloudinaryService = Get.find<CloudinaryService>();
+      final authService = Get.find<AuthService>();
+      final userId = authService.currentUser.value?.id ?? 'unknown';
+      
+      // Upload ID front image
+      final idFrontFolder = '${cloudinaryService.generateKycFolder(userId, 'id_card')}/front';
+      final frontResponse = await cloudinaryService.uploadImage(
+        filePath: idFrontPath,
+        folder: idFrontFolder,
+        metadata: {'type': 'id_front', 'id_type': idType},
+        onProgress: onSendProgress,
+      );
+      
+      if (!frontResponse.success) {
+        return ApiResponse<Map<String, dynamic>>(
+          success: false,
+          error: ApiError(
+            code: frontResponse.error!.code,
+            message: 'Failed to upload ID front: ${frontResponse.error!.message}',
+          ),
+        );
+      }
+      
+      // Upload ID back image (if provided)
+      String? idBackUrl;
+      if (idBackPath != null && idBackPath.isNotEmpty) {
+        final idBackFolder = '${cloudinaryService.generateKycFolder(userId, 'id_card')}/back';
+        final backResponse = await cloudinaryService.uploadImage(
+          filePath: idBackPath,
+          folder: idBackFolder,
+          metadata: {'type': 'id_back', 'id_type': idType},
+          onProgress: onSendProgress,
+        );
+        
+        if (!backResponse.success) {
+          return ApiResponse<Map<String, dynamic>>(
+            success: false,
+            error: ApiError(
+              code: backResponse.error!.code,
+              message: 'Failed to upload ID back: ${backResponse.error!.message}',
+            ),
+          );
+        }
+        
+        idBackUrl = backResponse.secureUrl;
+      }
+      
+      // Upload liveness image
+      final livenessFolder = cloudinaryService.generateLivenessPhotoFolder(userId);
+      final livenessResponse = await cloudinaryService.uploadImage(
+        filePath: livenessImagePath,
+        folder: livenessFolder,
+        metadata: {'type': 'liveness'},
+        onProgress: onSendProgress,
+      );
+      
+      if (!livenessResponse.success) {
+        return ApiResponse<Map<String, dynamic>>(
+          success: false,
+          error: ApiError(
+            code: livenessResponse.error!.code,
+            message: 'Failed to upload liveness image: ${livenessResponse.error!.message}',
+          ),
+        );
+      }
+      
+      return ApiResponse<Map<String, dynamic>>(
+        success: true,
+        data: {
+          'id_front_url': frontResponse.secureUrl,
+          if (idBackUrl != null) 'id_back_url': idBackUrl,
+          'liveness_url': livenessResponse.secureUrl,
+        },
+        message: 'All images uploaded successfully',
+      );
+    } catch (e) {
+      return ApiResponse<Map<String, dynamic>>(
+        success: false,
+        error: ApiError(
+          code: 'UPLOAD_ERROR',
+          message: 'Failed to upload KYC images: $e',
+        ),
+      );
+    }
+  }
+
+  // Submit KYC verification with image URLs and metadata
+  Future<ApiResponse<Map<String, dynamic>>> submitKYCVerification({
+    required String idFrontUrl,
+    String? idBackUrl,
+    required String livenessUrl,
+    required String idType,
+    required String challengeType,
+    Map<String, dynamic>? additionalMetadata,
+  }) async {
+    try {
+      final response = await _apiService.userDio.post(
+        '/kyc/verification/submit',
+        data: {
+          'id_front_url': idFrontUrl,
+          if (idBackUrl != null) 'id_back_url': idBackUrl,
+          'liveness_url': livenessUrl,
+          'id_type': idType,
+          'challenge_type': challengeType,
+          'timestamp': DateTime.now().toIso8601String(),
+          'storage_provider': 'cloudinary',
+          if (additionalMetadata != null) ...additionalMetadata,
+        },
+      );
+
+      final apiResponse = ApiResponse.fromJson(
+        response.data as Map<String, dynamic>,
+        (data) => data as Map<String, dynamic>,
+      );
+
+      return apiResponse;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return ApiResponse.fromJson(
+          e.response!.data as Map<String, dynamic>,
+          (data) => data as Map<String, dynamic>,
+        );
+      }
+      rethrow;
+    } catch (e) {
+      return ApiResponse<Map<String, dynamic>>(
+        success: false,
+        error: ApiError(
+          code: 'SUBMIT_ERROR',
+          message: 'Failed to submit KYC verification: $e',
+        ),
+      );
     }
   }
 }

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'dart:async';
-import '../../../../core/widgets/app_button.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_otp_kit/flutter_otp_kit.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/app_assets.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/fcm_service.dart';
 import '../../../../core/utils/device_info.dart';
 import '../../../../models/verify_otp_request.dart';
 import '../../../../models/login_request.dart';
@@ -30,10 +30,7 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
-  final List<TextEditingController> _controllers = [];
-  final List<FocusNode> _focusNodes = [];
-  final List<String> _otpValues = [];
-  bool _isLoading = false;
+  String _otpCode = '';
 
   // Resend OTP state
   final AuthService _authService = AuthService.to;
@@ -44,13 +41,6 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   void initState() {
     super.initState();
-    for (int i = 0; i < 6; i++) {
-      _controllers.add(TextEditingController());
-      _focusNodes.add(FocusNode());
-      _otpValues.add('');
-    }
-    // Focus first field
-    _focusNodes[0].requestFocus();
 
     // Start countdown timer
     _startResendTimer();
@@ -76,12 +66,6 @@ class _OtpScreenState extends State<OtpScreen> {
     _resendTimer?.cancel();
     _resendCountdown.close();
     _canResend.close();
-    for (var controller in _controllers) {
-      controller.dispose();
-    }
-    for (var focusNode in _focusNodes) {
-      focusNode.dispose();
-    }
     super.dispose();
   }
 
@@ -92,34 +76,39 @@ class _OtpScreenState extends State<OtpScreen> {
     if (cleaned.length < 10) return phone;
     final start = cleaned.substring(0, 5);
     final end = cleaned.substring(cleaned.length - 2);
-    return '+251$start******$end';
+    return '+$start******$end';
   }
 
-  void _checkCompletion() {
-    final otp = _otpValues.join('');
-    if (otp.length == 6) {
-      // OTP completed
-    }
-  }
+  // _checkCompletion is no longer needed as we're using flutter_otp_kit
+  // The OTP code is directly captured in the _otpCode variable
 
   Future<void> _handleContinue() async {
-    final otp = _otpValues.join('');
-    if (otp.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter the complete OTP'),
-          backgroundColor: AppColors.lightError,
-        ),
-      );
+    final otp = _otpCode;
+    if (otp.isEmpty || otp.length != 6) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('enter_complete_otp'.tr),
+            backgroundColor: AppColors.lightError,
+          ),
+        );
+      }
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
-
     try {
       ApiResponse<Map<String, dynamic>> response;
+
+      // Get FCM token (only on mobile platforms)
+      String? fcmToken;
+      if (!kIsWeb && DeviceInfo.isMobile()) {
+        try {
+          final fcmService = FcmService.to;
+          fcmToken = fcmService.fcmToken.isNotEmpty ? fcmService.fcmToken : null;
+        } catch (e) {
+          debugPrint('FCM service not available: $e');
+        }
+      }
 
       if (widget.isFromLogin) {
         // If from login screen, use login endpoint with OTP
@@ -127,7 +116,7 @@ class _OtpScreenState extends State<OtpScreen> {
           phone: widget.phoneNumber,
           password: null,
           otp: otp,
-          fcmToken: null, // TODO: Add FCM token when Firebase is set up
+          fcmToken: fcmToken,
           deviceId: DeviceInfo.getDeviceId(),
           deviceType: DeviceInfo.getDeviceType(),
         );
@@ -139,7 +128,7 @@ class _OtpScreenState extends State<OtpScreen> {
         final verifyRequest = VerifyOtpRequest(
           phone: widget.phoneNumber,
           otp: otp,
-          fcmToken: null, // TODO: Add FCM token when Firebase is set up
+          fcmToken: fcmToken,
           deviceId: DeviceInfo.getDeviceId(),
           deviceType: DeviceInfo.getDeviceType(),
         );
@@ -154,8 +143,8 @@ class _OtpScreenState extends State<OtpScreen> {
             SnackBar(
               content: Text(
                 widget.isFromLogin
-                    ? 'Login successful!'
-                    : 'OTP verified successfully!',
+                    ? 'login_successful'.tr
+                    : 'otp_verified_successfully'.tr,
               ),
               backgroundColor: AppColors.primary,
             ),
@@ -168,8 +157,8 @@ class _OtpScreenState extends State<OtpScreen> {
               content: Text(
                 response.error?.message ??
                     (widget.isFromLogin
-                        ? 'Login failed'
-                        : 'OTP verification failed'),
+                        ? 'login_failed'.tr
+                        : 'otp_verification_failed'.tr),
               ),
               backgroundColor: AppColors.lightError,
             ),
@@ -180,16 +169,10 @@ class _OtpScreenState extends State<OtpScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('${'error'.tr}: ${e.toString()}'),
             backgroundColor: AppColors.lightError,
           ),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
   }
@@ -198,43 +181,37 @@ class _OtpScreenState extends State<OtpScreen> {
     if (!_canResend.value) return;
 
     try {
-      setState(() {
-        _isLoading = true;
-      });
-
       // Call resend OTP API
       final response = await _authService.resendOtp(widget.phoneNumber);
 
-      if (response.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('OTP resent successfully'),
-            backgroundColor: AppColors.primary,
-          ),
-        );
+      if (mounted) {
+        if (response.success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('otp_resent_successfully'.tr),
+              backgroundColor: AppColors.primary,
+            ),
+          );
 
-        // Restart countdown timer
-        _startResendTimer();
-      } else {
+          // Restart countdown timer
+          _startResendTimer();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response.error?.message ?? 'failed_resend_otp'.tr),
+              backgroundColor: AppColors.lightError,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(response.error?.message ?? 'Failed to resend OTP'),
+            content: Text('${'error'.tr}: ${e.toString()}'),
             backgroundColor: AppColors.lightError,
           ),
         );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: AppColors.lightError,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
   }
@@ -269,7 +246,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
                     // Title
                     Text(
-                      'Enter OTP',
+                      'enter_otp'.tr,
                       style: GoogleFonts.montserrat(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -281,7 +258,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
                     // Subtitle
                     Text(
-                      'We\'ve sent 6 digit code to ${_maskPhoneNumber(widget.phoneNumber)}',
+                      '${'otp_sent_to'.tr}${_maskPhoneNumber(widget.phoneNumber)}',
                       style: AppTextStyles.bodyMedium(
                         color: AppColors.lightTextSecondary,
                         isDark: false,
@@ -290,145 +267,120 @@ class _OtpScreenState extends State<OtpScreen> {
 
                     SizedBox(height: screenHeight * 0.03),
 
-                    // OTP input fields
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: List.generate(6, (index) {
-                        return Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width:
-                                  (MediaQuery.of(context).size.width -
-                                      AppSizes.paddingLarge * 2 -
-                                      10.79 * 5) /
-                                  6,
-                              child: TextFormField(
-                                controller: _controllers[index],
-                                focusNode: _focusNodes[index],
-                                textAlign: TextAlign.center,
-                                keyboardType: TextInputType.number,
-                                maxLength: 1,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                style: AppTextStyles.h3(
-                                  color: AppColors.lightTextPrimary,
-                                  isDark: false,
-                                ),
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: AppColors.white,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: AppSizes.paddingMedium,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppSizes.otpFieldRadius,
-                                    ),
-                                    borderSide: const BorderSide(
-                                      color: AppColors.textFieldBorder,
-                                      width: AppSizes.textFieldBorderWidth,
-                                    ),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppSizes.otpFieldRadius,
-                                    ),
-                                    borderSide: const BorderSide(
-                                      color: AppColors.textFieldBorder,
-                                      width: AppSizes.textFieldBorderWidth,
-                                    ),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppSizes.otpFieldRadius,
-                                    ),
-                                    borderSide: const BorderSide(
-                                      color: AppColors.primary,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  counterText: '',
-                                  constraints: const BoxConstraints(
-                                    minHeight: AppSizes.textFieldHeight,
-                                  ),
-                                ),
-                                onChanged: (value) {
-                                  _otpValues[index] = value;
-                                  if (value.isNotEmpty && index < 5) {
-                                    _focusNodes[index + 1].requestFocus();
-                                  }
-                                  _checkCompletion();
-                                },
-                              ),
-                            ),
-                            if (index < 5) const SizedBox(width: 10.79),
-                          ],
-                        );
-                      }),
-                    ),
-
-                    const SizedBox(height: AppSizes.spacingLarge),
-
-                    // Request again link with countdown
-                    Center(
-                      child: Obx(
-                        () => RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
-                            style: AppTextStyles.bodyMedium(
-                              color: AppColors.lightTextSecondary,
-                              isDark: false,
-                            ),
-                            children: [
-                              const TextSpan(text: 'Didn\'t receive a code? '),
-                              if (_canResend.value)
-                                WidgetSpan(
-                                  child: GestureDetector(
-                                    onTap: _handleRequestAgain,
-                                    child: Text(
-                                      'Request again',
-                                      style:
-                                          AppTextStyles.bodyMedium(
-                                            color: AppColors.splashBackground,
-                                            isDark: false,
-                                          ).copyWith(
-                                            decoration:
-                                                TextDecoration.underline,
-                                            decorationColor:
-                                                AppColors.splashBackground,
-                                          ),
-                                    ),
-                                  ),
-                                )
-                              else
-                                TextSpan(
-                                  text:
-                                      'Request again in ${_resendCountdown.value}s',
-                                  style: AppTextStyles.bodyMedium(
-                                    color: AppColors.lightTextSecondary,
-                                    isDark: false,
-                                  ),
-                                ),
-                            ],
-                          ),
+                    // OTP input field with SMS auto-fill
+                    Container(
+                      margin: EdgeInsets.symmetric(
+                        vertical: AppSizes.spacingMedium,
+                      ),
+                      child: OtpKit(
+                        fieldCount: 6,
+                        fieldConfig: OtpFieldConfig(
+                          fieldWidth: 40,
+                          fieldHeight: 60,
+                          borderRadius: AppSizes.otpFieldRadius,
+                          borderWidth: AppSizes.textFieldBorderWidth,
+                          primaryColor: AppColors.primary,
+                          secondaryColor: AppColors.textFieldBorder,
+                          backgroundColor: AppColors.white,
+                          fieldFontSize: 20,
+                          fieldFontWeight: FontWeight.w600,
+                        ),
+                        smsConfig: OtpSmsConfig(
+                          // Enable SMS auto-fill for Android
+                          enableSmsAutofill: true,
+                          enableSmartAuth: true,
+                          enableSmsRetrieverAPI: true, // Android SMS Retriever API
+                          enableSmsUserConsentAPI: true, // Android SMS User Consent API
+                          // App signature for SMS verification (optional)
+                          appSignature: null, // Will use package name by default
+                        ),
+                        primaryColor: AppColors.primary,
+                        successColor: AppColors.primary,
+                        autoFocus: true,
+                        buttonText: 'continue'.tr,
+                        buttonBorderRadius: AppSizes.buttonRadius,
+                        buttonPadding: EdgeInsets.symmetric(
+                          horizontal: AppSizes.paddingLarge,
+                          vertical: AppSizes.paddingMedium,
+                        ),
+                        buttonWidth: screenHeight * 0.3,
+                        onVerify: (String otp) async {
+                          _otpCode = otp;
+                          // Auto-continue when OTP is complete
+                          if (otp.length == 6) {
+                            await _handleContinue();
+                          }
+                          return true; // Return true to indicate success
+                        },
+                        onResend: () {
+                          _handleRequestAgain();
+                        },
+                        animationConfig: const OtpAnimationConfig(
+                          enableAnimation: true,
                         ),
                       ),
                     ),
 
-                    SizedBox(height: screenHeight * 0.04),
+                    // const SizedBox(height: AppSizes.spacingLarge),
 
-                    // Continue button
-                    Center(
-                      child: AppButton(
-                        text: 'Continue',
-                        onPressed: _handleContinue,
-                        isLoading: _isLoading,
-                        isFullWidth: false,
-                        horizontalPadding: 62.2,
-                      ),
-                    ),
+                    // // Request again link with countdown
+                    // Center(
+                    //   child: Obx(
+                    //     () => RichText(
+                    //       textAlign: TextAlign.center,
+                    //       text: TextSpan(
+                    //         style: AppTextStyles.bodyMedium(
+                    //           color: AppColors.lightTextSecondary,
+                    //           isDark: false,
+                    //         ),
+                    //         children: [
+                    //           const TextSpan(text: 'Didn\'t receive a code? '),
+                    //           if (_canResend.value)
+                    //             WidgetSpan(
+                    //               child: GestureDetector(
+                    //                 onTap: _handleRequestAgain,
+                    //                 child: Text(
+                    //                   'Request again',
+                    //                   style:
+                    //                       AppTextStyles.bodyMedium(
+                    //                         color: AppColors.splashBackground,
+                    //                         isDark: false,
+                    //                       ).copyWith(
+                    //                         decoration:
+                    //                             TextDecoration.underline,
+                    //                         decorationColor:
+                    //                             AppColors.splashBackground,
+                    //                       ),
+                    //                 ),
+                    //               ),
+                    //             )
+                    //           else
+                    //             TextSpan(
+                    //               text:
+                    //                   'Request again in ${_resendCountdown.value}s',
+                    //               style: AppTextStyles.bodyMedium(
+                    //                 color: AppColors.lightTextSecondary,
+                    //                 isDark: false,
+                    //               ),
+                    //             ),
+                    //         ],
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+
+                    // SizedBox(height: screenHeight * 0.04),
+
+                    // // Continue button
+                    // Center(
+                    //   child: AppButton(
+                    //     text: 'Continue',
+                    //     onPressed: _handleContinue,
+                    //     isLoading: _isLoading,
+                    //     isFullWidth: false,
+                    //     horizontalPadding: 62.2,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),

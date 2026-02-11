@@ -2,6 +2,7 @@
 // Author: haptome H.
 // Linked Spec Section: Your Ekubs Page
 
+import 'package:et_digital_equb/core/extensions/number_formatting.dart';
 import 'package:get/get.dart';
 import 'package:et_digital_equb/core/services/auth_service.dart';
 import 'package:et_digital_equb/core/services/group_service.dart';
@@ -25,9 +26,31 @@ class YourEkubsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    
+    // Listen to authentication state changes
+    ever(_authService.isAuthenticated, (isAuth) {
+      if (isAuth) {
+        // User just logged in, load data
+        loadUserGroups();
+      } else {
+        // User logged out, clear data
+        ekubs.clear();
+        completedEkubs.clear();
+      }
+    });
+    
+    // Also load data immediately if already authenticated
+    if (_authService.isAuthenticated.value) {
+      loadUserGroups();
+    }
+  }
+ @override
+  void onReady() {
+    super.onReady();
+    // Also try to load data when controller is ready
+    // This handles the case where user logs in after controller initialization
     loadUserGroups();
   }
-
   Future<void> loadUserGroups() async {
     try {
       isLoading.value = true;
@@ -53,8 +76,6 @@ class YourEkubsController extends GetxController {
         status: 'completed',
         limit: 50,
       );
-
-      final List<Map<String, dynamic>> allGroups = [];
 
       // Separate completed groups
       final List<Map<String, dynamic>> activeGroups = [];
@@ -104,16 +125,19 @@ class YourEkubsController extends GetxController {
   }
 
   Map<String, dynamic> _groupToEkubMap(Group group) {
-    // Calculate completed rounds (simplified - in real app, this would come from rotation service)
+    // Calculate completed rounds based on start date and frequency
+    final completedRounds = _calculateCompletedRounds(
+      group.startDate,
+      group.frequency,
+      group.targetMembers,
+    );
     final totalRounds = group.targetMembers;
-    final completedRounds = (group.currentMembers * 0.3)
-        .round(); // Placeholder calculation
 
     return {
       'id': group.id,
       'title': group.name,
       'frequency': group.frequency,
-      'amount': '${group.contributionAmount.toStringAsFixed(0)} ETB',
+      'amount': '${group.contributionAmount.toCurrencyShort()}',
       'completedRounds': completedRounds,
       'totalRounds': totalRounds,
       'type': 'cash',
@@ -122,20 +146,71 @@ class YourEkubsController extends GetxController {
   }
 
   Map<String, dynamic> _inKindGroupToEkubMap(InKindGroup group) {
+    // Calculate completed rounds based on start date and frequency
+    final completedRounds = _calculateCompletedRounds(
+      group.startDate,
+      group.frequency,
+      group.targetMembers,
+    );
     final totalRounds = group.targetMembers;
-    // InKindGroup doesn't have currentMembers, use targetMembers as placeholder
-    final completedRounds = (group.targetMembers * 0.3).round();
 
     return {
       'id': group.id,
       'title': group.name,
       'frequency': group.frequency,
-      'amount': '${group.contributionAmount.toStringAsFixed(0)} ETB',
+      'amount': '${group.contributionAmount.toCurrencyShort()}',
       'completedRounds': completedRounds,
       'totalRounds': totalRounds,
       'type': 'in_kind',
       'group': group,
     };
+  }
+
+  /// Calculate completed rounds based on start date and frequency
+  int _calculateCompletedRounds(
+    DateTime? startDate,
+    String frequency,
+    int targetMembers,
+  ) {
+    if (startDate == null) return 0;
+
+    final now = DateTime.now();
+    
+    // If start date is in the future, no rounds completed yet
+    if (startDate.isAfter(now)) return 0;
+
+    final daysSinceStart = now.difference(startDate).inDays;
+
+    int completedRounds;
+    switch (frequency.toLowerCase()) {
+      case 'daily':
+        completedRounds = daysSinceStart;
+        break;
+      case 'weekly':
+        completedRounds = (daysSinceStart / 7).floor();
+        break;
+      case 'monthly':
+        // Calculate months difference more accurately
+        completedRounds = _calculateMonthsDifference(startDate, now);
+        break;
+      default:
+        completedRounds = 0;
+    }
+
+    // Cap at target members (can't have more completed rounds than total rounds)
+    return completedRounds.clamp(0, targetMembers);
+  }
+
+  /// Calculate the number of months between two dates
+  int _calculateMonthsDifference(DateTime start, DateTime end) {
+    int months = (end.year - start.year) * 12 + (end.month - start.month);
+    
+    // If the end day is before the start day, subtract one month
+    if (end.day < start.day) {
+      months--;
+    }
+    
+    return months.clamp(0, double.infinity.toInt());
   }
 
   Map<String, dynamic> _groupToCompletedEkubMap(Group group) {
@@ -148,10 +223,10 @@ class YourEkubsController extends GetxController {
       'id': group.id,
       'title': group.name,
       'frequency': group.frequency,
-      'amount': '${group.contributionAmount.toStringAsFixed(0)} ETB',
+      'amount': '${group.contributionAmount.toCurrencyShort()}',
       'completedRounds': completedRounds,
       'totalRounds': totalRounds,
-      'totalAmount': '${totalAmount.toStringAsFixed(0)} ETB',
+      'totalAmount': '${totalAmount.toCurrencyShort()}',
       'type': 'cash_completed',
       'group': group,
     };
@@ -200,12 +275,7 @@ class YourEkubsController extends GetxController {
       } else if (group is Group) {
         Get.toNamed('/group-detail', arguments: group);
       } else if (group is InKindGroup) {
-        // TODO: Navigate to in-kind group detail when implemented
-        Get.snackbar(
-          'In-Kind Group',
-          'In-kind group details coming soon',
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        Get.toNamed('/in-kind-detail', arguments: group);
       }
     }
   }

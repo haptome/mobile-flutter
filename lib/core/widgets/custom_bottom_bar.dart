@@ -61,7 +61,7 @@ class CustomBottomBar extends StatelessWidget {
                           fontWeight: FontWeight.w500,
                         )
                       : const TextStyle(
-                          color: AppColors.textLightGray,
+                          color: AppColors.black,
                           fontSize: 10,
                           fontWeight: FontWeight.w400,
                         ),
@@ -79,7 +79,7 @@ class CustomBottomBar extends StatelessWidget {
                           BlendMode.srcIn,
                         )
                       : const ColorFilter.mode(
-                          AppColors.textLightGray,
+                          AppColors.black,
                           BlendMode.srcIn,
                         ),
                 ),

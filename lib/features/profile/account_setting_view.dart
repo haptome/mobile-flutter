@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/account_setting_controller.dart';
 import 'package:et_digital_equb/core/widgets/app_button.dart';
+import 'package:et_digital_equb/core/widgets/scaffold_with_bottom_bar.dart';
 
 class AccountSettingView extends StatelessWidget {
   const AccountSettingView({super.key});
@@ -19,7 +20,7 @@ class AccountSettingView extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<AccountSettingController>();
 
-    return Scaffold(
+    return ScaffoldWithBottomBar(
       backgroundColor: AppColors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,

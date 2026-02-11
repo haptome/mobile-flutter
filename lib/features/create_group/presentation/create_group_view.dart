@@ -4,12 +4,38 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:et_digital_equb/core/theme/app_colors.dart';
 import 'package:et_digital_equb/core/theme/app_sizes.dart';
 import 'package:et_digital_equb/controllers/create_group_controller.dart';
+import 'package:et_digital_equb/core/widgets/scaffold_with_bottom_bar.dart';
 
-class CreateGroupView extends StatelessWidget {
+class CreateGroupView extends StatefulWidget {
   const CreateGroupView({super.key});
+
+  @override
+  State<CreateGroupView> createState() => _CreateGroupViewState();
+}
+
+class _CreateGroupViewState extends State<CreateGroupView> {
+  // Text editing controllers for each step
+  final _groupNameController = TextEditingController();
+  final _groupPurposeController = TextEditingController();
+  final _contributionAmountController = TextEditingController();
+  final _targetMembersController = TextEditingController();
+  final _minMembersController = TextEditingController();
+  final _serviceChargeController = TextEditingController();
+  final _groupRulesController = TextEditingController();
+
+  @override
+  void dispose() {
+    _groupNameController.dispose();
+    _groupPurposeController.dispose();
+    _contributionAmountController.dispose();
+    _targetMembersController.dispose();
+    _minMembersController.dispose();
+    _serviceChargeController.dispose();
+    _groupRulesController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +43,7 @@ class CreateGroupView extends StatelessWidget {
         ? Get.find<CreateGroupController>()
         : Get.put(CreateGroupController());
 
-    return Scaffold(
+    return ScaffoldWithBottomBar(
       backgroundColor: const Color(0xFFFFFFFF),
       body: SafeArea(
         child: Container(
@@ -283,6 +309,7 @@ class CreateGroupView extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           TextField(
+            controller: _groupNameController,
             decoration: InputDecoration(
               hintText: 'Enter group name',
               hintStyle: TextStyle(
@@ -307,6 +334,7 @@ class CreateGroupView extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           TextField(
+            controller: _groupPurposeController,
             decoration: InputDecoration(
               hintText: 'Enter group purpose',
               hintStyle: TextStyle(
@@ -339,6 +367,7 @@ class CreateGroupView extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           TextField(
+            controller: _contributionAmountController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               hintText: 'Enter contribution amount',
@@ -509,6 +538,7 @@ class CreateGroupView extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           TextField(
+            controller: _targetMembersController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               hintText: 'Enter target members',
@@ -538,6 +568,7 @@ class CreateGroupView extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           TextField(
+            controller: _minMembersController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               hintText: 'Enter minimum members',
@@ -596,7 +627,7 @@ class CreateGroupView extends StatelessWidget {
                       fontWeight: FontWeight.w400,
                     ),
                   ),
-                  items: <String>['private', 'invite']
+                  items: <String>['private']
                       .map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
@@ -659,12 +690,14 @@ class CreateGroupView extends StatelessWidget {
                       fontWeight: FontWeight.w400,
                     ),
                   ),
-                  items: <String>['random', 'sequential', 'bidding']
+                  items: <String>['random', 'sequential', 'me_first', 'bidding']
                       .map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Text(
-                            value[0].toUpperCase() + value.substring(1),
+                            value == 'me_first' 
+                              ? 'Me First' 
+                              : value[0].toUpperCase() + value.substring(1),
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.black,
@@ -702,6 +735,7 @@ class CreateGroupView extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           TextField(
+            controller: _serviceChargeController,
             keyboardType: TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               hintText: 'Enter service charge',
@@ -733,44 +767,10 @@ class CreateGroupView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Container(
-            height: 56,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: const Color(0xFFD8DADC), width: 1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Obx(
-                    () => Text(
-                      controller.startDate.value != null
-                          ? '${controller.startDate.value!.day}/${controller.startDate.value!.month}/${controller.startDate.value!.year}'
-                          : 'Select start date',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: controller.startDate.value != null
-                            ? Colors.black
-                            : Colors.black.withOpacity(0.5),
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                ),
-                Icon(
-                  Icons.calendar_today,
-                  size: 16,
-                  color: Colors.black.withOpacity(0.5),
-                ),
-              ],
-            ),
-          ),
           GestureDetector(
             onTap: () async {
               DateTime? pickedDate = await showDatePicker(
-                context: Get.context!,
+                context: context,
                 initialDate: DateTime.now(),
                 firstDate: DateTime.now(),
                 lastDate: DateTime(2100),
@@ -779,7 +779,189 @@ class CreateGroupView extends StatelessWidget {
                 controller.updateStartDate(pickedDate);
               }
             },
-            child: Container(),
+            child: Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: const Color(0xFFD8DADC), width: 1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Obx(
+                      () => Text(
+                        controller.startDate.value != null
+                            ? '${controller.startDate.value!.day}/${controller.startDate.value!.month}/${controller.startDate.value!.year}'
+                            : 'Select start date',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: controller.startDate.value != null
+                              ? Colors.black
+                              : Colors.black.withOpacity(0.5),
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.calendar_today,
+                    size: 16,
+                    color: Colors.black.withOpacity(0.5),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Rules & Terms Section
+          const SizedBox(height: 24),
+          Text(
+            'Rules & Terms',
+            style: GoogleFonts.montserrat(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 12),
+          
+          // Group Rules TextField
+          Text(
+            'Group Rules',
+            style: GoogleFonts.montserrat(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Container(
+
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            child: Obx(
+              () {
+                // Update the controller text when groupRules changes
+                if (_groupRulesController.text != controller.groupRules.value) {
+                  _groupRulesController.text = controller.groupRules.value;
+                  _groupRulesController.selection = TextSelection.fromPosition(
+                    TextPosition(offset: _groupRulesController.text.length),
+                  );
+                }
+                return TextField(
+                  controller: _groupRulesController,
+                  maxLines: 8,
+                  decoration: InputDecoration(
+                    hintText: 'Group rules will be auto-generated based on your settings',
+                    hintStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black.withOpacity(0.5),
+                      fontWeight: FontWeight.w400,
+                    ),
+                    border: InputBorder.none,
+                  ),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  onChanged: (value) => controller.updateGroupRules(value),
+                );
+              },
+            ),
+          ),
+
+          // Terms and Conditions Checkbox
+          const SizedBox(height: 16),
+          Obx(
+            () => Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    value: controller.termsAccepted.value,
+                    onChanged: (value) {
+                      controller.updateTermsAccepted(value ?? false);
+                    },
+                    activeColor: const Color(0xFFBBBB32),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      // Show terms and conditions dialog
+                      _showTermsAndConditions(context);
+                    },
+                    child: RichText(
+                      text: TextSpan(
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        children: [
+                          TextSpan(text: 'I agree to the '),
+                          TextSpan(
+                            text: 'group terms and conditions',
+                            style: TextStyle(
+                              decoration: TextDecoration.underline,
+                              color: const Color(0xFFBBBB32),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  void _showTermsAndConditions(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Group Terms and Conditions',
+          style: GoogleFonts.montserrat(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: SingleChildScrollView(
+          child: Text(
+            'By creating this group, you agree to:\n\n'
+            '1. Ensure all members contribute on time\n'
+            '2. Follow the rotation method selected\n'
+            '3. Maintain transparency in all transactions\n'
+            '4. Resolve disputes fairly and promptly\n'
+            '5. Comply with all applicable laws and regulations\n\n'
+            'Additional terms may apply based on your group rules.',
+            style: GoogleFonts.montserrat(fontSize: 14),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Close',
+              style: GoogleFonts.montserrat(
+                color: const Color(0xFFBBBB32),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),

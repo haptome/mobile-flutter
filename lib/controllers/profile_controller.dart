@@ -2,14 +2,23 @@
 // Author: haptome H.
 // Linked Spec Section: Profile Page
 
+import 'dart:io';
+import 'package:et_digital_equb/core/services/permission_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:et_digital_equb/core/services/auth_service.dart';
+import 'package:et_digital_equb/core/services/cloudinary_service.dart';
 import 'package:et_digital_equb/core/routes/app_routes.dart';
+import '../features/profile/set_password_view.dart';
 
 class ProfileController extends GetxController {
   final AuthService _authService = AuthService.to;
+  final CloudinaryService _cloudinaryService = Get.find<CloudinaryService>();
+  final ImagePicker _imagePicker = ImagePicker();
+  
   final RxMap<String, dynamic> user = <String, dynamic>{}.obs;
+  final RxBool isUploadingPhoto = false.obs;
 
   @override
   void onInit() {
@@ -43,12 +52,221 @@ class ProfileController extends GetxController {
   }
 
   void onEditProfile() {
-    // TODO: Navigate to edit profile page
-    Get.snackbar(
-      'edit_profile'.tr,
-      'edit_profile_message'.tr,
-      snackPosition: SnackPosition.BOTTOM,
+    _showPhotoUploadBottomSheet();
+  }
+
+  void _showPhotoUploadBottomSheet() {
+    Get.bottomSheet(
+      Container(
+        height: Get.height * 0.25,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'set new profile photo',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildPhotoOption(
+                  icon: Icons.photo_library,
+                  label: 'Gallery',
+                  onTap: _pickImageFromGallery,
+                ),
+                _buildPhotoOption(
+                  icon: Icons.camera_alt,
+                  label: 'Camera',
+                  onTap: _pickImageFromCamera,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      isDismissible: true,
+      enableDrag: true,
     );
+  }
+
+  Widget _buildPhotoOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: const Color(0xFFBBBB32).withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 30,
+              color: const Color(0xFFBBBB32),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    try {
+      Get.back(); // Close bottom sheet
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        await _uploadProfilePhoto(File(image.path));
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to pick image from gallery',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      Get.back(); // Close bottom sheet
+        // Request permissions before picking image
+      final permissionService = Get.find<PermissionService>();
+      final permissionsGranted = await permissionService
+          .requestKycPermissions();
+
+      if (!permissionsGranted) {
+        Get.snackbar(
+          'Permission Error',
+          'Camera and storage permissions are required to select a photo',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        await _uploadProfilePhoto(File(image.path));
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to capture image from camera',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> _uploadProfilePhoto(File imageFile) async {
+    try {
+      isUploadingPhoto.value = true;
+
+      // Read file bytes for web compatibility
+      final fileBytes = await imageFile.readAsBytes();
+
+      // Upload with pre-loaded bytes for web compatibility
+      final uploadResult = await _cloudinaryService.uploadImage(
+        filePath: imageFile.path,
+        folder: 'profile_photos',
+        fileBytes: fileBytes,
+      );
+
+      if (uploadResult.success) {
+        final imageUrl = uploadResult.secureUrl;
+
+        // Update user profile with new photo URL
+        final updateResult = await _authService.updateProfile(
+          profilePicUrl: imageUrl,
+        );
+
+        if (updateResult.success) {
+          // Update local user data
+          user['profileImageUrl'] = imageUrl ?? '';
+          user.refresh();
+
+          Get.snackbar(
+            'Success',
+            'Profile photo updated successfully',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
+        } else {
+          Get.snackbar(
+            'Error',
+            updateResult.message ?? 'Failed to update profile',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+        }
+      } else {
+        Get.snackbar(
+          'Error',
+          uploadResult.error?.userMessage ?? 'Failed to upload image',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to upload profile photo: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isUploadingPhoto.value = false;
+    }
   }
 
   void onWalletTap() {
@@ -69,19 +287,22 @@ class ProfileController extends GetxController {
   }
 
   void onSetPasswordTap() async {
-    // Navigate to set password view, checking if user actually has a password set
+    // Show set password as bottom sheet, checking if user actually has a password set
     // We can check the hasPassword field directly from the current user model
     final hasPassword = _authService.currentUser.value?.hasPassword ?? false;
 
-    Get.toNamed(
-      '/set-password',
-      arguments: {'hasExistingPassword': hasPassword},
+    SetPasswordBottomSheet.show(
+      context: Get.context!,
+      hasExistingPassword: hasPassword,
     );
   }
 
   void onSetFirstTimePassword() {
-    // Navigate to set password view for first-time password setup
-    Get.toNamed('/set-password', arguments: {'hasExistingPassword': false});
+    // Show set password as bottom sheet for first-time password setup
+    SetPasswordBottomSheet.show(
+      context: Get.context!,
+      hasExistingPassword: false,
+    );
   }
 
   void onTermsConditionsTap() {

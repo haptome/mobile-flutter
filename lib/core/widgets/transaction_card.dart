@@ -227,7 +227,7 @@ class _TransactionCardState extends State<TransactionCard> {
                   widget.rounds != null)) ...[
             const Divider(height: 1),
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0,vertical: 16),
               child: Column(
                 children: [
                   if (widget.ekubName != null) ...[
@@ -260,19 +260,20 @@ class _TransactionCardState extends State<TransactionCard> {
   Widget _buildDetailRow(String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        SizedBox(
-          width: 100,
-          child: Text(
-            label,
+        Text(
+          label,
             style: const TextStyle(fontSize: 14, color: AppColors.black),
           ),
-        ),
-        Expanded(
+        SizedBox(
+          width: 200,
           child: Text(
             value,
-            style: const TextStyle(fontSize: 14, color: AppColors.black),
-          ),
+              style: const TextStyle(fontSize: 14, color: AppColors.black),
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end
+            ),
         ),
       ],
     );

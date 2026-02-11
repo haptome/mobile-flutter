@@ -25,14 +25,13 @@ class _AccountCheckingViewState extends State<AccountCheckingView>
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 5),
-    )..addListener(() {
-        setState(() {
-          _progress = _animationController.value;
-        });
-      });
+    _animationController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 5))
+          ..addListener(() {
+            setState(() {
+              _progress = _animationController.value;
+            });
+          });
 
     _startTimer();
     _animationController.forward();
@@ -129,7 +128,9 @@ class _AccountCheckingViewState extends State<AccountCheckingView>
                             child: CircularProgressIndicator(
                               value: _progress,
                               strokeWidth: 8,
-                              backgroundColor: const Color(0xFFE0F7FA), // Light cyan
+                              backgroundColor: const Color(
+                                0xFFE0F7FA,
+                              ), // Light cyan
                               valueColor: const AlwaysStoppedAnimation<Color>(
                                 Color(0xFF00897B), // Dark teal/green
                               ),
@@ -185,7 +186,8 @@ class GeometricPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFE8E8E0) // Light beige pattern color
+      ..color =
+          const Color(0xFFE8E8E0) // Light beige pattern color
       ..style = PaintingStyle.fill;
 
     const squareSize = 40.0;
@@ -199,10 +201,7 @@ class GeometricPatternPainter extends CustomPainter {
 
         // Create a subtle geometric pattern
         if ((row + col) % 2 == 0) {
-          canvas.drawRect(
-            Rect.fromLTWH(x, y, squareSize, squareSize),
-            paint,
-          );
+          canvas.drawRect(Rect.fromLTWH(x, y, squareSize, squareSize), paint);
         }
       }
     }

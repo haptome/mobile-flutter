@@ -1,6 +1,7 @@
 // Purpose: In-Kind Group Detail page - shows in-kind group details, members, join button
 // Author: Auto-generated
 
+import 'package:et_digital_equb/core/widgets/scaffold_with_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,7 +18,7 @@ class InKindDetailView extends StatelessWidget {
     final controller = Get.find<InKindDetailController>();
     final InKindGroup group = controller.group;
 
-    return Scaffold(
+    return ScaffoldWithBottomBar(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -231,137 +232,138 @@ class InKindDetailView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Obx(() {
-                      final currentRound = controller.group.currentMembers;
-                      final progressValue = (group.targetMembers) > 0
-                          ? (controller.group.currentMembers /
-                                    (group.targetMembers))
+                    // Progress section - no Obx needed since group data is static
+                    Builder(
+                      builder: (context) {
+                        final currentRound = group.currentMembers;
+                        final progressValue = (group.targetMembers) > 0
+                            ? (group.currentMembers / (group.targetMembers))
                                 .toDouble()
-                          : 0.0;
-                      final roundsCompleted = controller.group.currentMembers;
-                      final roundsRemaining =
-                          ((group.targetMembers -
-                                  controller.group.currentMembers))
-                              .clamp(0, group.targetMembers);
+                            : 0.0;
+                        final roundsCompleted = group.currentMembers;
+                        final roundsRemaining =
+                            ((group.targetMembers - group.currentMembers))
+                                .clamp(0, group.targetMembers);
 
-                      return Column(
-                        children: [
-                          Text(
-                            'Round $currentRound of ${group.targetMembers}',
-                            style: GoogleFonts.montserrat(
-                              color: AppColors.textLightGray,
-                              fontSize: 12,
+                        return Column(
+                          children: [
+                            Text(
+                              'Round $currentRound of ${group.targetMembers}',
+                              style: GoogleFonts.montserrat(
+                                color: AppColors.textLightGray,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Flexible(
-                                child: LinearProgressIndicator(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(12),
-                                  value: progressValue,
-                                  minHeight: 8,
-                                  backgroundColor: Colors.purple.shade50,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.green,
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: LinearProgressIndicator(
+                                    color: AppColors.primary,
+                                    borderRadius: BorderRadius.circular(12),
+                                    value: progressValue,
+                                    minHeight: 8,
+                                    backgroundColor: Colors.purple.shade50,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.green,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${(progressValue * 100).round()}%',
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.bold,
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${(progressValue * 100).round()}%',
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Rounds Completed',
-                                    style: GoogleFonts.montserrat(
-                                      color: AppColors.textLightGray,
-                                      fontSize: 9,
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Rounds Completed',
+                                      style: GoogleFonts.montserrat(
+                                        color: AppColors.textLightGray,
+                                        fontSize: 9,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '$roundsCompleted',
-                                    style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.bold,
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '$roundsCompleted',
+                                      style: GoogleFonts.montserrat(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Rounds Remaining',
-                                    style: GoogleFonts.montserrat(
-                                      color: AppColors.textLightGray,
-                                      fontSize: 9,
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Rounds Remaining',
+                                      style: GoogleFonts.montserrat(
+                                        color: AppColors.textLightGray,
+                                        fontSize: 9,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '$roundsRemaining',
-                                    style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.bold,
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '$roundsRemaining',
+                                      style: GoogleFonts.montserrat(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Total Pool',
-                                    style: GoogleFonts.montserrat(
-                                      color: AppColors.textLightGray,
-                                      fontSize: 9,
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Total Pool',
+                                      style: GoogleFonts.montserrat(
+                                        color: AppColors.textLightGray,
+                                        fontSize: 9,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${((group.contributionAmount * group.targetMembers).toStringAsFixed(0))}',
-                                    style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.bold,
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${((group.contributionAmount * group.targetMembers).toStringAsFixed(0))}',
+                                      style: GoogleFonts.montserrat(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Next Draw',
-                                    style: GoogleFonts.montserrat(
-                                      color: AppColors.textLightGray,
-                                      fontSize: 9,
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Next Draw',
+                                      style: GoogleFonts.montserrat(
+                                        color: AppColors.textLightGray,
+                                        fontSize: 9,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${group.startDate != null ? '${group.startDate!.month}/${group.startDate!.day}' : 'Soon'}',
-                                    style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.bold,
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${group.startDate != null ? '${group.startDate!.month}/${group.startDate!.day}' : 'Soon'}',
+                                      style: GoogleFonts.montserrat(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      );
-                    }),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -376,16 +378,14 @@ class InKindDetailView extends StatelessWidget {
                 color: Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Obx(() {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildTab(controller, 'Members', 0),
-                    _buildTab(controller, 'Payments', 1),
-                    _buildTab(controller, 'History', 2),
-                  ],
-                );
-              }),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildTab(controller, 'Members', 0),
+                  _buildTab(controller, 'Payments', 1),
+                  _buildTab(controller, 'History', 2),
+                ],
+              ),
             ),
 
             const SizedBox(height: 12),

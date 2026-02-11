@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:et_digital_equb/controllers/your_ekubs_controller.dart';
+import 'package:et_digital_equb/controllers/language_controller.dart';
 import 'package:et_digital_equb/core/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -26,8 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentCarouselIndex = 0;
   Timer? _carouselTimer;
 
-  final List<String> _bannerImages = [AppAssets.electronics, AppAssets.mpesa];
-
   @override
   void initState() {
     super.initState();
@@ -53,9 +51,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void _startCarouselTimer() {
     _carouselTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (_carouselController != null && _carouselController!.hasClients) {
+        final campaigns = _homeController.marketingCampaigns;
+        if (campaigns.isEmpty) return;
+        
         // Only auto-scroll if user hasn't interacted recently
         if (_carouselController!.page?.round() == _currentCarouselIndex) {
-          int nextIndex = (_currentCarouselIndex + 1) % _bannerImages.length;
+          int nextIndex = (_currentCarouselIndex + 1) % campaigns.length;
           _carouselController!
               .animateToPage(
                 nextIndex,
@@ -105,9 +106,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     Obx(() {
                       return Offstage(
                         offstage: _homeController.isAccountVerified.value,
-                        child: const WarningBanner(
-                          message:
-                              'You haven\'t yet verified your account. Verify now to access all features.',
+                        child: WarningBanner(
+                          message: 'verify_account_warning'.tr,
+                          //ontap got to verification page
+                          onTap: () {
+                            Get.toNamed('/verification');
+                          },
                         ),
                       );
                     }),
@@ -128,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       }
                       return CategorySectionCards(
-                        title: 'Ekub For',
+                        title: 'main_ekub'.tr,
                         shadow: false,
                         categories: _homeController.cashCategories,
                         onViewAll: () {
@@ -158,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return const SizedBox.shrink();
                       }
                       return CategorySectionCards(
-                        title: 'In-Kind',
+                        title: 'in_kind'.tr,
                         categories: _homeController.inKindCategories,
                         onViewAll: _homeController.onViewAllInKind,
                         onCategoryTap: _homeController.onInKindCategoryTap,
@@ -199,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SectionHeader(
-                            title: 'Duration',
+                            title: 'duration'.tr,
                             onViewAll: _homeController.onViewAllDuration,
                           ),
                           Padding(
@@ -214,9 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     _homeController
                                         .durationGroupsCount[frequency] ??
                                     0;
-                                final label =
-                                    frequency[0].toUpperCase() +
-                                    frequency.substring(1);
+                                final label = '${frequency}_label'.tr;
                                 return Expanded(
                                   child: GestureDetector(
                                     onTap: () => _homeController.onDurationTap(
@@ -294,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                           if (count > 0)
                                             Text(
-                                              '$count groups',
+                                              '$count ${'groups'.tr}',
                                               textAlign: TextAlign.center,
                                               style: GoogleFonts.montserrat(
                                                 fontSize: 10,
@@ -366,7 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(
                   width: 150,
                   child: Text(
-                    'Selam, ${userName}!',
+                    '${'selam'.tr}, $userName!',
                     style: AppTextStyles.h4(
                       color: const Color.fromARGB(255, 100, 80, 80),
                       isDark: false,
@@ -388,33 +390,44 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Handle notifications
                 },
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.paddingSmall,
-                  vertical: AppSizes.paddingXSmall,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.transparent),
+              // Language selector
+              Obx(() {
+                final languageController = Get.find<LanguageController>();
+                return InkWell(
+                  onTap: () => languageController.toggleLanguage(),
                   borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      'Eng',
-                      style: AppTextStyles.bodySmall(
-                        color: AppColors.black,
-                        isDark: false,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.paddingSmall,
+                      vertical: AppSizes.paddingXSmall,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: AppColors.primary.withOpacity(0.3),
+                        width: 1,
                       ),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                     ),
-                    const SizedBox(width: AppSizes.spacingXSmall),
-                    const Icon(
-                      Icons.arrow_drop_down,
-                      color: AppColors.black,
-                      size: 20,
+                    child: Row(
+                      children: [
+                        Text(
+                          languageController.isEnglish() ? 'Eng' : 'አማ',
+                          style: AppTextStyles.bodySmall(
+                            color: AppColors.black,
+                            isDark: false,
+                          ),
+                        ),
+                        const SizedBox(width: AppSizes.spacingXSmall),
+                        const Icon(
+                          Icons.arrow_drop_down,
+                          color: AppColors.black,
+                          size: 20,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              }),
             ],
           ),
         ],
@@ -427,71 +440,184 @@ class _HomeScreenState extends State<HomeScreen> {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppSizes.paddingLarge,
-        vertical: AppSizes.paddingXSmall,
-      ),
-      child: Column(
-        children: [
-          // Carousel with images
-          SizedBox(
-            height: 100,
-            child: PageView.builder(
-              controller: _carouselController,
-              onPageChanged: (index) {
-                _currentCarouselIndex = index;
-              },
-              itemCount: _bannerImages.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: AppSizes.spacingMedium),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.black.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
-                    child: Image.asset(
-                      _bannerImages[index],
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: AppColors.lightBorder,
-                          child: const Center(
-                            child: Icon(
-                              Icons.broken_image,
-                              size: 48,
-                              color: AppColors.lightTextSecondary,
-                            ),
+    return Obx(() {
+      final campaigns = _homeController.marketingCampaigns;
+      
+      // Show loading indicator while campaigns are loading
+      if (_homeController.isLoadingCampaigns.value) {
+        return Container(
+          margin: const EdgeInsets.symmetric(
+            horizontal: AppSizes.paddingLarge,
+            vertical: AppSizes.paddingXSmall,
+          ),
+          height: 100,
+          child: const Center(
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        );
+      }
+      
+      // If no campaigns, show fallback static images
+      if (campaigns.isEmpty) {
+        final fallbackImages = [AppAssets.electronics, AppAssets.mpesa];
+        return Container(
+          margin: const EdgeInsets.symmetric(
+            horizontal: AppSizes.paddingLarge,
+            vertical: AppSizes.paddingXSmall,
+          ),
+          child: Column(
+            children: [
+              SizedBox(
+                height: 100,
+                child: PageView.builder(
+                  controller: _carouselController,
+                  onPageChanged: (index) {
+                    _currentCarouselIndex = index;
+                  },
+                  itemCount: fallbackImages.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: AppSizes.spacingMedium),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.black.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
-                        );
-                      },
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
+                        child: Image.asset(
+                          fallbackImages[index],
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  fallbackImages.length,
+                  (index) => _buildDot(isActive: index == _currentCarouselIndex),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      // Show campaigns from API
+      return Container(
+        margin: const EdgeInsets.symmetric(
+          horizontal: AppSizes.paddingLarge,
+          vertical: AppSizes.paddingXSmall,
+        ),
+        child: Column(
+          children: [
+            // Carousel with campaign images
+            SizedBox(
+              height: 100,
+              child: PageView.builder(
+                controller: _carouselController,
+                onPageChanged: (index) {
+                  _currentCarouselIndex = index;
+                },
+                itemCount: campaigns.length,
+                itemBuilder: (context, index) {
+                  final campaign = campaigns[index];
+                  final imageUrl = campaign['image_url'] as String? ?? '';
+                  
+                  return GestureDetector(
+                    onTap: () => _homeController.onCampaignTap(campaign),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: AppSizes.spacingMedium),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.black.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
+                        child: imageUrl.isNotEmpty
+                            ? Image.network(
+                                imageUrl,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Container(
+                                    color: AppColors.lightBorder,
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        value: loadingProgress.expectedTotalBytes != null
+                                            ? loadingProgress.cumulativeBytesLoaded /
+                                                loadingProgress.expectedTotalBytes!
+                                            : null,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: AppColors.lightBorder,
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.broken_image,
+                                        size: 48,
+                                        color: AppColors.lightTextSecondary,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              )
+                            : Container(
+                                color: AppColors.lightBorder,
+                                child: Center(
+                                  child: Text(
+                                    campaign['title'] as String? ?? 'Campaign',
+                                    style: AppTextStyles.bodyMedium(
+                                      color: AppColors.lightTextPrimary,
+                                      isDark: false,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-          // Dots indicator below the image
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              _bannerImages.length,
-              (index) => _buildDot(isActive: index == _currentCarouselIndex),
+            // Dots indicator below the image
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                campaigns.length,
+                (index) => _buildDot(isActive: index == _currentCarouselIndex),
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildDot({required bool isActive}) {

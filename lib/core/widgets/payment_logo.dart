@@ -14,17 +14,29 @@ class ChapaLogo extends StatelessWidget {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Center(
-        child: Text(
-          'C',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.asset(
+          'assets/images/chapa.png',
+          width: 48,
+          height: 48,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            // Fallback to text logo if image fails to load
+            return Center(
+              child: Text(
+                'C',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -40,17 +52,29 @@ class ArifpayLogo extends StatelessWidget {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: AppColors.lightTextPrimary.withOpacity(0.1),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Center(
-        child: Text(
-          'NC',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.lightTextPrimary,
-          ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.asset(
+          'assets/images/arif-pay.png',
+          width: 48,
+          height: 48,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            // Fallback to text logo if image fails to load
+            return Center(
+              child: Text(
+                'AP',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -62,37 +86,73 @@ class SantimPayLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'SANTIM',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.lightTextPrimary,
-          ),
-        ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'PAY',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.asset(
+          'assets/images/santim.png',
+          width: 48,
+          height: 48,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            // Fallback to text logo if image fails to load
+            return Center(
+              child: Text(
+                'SP',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
               ),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              'So Simple!',
-              style: TextStyle(fontSize: 10, color: AppColors.textLightGray),
-            ),
-          ],
+            );
+          },
         ),
-      ],
+      ),
+    );
+  }
+}
+
+class TelebirrLogo extends StatelessWidget {
+  const TelebirrLogo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.asset(
+          'assets/images/tele_birr.png',
+          width: 48,
+          height: 48,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            // Fallback to text logo if image fails to load
+            return Center(
+              child: Text(
+                'TB',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }

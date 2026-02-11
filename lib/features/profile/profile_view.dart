@@ -68,14 +68,37 @@ class _ProfileViewState extends State<ProfileView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // User Profile Card
-                      ProfileUserCard(
-                        profileImageUrl: user['profileImageUrl'] as String?,
-                        userName: user['name'] ?? 'user_name'.tr,
-                        phoneNumber: user['phone'] ?? '',
-                        idNumber: user['idNumber'] ?? '',
-                        location: user['location'] ?? '',
-                        level: user['level'] ?? '1',
-                        onEditProfile: controller.onEditProfile,
+                      Stack(
+                        children: [
+                          ProfileUserCard(
+                            profileImageUrl: user['profileImageUrl'] as String?,
+                            userName: user['name'] ?? 'user_name'.tr,
+                            phoneNumber: user['phone'] ?? '',
+                            idNumber: user['idNumber'] ?? '',
+                            location: user['location'] ?? '',
+                            level: user['level'] ?? '1',
+                            onEditProfile: controller.onEditProfile,
+                          ),
+                          // Loading overlay
+                          if (controller.isUploadingPhoto.value)
+                            Positioned.fill(
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                  vertical: 16.0,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       // Wallets Section
                       SectionHeader(title: 'wallets'.tr),

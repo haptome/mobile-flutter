@@ -13,7 +13,8 @@ class DurationController extends GetxController {
 
   final RxList<Group> allGroups = <Group>[].obs;
   final RxList<Group> filteredGroups = <Group>[].obs;
-  final RxString selectedFrequency = 'all'.obs; // 'all', 'daily', 'weekly', 'monthly'
+  final RxString selectedFrequency =
+      'all'.obs; // 'all', 'daily', 'weekly', 'monthly'
   final RxBool isLoading = false.obs;
   final RxString errorMessage = ''.obs;
 
@@ -63,7 +64,11 @@ class DurationController extends GetxController {
     // Filter by frequency (if filter is set)
     if (selectedFrequency.value != 'all') {
       filtered = filtered
-          .where((group) => group.frequency.toLowerCase() == selectedFrequency.value.toLowerCase())
+          .where(
+            (group) =>
+                group.frequency.toLowerCase() ==
+                selectedFrequency.value.toLowerCase(),
+          )
           .toList();
     }
 
@@ -99,4 +104,3 @@ class DurationController extends GetxController {
     Get.toNamed('/group-detail', arguments: group);
   }
 }
-

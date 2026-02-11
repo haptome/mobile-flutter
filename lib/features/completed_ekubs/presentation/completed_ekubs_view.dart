@@ -20,69 +20,66 @@ class CompletedEkubsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<CompletedEkubsController>();
 
-    return MainWrapper(
-      currentIndex: 1, // Your Ekubs tab
-      child: Scaffold(
-        backgroundColor: AppColors.lightBackground,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: const CustomBackButton(),
-          title: Text(
-            'completed_ekubs'.tr,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.lightTextPrimary,
-            ),
+    return Scaffold(
+      backgroundColor: AppColors.lightBackground,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: const CustomBackButton(),
+        title: Text(
+          'completed_ekubs'.tr,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.lightTextPrimary,
           ),
-          centerTitle: true,
         ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              // Search bar with filter
-              SearchBarWidget(
-                hintText: 'search'.tr,
-                onChanged: controller.onSearchChanged,
-                onFilterTap: controller.onFilterTap,
-              ),
-              // Ekubs list
-              Expanded(
-                child: Obx(() {
-                  if (controller.filteredEkubs.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'no_completed_ekubs'.tr,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: AppColors.textLightGray,
-                        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Search bar with filter
+            SearchBarWidget(
+              hintText: 'search'.tr,
+              onChanged: controller.onSearchChanged,
+              onFilterTap: controller.onFilterTap,
+            ),
+            // Ekubs list
+            Expanded(
+              child: Obx(() {
+                if (controller.filteredEkubs.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'no_completed_ekubs'.tr,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: AppColors.textLightGray,
                       ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    itemCount: controller.filteredEkubs.length,
-                    itemBuilder: (context, index) {
-                      final ekub = controller.filteredEkubs[index];
-                      return CompletedEkubCard(
-                        id: ekub['id'] ?? '',
-                        name: ekub['name'] ?? '',
-                        amount: ekub['amount'] ?? '',
-                        round: ekub['round'] ?? 0,
-                        frequency: ekub['frequency'] ?? '',
-                        duration: ekub['duration'] ?? '',
-                        totalAmount: ekub['totalAmount'] ?? '',
-                        onTap: () => controller.onEkubTap(ekub['id'] ?? ''),
-                      );
-                    },
+                    ),
                   );
-                }),
-              ),
-            ],
-          ),
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  itemCount: controller.filteredEkubs.length,
+                  itemBuilder: (context, index) {
+                    final ekub = controller.filteredEkubs[index];
+                    return CompletedEkubCard(
+                      id: ekub['id'] ?? '',
+                      name: ekub['name'] ?? '',
+                      amount: ekub['amount'] ?? '',
+                      round: ekub['round'] ?? 0,
+                      frequency: ekub['frequency'] ?? '',
+                      duration: ekub['duration'] ?? '',
+                      totalAmount: ekub['totalAmount'] ?? '',
+                      onTap: () => controller.onEkubTap(ekub['id'] ?? ''),
+                    );
+                  },
+                );
+              }),
+            ),
+          ],
         ),
       ),
     );

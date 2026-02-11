@@ -2,16 +2,14 @@
 // Author: Auto-generated
 // Linked Spec Section: In-Kind Page
 
+import 'package:et_digital_equb/core/widgets/category_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/widgets/app_bottom_nav.dart';
-import '../../../../core/widgets/category_section_cards.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/app_assets.dart';
 import '../../../../core/theme/app_sizes.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../controllers/in_kind_controller.dart';
+import '../../../../core/widgets/scaffold_with_bottom_bar.dart';
 
 class InKindView extends StatefulWidget {
   const InKindView({super.key});
@@ -21,12 +19,11 @@ class InKindView extends StatefulWidget {
 }
 
 class _InKindViewState extends State<InKindView> {
-  int _currentNavIndex = 0;
   final InKindController _controller = Get.put(InKindController());
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ScaffoldWithBottomBar(
       backgroundColor: AppColors.lightBackground,
       body: SafeArea(
         child: Column(
@@ -75,11 +72,68 @@ class _InKindViewState extends State<InKindView> {
                           ),
                         );
                       }
-                      return CategorySectionCards(
-                        title: 'In-Kind Categories',
-                        categories: _controller.inKindCategories,
-                        onCategoryTap: _controller.onCategoryTap,
-                        onViewAll: null,
+                      // Display categories in rows of 3
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSizes.paddingLarge,
+                        ),
+                        child: Column(
+                          children: [
+                            for (
+                              int i = 0;
+                              i < _controller.inKindCategories.length;
+                              i += 3
+                            )
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSizes.spacingMedium,
+                                ),
+                                child: Row(
+                                  children: [
+                                    for (
+                                      int j = i;
+                                      j < i + 3 &&
+                                          j <
+                                              _controller
+                                                  .inKindCategories
+                                                  .length;
+                                      j++
+                                    )
+                                      CategoryCard(
+                                        iconUrl:
+                                            _controller
+                                                .inKindCategories[j]
+                                                .icon ??
+                                            'material-symbols:category-outline',
+                                        label: _controller
+                                            .inKindCategories[j]
+                                            .name,
+                                        onTap: () => Get.toNamed(
+                                          '/category-detail',
+                                          arguments:
+                                              _controller.inKindCategories[j],
+                                        ),
+                                      ),
+                                    // Fill remaining slots with empty space
+                                    if (_controller.inKindCategories.length -
+                                            i <
+                                        3)
+                                      for (
+                                        int k = 0;
+                                        k <
+                                            3 -
+                                                (_controller
+                                                        .inKindCategories
+                                                        .length -
+                                                    i);
+                                        k++
+                                      )
+                                        const Expanded(child: SizedBox()),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
                       );
                     }),
                     const SizedBox(height: AppSizes.spacingLarge),

@@ -1,7 +1,6 @@
 // Purpose: Category Detail page - shows groups in a category
 // Author: Auto-generated
 
-import 'package:et_digital_equb/core/app_assets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,12 +8,9 @@ import 'package:iconify_design/iconify_design.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../models/category_model.dart' as category_models;
-import '../../../../models/group_model.dart';
 import '../../../../controllers/category_detail_controller.dart';
 import '../../../../core/widgets/ekub_list_item.dart';
-import '../../../../core/routes/app_routes.dart';
-import 'package:et_digital_equb/core/services/auth_service.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/scaffold_with_bottom_bar.dart';
 
 class CategoryDetailView extends StatelessWidget {
   const CategoryDetailView({super.key});
@@ -29,7 +25,7 @@ class CategoryDetailView extends StatelessWidget {
       category = Get.arguments as category_models.Category?;
       if (category == null) {
         // If no category, show error
-        return Scaffold(
+        return ScaffoldWithBottomBar(
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -49,7 +45,7 @@ class CategoryDetailView extends StatelessWidget {
 
     final controller = Get.find<CategoryDetailController>();
 
-    return Scaffold(
+    return ScaffoldWithBottomBar(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -115,11 +111,11 @@ class CategoryDetailView extends StatelessWidget {
           );
         }
 
-        // Group groups by frequency
-        final Map<String, List<Group>> grouped = {};
+        // Group groups by frequency (use dynamic list to support Group and InKindGroup)
+        final Map<String, List<dynamic>> grouped = {};
         for (var g in controller.groups) {
-          final key = (g.frequency ?? 'other').toLowerCase();
-          grouped.putIfAbsent(key, () => []).add(g);
+          final key = ((g?.frequency) ?? 'other').toString().toLowerCase();
+          grouped.putIfAbsent(key, () => <dynamic>[]).add(g);
         }
 
         // Build a scrollable list with collapsible sections
@@ -150,10 +146,12 @@ class CategoryDetailView extends StatelessWidget {
                     ),
                   ),
                   children: entry.value.map((g) {
+                    final isMember = controller.isUserMember(g);
                     return EkubListItem.fromGroup(
                       g,
-                      onJoin: () => controller.onJoinTap(g),
-                      onTap: () => controller.onGroupTap(g),
+                      onJoin: isMember ? null : () => controller.onJoinTap(g),
+                      onTap: isMember ? () => controller.onGroupTap(g) : null,
+                      showJoin: !isMember,
                     );
                   }).toList(),
                 ),
@@ -161,14 +159,6 @@ class CategoryDetailView extends StatelessWidget {
           ],
         );
       }),
-    );
-  }
-
-  Widget _buildFilterChip(String label, bool selected) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: selected,
-      onSelected: (_) {},
     );
   }
 }

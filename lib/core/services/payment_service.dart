@@ -42,12 +42,27 @@ class PaymentService extends GetxService {
       );
 
       if (response.data['success'] == true) {
-        // Handle both direct array and wrapped data structure
-        final data = response.data['data'];
-        if (data is List) {
-          return List<Map<String, dynamic>>.from(data);
-        } else if (data is Map && data.containsKey('data')) {
-          return List<Map<String, dynamic>>.from(data['data']);
+        final responseData = response.data['data'];
+        
+        // Handle different response formats
+        if (responseData == null) {
+          return [];
+        } else if (responseData is List) {
+          // Direct array format
+          return List<Map<String, dynamic>>.from(responseData);
+        } else if (responseData is Map) {
+          // Backend returns UserTransactionHistoryResponse format:
+          // { data: [...], total: number, page: number, limit: number, user: {...} }
+          if (responseData.containsKey('data') && responseData['data'] is List) {
+            return List<Map<String, dynamic>>.from(responseData['data']);
+          } else if (responseData.containsKey('items') && responseData['items'] is List) {
+            return List<Map<String, dynamic>>.from(responseData['items']);
+          } else if (responseData.containsKey('transactions') && responseData['transactions'] is List) {
+            return List<Map<String, dynamic>>.from(responseData['transactions']);
+          } else {
+            // If it's a single transaction object, wrap it in a list
+            return [Map<String, dynamic>.from(responseData)];
+          }
         } else {
           return [];
         }

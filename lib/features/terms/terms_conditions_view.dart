@@ -6,6 +6,7 @@ import 'package:et_digital_equb/core/theme/app_colors.dart';
 import 'package:et_digital_equb/core/widgets/app_button.dart';
 import 'package:et_digital_equb/core/widgets/custom_back_button.dart';
 import 'package:et_digital_equb/core/widgets/primary_button.dart';
+import 'package:et_digital_equb/core/widgets/scaffold_with_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,7 +19,7 @@ class TermsConditionsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<TermsConditionsController>();
 
-    return Scaffold(
+    return ScaffoldWithBottomBar(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,

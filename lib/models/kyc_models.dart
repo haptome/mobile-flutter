@@ -25,10 +25,7 @@ class UploadDocumentRequest {
   final DocumentType docType;
   final Map<String, dynamic>? metadata;
 
-  UploadDocumentRequest({
-    required this.docType,
-    this.metadata,
-  });
+  UploadDocumentRequest({required this.docType, this.metadata});
 
   Map<String, dynamic> toJson() {
     return {
@@ -41,14 +38,10 @@ class UploadDocumentRequest {
 class SubmitKycRequest {
   final List<String> documentIds;
 
-  SubmitKycRequest({
-    required this.documentIds,
-  });
+  SubmitKycRequest({required this.documentIds});
 
   Map<String, dynamic> toJson() {
-    return {
-      'document_ids': documentIds,
-    };
+    return {'document_ids': documentIds};
   }
 }
 
@@ -74,18 +67,16 @@ class KycDocument {
   factory KycDocument.fromJson(Map<String, dynamic> json) {
     // Backend returns created_at, not uploaded_at
     // Also handle uploaded_at for backward compatibility
-    final uploadedAtStr = json['uploaded_at'] as String? ??
-        json['created_at'] as String?;
-    
+    final uploadedAtStr =
+        json['uploaded_at'] as String? ?? json['created_at'] as String?;
+
     return KycDocument(
       id: json['id'] as String? ?? json['document_id'] as String? ?? '',
       docType: json['doc_type'] as String? ?? '',
       fileName: json['file_name'] as String? ?? '',
       fileUrl: json['file_url'] as String?,
       status: json['status'] as String? ?? 'uploaded',
-      uploadedAt: uploadedAtStr != null
-          ? DateTime.parse(uploadedAtStr)
-          : null,
+      uploadedAt: uploadedAtStr != null ? DateTime.parse(uploadedAtStr) : null,
       metadata: json['metadata'] as Map<String, dynamic>?,
     );
   }
@@ -109,7 +100,8 @@ class KycStatus {
   factory KycStatus.fromJson(Map<String, dynamic> json) {
     return KycStatus(
       status: json['status'] as String,
-      documents: (json['documents'] as List<dynamic>?)
+      documents:
+          (json['documents'] as List<dynamic>?)
               ?.map((doc) => KycDocument.fromJson(doc as Map<String, dynamic>))
               .toList() ??
           [],
@@ -127,4 +119,3 @@ class KycStatus {
   bool get isPending => status == 'pending' || status == 'submitted';
   bool get isRejected => status == 'rejected';
 }
-
