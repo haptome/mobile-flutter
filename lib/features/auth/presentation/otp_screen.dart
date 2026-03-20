@@ -9,6 +9,7 @@ import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/fcm_service.dart';
+import '../../../../core/utils/app_signature_helper.dart';
 import '../../../../core/utils/device_info.dart';
 import '../../../../models/verify_otp_request.dart';
 import '../../../../models/login_request.dart';
@@ -30,7 +31,8 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
-  String _otpCode = '';
+  bool _isVerifying = false;
+  String? _appSignature;
 
   // Resend OTP state
   final AuthService _authService = AuthService.to;
@@ -41,9 +43,15 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Start countdown timer
     _startResendTimer();
+    _loadAppSignature();
+  }
+
+  Future<void> _loadAppSignature() async {
+    final sig = await AppSignatureHelper.getAppSignature();
+    if (mounted && sig != null) {
+      setState(() => _appSignature = sig);
+    }
   }
 
   void _startResendTimer() {
@@ -79,12 +87,10 @@ class _OtpScreenState extends State<OtpScreen> {
     return '+$start******$end';
   }
 
-  // _checkCompletion is no longer needed as we're using flutter_otp_kit
-  // The OTP code is directly captured in the _otpCode variable
-
-  Future<void> _handleContinue() async {
-    final otp = _otpCode;
-    if (otp.isEmpty || otp.length != 6) {
+  /// Verifies the OTP with the backend. Returns true on success, false on failure.
+  Future<bool> _verifyOtp(String otp) async {
+    if (_isVerifying) return false;
+    if (otp.length != 6) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -93,13 +99,13 @@ class _OtpScreenState extends State<OtpScreen> {
           ),
         );
       }
-      return;
+      return false;
     }
 
+    _isVerifying = true;
     try {
       ApiResponse<Map<String, dynamic>> response;
 
-      // Get FCM token (only on mobile platforms)
       String? fcmToken;
       if (!kIsWeb && DeviceInfo.isMobile()) {
         try {
@@ -111,59 +117,54 @@ class _OtpScreenState extends State<OtpScreen> {
       }
 
       if (widget.isFromLogin) {
-        // If from login screen, use login endpoint with OTP
-        final loginRequest = LoginRequest(
-          phone: widget.phoneNumber,
-          password: null,
-          otp: otp,
-          fcmToken: fcmToken,
-          deviceId: DeviceInfo.getDeviceId(),
-          deviceType: DeviceInfo.getDeviceType(),
+        response = await _authService.login(
+          LoginRequest(
+            phone: widget.phoneNumber,
+            password: null,
+            otp: otp,
+            fcmToken: fcmToken,
+            deviceId: DeviceInfo.getDeviceId(),
+            deviceType: DeviceInfo.getDeviceType(),
+          ),
         );
-
-        // Call login API with OTP
-        response = await _authService.login(loginRequest);
       } else {
-        // If from signup/registration, use verify-otp endpoint
-        final verifyRequest = VerifyOtpRequest(
-          phone: widget.phoneNumber,
-          otp: otp,
-          fcmToken: fcmToken,
-          deviceId: DeviceInfo.getDeviceId(),
-          deviceType: DeviceInfo.getDeviceType(),
+        response = await _authService.verifyOtp(
+          VerifyOtpRequest(
+            phone: widget.phoneNumber,
+            otp: otp,
+            fcmToken: fcmToken,
+            deviceId: DeviceInfo.getDeviceId(),
+            deviceType: DeviceInfo.getDeviceType(),
+          ),
         );
-
-        // Call verify OTP API
-        response = await _authService.verifyOtp(verifyRequest);
       }
 
-      if (mounted) {
-        if (response.success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                widget.isFromLogin
-                    ? 'login_successful'.tr
-                    : 'otp_verified_successfully'.tr,
-              ),
-              backgroundColor: AppColors.primary,
+      if (!mounted) return false;
+
+      if (response.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              widget.isFromLogin
+                  ? 'login_successful'.tr
+                  : 'otp_verified_successfully'.tr,
             ),
-          );
-          // Navigate to home screen
-          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                response.error?.message ??
-                    (widget.isFromLogin
-                        ? 'login_failed'.tr
-                        : 'otp_verification_failed'.tr),
-              ),
-              backgroundColor: AppColors.lightError,
+            backgroundColor: AppColors.primary,
+          ),
+        );
+        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        return true;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              response.error?.message ??
+                  (widget.isFromLogin ? 'login_failed'.tr : 'otp_verification_failed'.tr),
             ),
-          );
-        }
+            backgroundColor: AppColors.lightError,
+          ),
+        );
+        return false;
       }
     } catch (e) {
       if (mounted) {
@@ -174,6 +175,9 @@ class _OtpScreenState extends State<OtpScreen> {
           ),
         );
       }
+      return false;
+    } finally {
+      _isVerifying = false;
     }
   }
 
@@ -286,13 +290,18 @@ class _OtpScreenState extends State<OtpScreen> {
                           fieldFontWeight: FontWeight.w600,
                         ),
                         smsConfig: OtpSmsConfig(
-                          // Enable SMS auto-fill for Android
                           enableSmsAutofill: true,
                           enableSmartAuth: true,
-                          enableSmsRetrieverAPI: true, // Android SMS Retriever API
-                          enableSmsUserConsentAPI: true, // Android SMS User Consent API
-                          // App signature for SMS verification (optional)
-                          appSignature: null, // Will use package name by default
+                          enableSmsRetrieverAPI: true,
+                          enableSmsUserConsentAPI: true,
+                          enableSmsValidation: true,
+                          // Extracts any 6-digit code from the SMS body
+                          smsValidationRegex: r'\b\d{6}\b',
+                          smsTimeout: const Duration(minutes: 5),
+                          enableSmsErrorHandling: true,
+                          // App signature hash for Android SMS Retriever API
+                          // Backend must append this to OTP SMS: "<#> code: 123456\n[hash]"
+                          appSignature: _appSignature,
                         ),
                         primaryColor: AppColors.primary,
                         successColor: AppColors.primary,
@@ -304,17 +313,16 @@ class _OtpScreenState extends State<OtpScreen> {
                           vertical: AppSizes.paddingMedium,
                         ),
                         buttonWidth: screenHeight * 0.3,
+                        // Called when user taps the verify button
                         onVerify: (String otp) async {
-                          _otpCode = otp;
-                          // Auto-continue when OTP is complete
-                          if (otp.length == 6) {
-                            await _handleContinue();
-                          }
-                          return true; // Return true to indicate success
+                          return await _verifyOtp(otp);
                         },
-                        onResend: () {
-                          _handleRequestAgain();
+                        // Called when all 6 fields are filled (including SMS auto-fill)
+                        // This triggers auto-submit without needing to tap the button
+                        onCompleted: (String otp) {
+                          _verifyOtp(otp);
                         },
+                        onResend: _handleRequestAgain,
                         animationConfig: const OtpAnimationConfig(
                           enableAnimation: true,
                         ),

@@ -1,19 +1,22 @@
 // Purpose: Group Detail page - shows group details, members, join button
 // Author: Auto-generated
 
+import 'package:et_digital_equb/controllers/group_detail_controller.dart';
 import 'package:et_digital_equb/controllers/payment_controller.dart';
 import 'package:et_digital_equb/core/services/auth_service.dart';
+import 'package:et_digital_equb/core/widgets/current_cycle_card.dart';
 import 'package:et_digital_equb/core/widgets/payment_logo.dart';
 import 'package:et_digital_equb/core/widgets/payment_method_card.dart';
 import 'package:et_digital_equb/core/widgets/scaffold_with_bottom_bar.dart';
 import 'package:et_digital_equb/features/payment/presentation/select_payment_method_view.dart';
+import 'package:et_digital_equb/widgets/lottery_number_badge.dart';
+import 'package:et_digital_equb/widgets/live_lottery_draw.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../models/group_model.dart';
-import '../../../../controllers/group_detail_controller.dart';
 
 // Simple number formatting function
 String formatCurrencyShort(num value) {
@@ -23,6 +26,13 @@ String formatCurrencyShort(num value) {
     return '${(value / 1000).toStringAsFixed(1)}K';
   }
   return value.toStringAsFixed(0);
+}
+
+// Helper function to determine if lottery numbers should be shown
+bool shouldShowLotteryNumber(String? groupStatus, String? lotteryNumber) {
+  return groupStatus == 'started' &&
+         lotteryNumber != null &&
+         lotteryNumber.isNotEmpty;
 }
 
 class GroupDetailView extends StatelessWidget {
@@ -180,12 +190,201 @@ class GroupDetailView extends StatelessWidget {
                             ),
                           ],
                         ),
+                        // the last cycle winner/winners
                       ],
                     ),
                   ),
                 ),
               ),
             ),
+
+            const SizedBox(height: 10),
+
+            // Your Lottery Number card — shown when group is started
+            if (group.status == 'started')
+              Obx(() {
+                final lotteryNum = controller.currentUserLotteryNumber;
+                if (lotteryNum == null) return const SizedBox.shrink();
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withOpacity(0.85),
+                        AppColors.primary,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.confirmation_number,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Your Lottery Number',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 11,
+                                color: Colors.white.withOpacity(0.85),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '#$lotteryNum',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        group!.name,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          color: Colors.white.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+
+            // Last Winner Card
+            Obx(() {
+              if (controller.history.isEmpty) {
+                return const SizedBox.shrink();
+              }
+
+              // Get the most recent winner(s)
+              final recentWinners = controller.history.take(3).toList();
+
+              return Card(
+                color: AppColors.lightBackground,
+                shadowColor: AppColors.black.withOpacity(0.4),
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.emoji_events,
+                            color: Colors.amber[700],
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            recentWinners.length == 1 ? 'Last Winner' : 'Recent Winners',
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      ...recentWinners.map((winner) {
+                        final winnerMap = winner as Map<String, dynamic>;
+                        final lotteryNumber = winnerMap['lottery_number'] as String?;
+                        final cycleNumber = winnerMap['cycle_number'] ?? 0;
+                        final amount = winnerMap['amount'] ?? 0;
+                        final date = winnerMap['date'] ?? '';
+
+                        // Use lottery number for display if available (privacy protection)
+                        final displayName = (lotteryNumber != null && lotteryNumber.isNotEmpty) 
+                            ? 'Lottery #$lotteryNumber' 
+                            : 'Winner #${cycleNumber.toString().padLeft(3, '0')}';
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.emoji_events,
+                                  color: Colors.amber[700],
+                                  size: 16,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      displayName,
+                                      style: GoogleFonts.montserrat(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Cycle $cycleNumber • $date',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 11,
+                                        color: AppColors.textLightGray,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                '${formatCurrencyShort(amount)} ETB',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ],
+                  ),
+                ),
+              );
+            }),
 
             const SizedBox(height: 10),
 
@@ -202,12 +401,46 @@ class GroupDetailView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Equb Progress',
-                      style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          'ekub_progress'.tr,
+                          style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const Spacer(),
+                        // Live lottery draw button
+                        Obx(() {
+                          if (controller.canShowLotteryDraw) {
+                            return LotteryDrawButton(
+                              onPressed: () {
+                                // Parse next draw date to pass as drawingTime for countdown
+                                DateTime? nextDrawDateTime;
+                                final nextDrawDateStr = controller.groupHistoryData['next_draw_date'] as String?;
+                                if (nextDrawDateStr != null) {
+                                  try {
+                                    nextDrawDateTime = DateTime.parse(nextDrawDateStr);
+                                  } catch (_) {}
+                                }
+                                Get.toNamed(
+                                  '/lottery-draw',
+                                  arguments: {
+                                    'lotteryNumbers': controller.availableLotteryNumbers,
+                                    'groupName': group?.name ?? 'Group',
+                                    'groupId': group?.id,
+                                    'drawingTime': nextDrawDateTime,
+                                  },
+                                );
+                              },
+                              isEnabled: true,
+                              tooltip: 'Open lottery draw machine',
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        }),
+                      ],
                     ),
                     const SizedBox(height: 6),
                     // Round text with proper Obx usage
@@ -303,7 +536,7 @@ class GroupDetailView extends StatelessWidget {
                               width: 70,
                               height: 30,
                               child: Text(
-                                'Rounds Completed',
+                                'rounds_completed'.tr,
                                 style: GoogleFonts.montserrat(
                                   color: AppColors.textLightGray,
                                   fontSize: 9,
@@ -351,7 +584,7 @@ class GroupDetailView extends StatelessWidget {
                               height: 30,
 
                               child: Text(
-                                'Rounds Remaining',
+                                'rounds_remaining'.tr,
                                 style: GoogleFonts.montserrat(
                                   color: AppColors.textLightGray,
                                   fontSize: 9,
@@ -399,7 +632,7 @@ class GroupDetailView extends StatelessWidget {
                               width: 70,
 
                               child: Text(
-                                'Total Pool',
+                                'total_pool'.tr,
                                 style: GoogleFonts.montserrat(
                                   color: AppColors.textLightGray,
                                   fontSize: 9,
@@ -428,7 +661,7 @@ class GroupDetailView extends StatelessWidget {
                               height: 30,
                               width: 70,
                               child: Text(
-                                'Next Draw',
+                                'next_draw'.tr,
                                 style: GoogleFonts.montserrat(
                                   color: AppColors.textLightGray,
                                   fontSize: 9,
@@ -615,7 +848,7 @@ class GroupDetailView extends StatelessWidget {
                                         final member = filteredMembers[i];
 
                                         // Determine status color and text
-                                        String statusText = 'On Hold';
+                                        String statusText = 'on_hold'.tr;
                                         Color statusColor = Colors.grey;
                                         bool isCurrentUserPayment = false;
                                         int? currentCycleNumber;
@@ -661,7 +894,7 @@ class GroupDetailView extends StatelessWidget {
 
                                           if (isFutureGroup) {
                                             // Future start date - show "On Hold"
-                                            statusText = 'On Hold';
+                                            statusText = 'on_hold'.tr;
                                             statusColor = Colors.grey;
                                           } else {
                                             // Past start date - check payment status
@@ -683,7 +916,7 @@ class GroupDetailView extends StatelessWidget {
                                                 statusText =
                                                     'R-$currentCycleNumber Not Paid';
                                               } else {
-                                                statusText = 'Not Paid';
+                                                statusText = 'not_paid'.tr;
                                               }
                                               statusColor = Colors.orange;
                                             } else {
@@ -755,15 +988,31 @@ class GroupDetailView extends StatelessWidget {
                                                                   .black54,
                                                             )),
                                               ),
-                                              title: Text(
-                                                (member is Map<String, dynamic>)
-                                                    ? (member['user']?['full_name'] ??
-                                                          'Unknown')
-                                                    : member.user.fullName,
-                                                style: GoogleFonts.montserrat(
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 12,
-                                                ),
+                                              title: Row(
+                                                children: [
+                                                  Text(
+                                                    (member is Map<String, dynamic>)
+                                                        ? (member['user']?['full_name'] ??
+                                                              'Unknown')
+                                                        : member.user.fullName,
+                                                    style: GoogleFonts.montserrat(
+                                                      fontWeight: FontWeight.w600,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                  // Show lottery number if group is started and lottery number exists
+                                                  if (shouldShowLotteryNumber(group?.status, 
+                                                      (member is Map<String, dynamic>) 
+                                                          ? member['lottery_number'] as String?
+                                                          : member.lotteryNumber)) ...[
+                                                    const SizedBox(width: 8),
+                                                    LotteryNumberBadge(
+                                                      lotteryNumber: (member is Map<String, dynamic>) 
+                                                          ? member['lottery_number'] as String
+                                                          : member.lotteryNumber!,
+                                                    ),
+                                                  ],
+                                                ],
                                               ),
                                               subtitle: Column(
                                                 crossAxisAlignment:
@@ -817,43 +1066,43 @@ class GroupDetailView extends StatelessWidget {
                                                 ],
                                               ),
                                               trailing: GestureDetector(
-                                                onTap:
-                                                    isCurrentUserPayment &&
-                                                        statusText != 'Paid' &&
-                                                        statusText != 'On Hold' &&
-                                                        group != null
-                                                    ? () {
-                                                        // Capture non-null group reference
-                                                        final nonNullGroup =
-                                                            group!;
-                                                        // Show payment method selection as bottom sheet
-                                                        showModalBottomSheet(
-                                                          context: Get.context!,
-                                                          builder: (context) =>
-                                                              SelectPaymentMethodView(
-                                                                ekubId:
-                                                                    nonNullGroup
-                                                                        .id,
-                                                                amount: nonNullGroup
-                                                                    .contributionAmount
-                                                                    .toDouble(),
-                                                                cycleNumber:
-                                                                    currentCycleNumber,
-                                                              ),
-                                                          isScrollControlled:
-                                                              true,
-                                                          shape: const RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius.vertical(
-                                                                  top:
-                                                                      Radius.circular(
-                                                                        20,
-                                                                      ),
-                                                                ),
-                                                          ),
-                                                        );
-                                                      }
-                                                    : null,
+                                                // onTap:
+                                                //     isCurrentUserPayment &&
+                                                //         statusText != 'Paid' &&
+                                                //         statusText != 'on_hold'.tr &&
+                                                //         group != null
+                                                //     ? () {
+                                                //         // Capture non-null group reference
+                                                //         final nonNullGroup =
+                                                //             group!;
+                                                //         // Show payment method selection as bottom sheet
+                                                //         showModalBottomSheet(
+                                                //           context: Get.context!,
+                                                //           builder: (context) =>
+                                                //               SelectPaymentMethodView(
+                                                //                 ekubId:
+                                                //                     nonNullGroup
+                                                //                         .id,
+                                                //                 amount: nonNullGroup
+                                                //                     .contributionAmount
+                                                //                     .toDouble(),
+                                                //                 cycleNumber:
+                                                //                     currentCycleNumber,
+                                                //               ),
+                                                //           isScrollControlled:
+                                                //               true,
+                                                //           shape: const RoundedRectangleBorder(
+                                                //             borderRadius:
+                                                //                 BorderRadius.vertical(
+                                                //                   top:
+                                                //                       Radius.circular(
+                                                //                         20,
+                                                //                       ),
+                                                //                 ),
+                                                //           ),
+                                                //         );
+                                                //       }
+                                                //     : null,
                                                 child: Container(
                                                   padding:
                                                       const EdgeInsets.symmetric(
@@ -897,15 +1146,104 @@ class GroupDetailView extends StatelessWidget {
                           }
                           final paymentController = Get.find<PaymentController>();
                           
-                          // Get current cycle number from group history data
+                          // Get current cycle information from group history data
                           final currentCycleNumber = controller.groupHistoryData['current_round'] as int?;
+                          final nextDrawDate = controller.groupHistoryData['next_draw_date'] as String?;
+                          
+                          // Active cycle = completed draws + 1 (e.g. 0 draws done → cycle 1 is active)
+                          final activeCycleNumber = (currentCycleNumber ?? 0) + 1;
+                          
+                          // Determine payment status for current user FOR THE ACTIVE CYCLE
+                          final currentUserId = Get.find<AuthService>().currentUser.value?.id;
+                          final currentUserMember = controller.membersWithPaymentStatus.firstWhereOrNull(
+                            (member) {
+                              if (member is Map<String, dynamic>) {
+                                return member['user']?['id'] == currentUserId;
+                              }
+                              return false;
+                            },
+                          );
+                          
+                          String paymentStatus = 'pending';
+                          if (currentUserMember != null && currentUserMember is Map<String, dynamic>) {
+                            // Check payment_history_per_cycle for the active cycle first
+                            final cycleHistory = currentUserMember['payment_history_per_cycle'] as List<dynamic>?;
+                            if (cycleHistory != null && cycleHistory.isNotEmpty) {
+                              final activeCyclePayment = cycleHistory.firstWhereOrNull(
+                                (c) => c is Map<String, dynamic> && c['cycle_number'] == activeCycleNumber,
+                              );
+                              if (activeCyclePayment is Map<String, dynamic>) {
+                                final cycleStatus = activeCyclePayment['payment_status'] as String?;
+                                if (cycleStatus == 'success' || cycleStatus == 'processing' || cycleStatus == 'initiated') {
+                                  paymentStatus = 'paid';
+                                } else {
+                                  paymentStatus = 'pending';
+                                }
+                              }
+                              // If no record for this cycle yet → pending (need to pay)
+                            } else {
+                              // Fallback: use overall payment_status only if no cycle history
+                              final status = currentUserMember['payment_status'] as String?;
+                              if (status == 'success' || status == 'processing' || status == 'initiated') {
+                                paymentStatus = 'paid';
+                              }
+                            }
+                          }
                           
                           return SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 6,vertical: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 16),
                             child: Obx(
                               () => Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  // Current Cycle Card — always show for started groups
+                                  if (group != null && group.status == 'started')
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 16),
+                                      child: CurrentCycleCard(
+                                        cycleNumber: activeCycleNumber,
+                                        totalCycles: group.targetMembers,
+                                        dueDate: nextDrawDate != null 
+                                          ? DateTime.tryParse(nextDrawDate) 
+                                          : null,
+                                        drawingDate: nextDrawDate != null 
+                                          ? DateTime.tryParse(nextDrawDate) 
+                                          : null,
+                                        amount: group.contributionAmount.toDouble(),
+                                        status: paymentStatus,
+                                        winnerInfo: null, // Will be populated after drawing
+                                        onPayNow: paymentStatus == 'pending'
+                                          ? () {
+                                              // Show payment method selection
+                                              showModalBottomSheet(
+                                                context: Get.context!,
+                                                builder: (context) => SelectPaymentMethodView(
+                                                  ekubId: group!.id,
+                                                  amount: group.contributionAmount.toDouble(),
+                                                  cycleNumber: activeCycleNumber,
+                                                ),
+                                                isScrollControlled: true,
+                                                shape: const RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.vertical(
+                                                    top: Radius.circular(20),
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          : null,
+                                      ),
+                                    ),
+                                  
+                                  // Payment Methods Section
+                                  Text(
+                                    'payment_methods'.tr,
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  
                                   // Chapa
                                   PaymentMethodCard(
                                     id: 'chapa',
@@ -913,13 +1251,13 @@ class GroupDetailView extends StatelessWidget {
                                     logo: const ChapaLogo(),
                                     description: paymentController.chapaDescription,
                                     isSelected: paymentController.selectedPaymentMethod.value == 'chapa',
-                                    onTap: () => paymentController.selectPaymentMethod('chapa'),
-                                    onProceed: () => paymentController.proceedToPayment(
-                                      'chapa',
-                                      group?.id,
-                                      group?.contributionAmount.toDouble(),
-                                      cycleNumber: currentCycleNumber,
-                                    ),
+                                    // onTap: () => paymentController.selectPaymentMethod('chapa'),
+                                    // onProceed: () => paymentController.proceedToPayment(
+                                    //   'chapa',
+                                    //   group?.id,
+                                    //   group?.contributionAmount.toDouble(),
+                                    //   cycleNumber: activeCycleNumber,
+                                    // ),
                                   ),
                                   // Arifpay
                                   PaymentMethodCard(
@@ -928,28 +1266,28 @@ class GroupDetailView extends StatelessWidget {
                                     logo: const ArifpayLogo(),
                                     description: paymentController.arifpayDescription,
                                     isSelected: paymentController.selectedPaymentMethod.value == 'arifpay',
-                                    onTap: () => paymentController.selectPaymentMethod('arifpay'),
-                                    onProceed: () => paymentController.proceedToPayment(
-                                      'arifpay',
-                                      group?.id,
-                                      group?.contributionAmount.toDouble(),
-                                      cycleNumber: currentCycleNumber,
-                                    ),
+                                    // onTap: () => paymentController.selectPaymentMethod('arifpay'),
+                                    // onProceed: () => paymentController.proceedToPayment(
+                                    //   'arifpay',
+                                    //   group?.id,
+                                    //   group?.contributionAmount.toDouble(),
+                                    //   cycleNumber: activeCycleNumber,
+                                    // ),
                                   ),
                                   // SANTIM PAY
                                   PaymentMethodCard(
                                     id: 'santim_pay',
-                                    name: 'SANTIM PAY',
+                                    name: 'santim_pay'.tr,
                                     logo: const SantimPayLogo(),
                                     description: paymentController.santimPayDescription,
                                     isSelected: paymentController.selectedPaymentMethod.value == 'santim_pay',
-                                    onTap: () => paymentController.selectPaymentMethod('santim_pay'),
-                                    onProceed: () => paymentController.proceedToPayment(
-                                      'santim_pay',
-                                      group?.id,
-                                      group?.contributionAmount.toDouble(),
-                                      cycleNumber: currentCycleNumber,
-                                    ),
+                                    // onTap: () => paymentController.selectPaymentMethod('santim_pay'),
+                                    // onProceed: () => paymentController.proceedToPayment(
+                                    //   'santim_pay',
+                                    //   group?.id,
+                                    //   group?.contributionAmount.toDouble(),
+                                    //   cycleNumber: activeCycleNumber,
+                                    // ),
                                   ),
                                   // Telebirr
                                   PaymentMethodCard(
@@ -958,14 +1296,15 @@ class GroupDetailView extends StatelessWidget {
                                     logo: const TelebirrLogo(),
                                     description: paymentController.telebirrDescription,
                                     isSelected: paymentController.selectedPaymentMethod.value == 'telebirr',
-                                    onTap: () => paymentController.selectPaymentMethod('telebirr'),
-                                    onProceed: () => paymentController.proceedToPayment(
-                                      'telebirr',
-                                      group?.id,
-                                      group?.contributionAmount.toDouble(),
-                                      cycleNumber: currentCycleNumber,
-                                    ),
+                                    // onTap: () => paymentController.selectPaymentMethod('telebirr'),
+                                    // onProceed: () => paymentController.proceedToPayment(
+                                    //   'telebirr',
+                                    //   group?.id,
+                                    //   group?.contributionAmount.toDouble(),
+                                    //   cycleNumber: activeCycleNumber,
+                                    // ),
                                   ),
+                               
                                 ],
                               ),
                             ),
@@ -1110,7 +1449,7 @@ class GroupDetailView extends StatelessWidget {
                             ],
                           );
                         default:
-                          return const Text('Unknown tab');
+                          return Text('unknown_tab'.tr);
                       }
                     }),
                   ],

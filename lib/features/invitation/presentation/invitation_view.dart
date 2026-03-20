@@ -50,7 +50,7 @@ class _InvitationViewState extends State<InvitationView> {
         elevation: 0,
         leading: const CustomBackButton(),
         title: Text(
-          'Group Invitation',
+          'group_invitation'.tr,
           style: GoogleFonts.montserrat(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -85,7 +85,7 @@ class _InvitationViewState extends State<InvitationView> {
                 ),
                 const SizedBox(height: AppSizes.spacingLarge),
                 AppButton(
-                  text: 'Go Back',
+                  text: 'go_back'.tr,
                   onPressed: () => Get.back(),
                   width: 150,
                 ),
@@ -96,7 +96,7 @@ class _InvitationViewState extends State<InvitationView> {
 
         final groupData = _controller.groupData;
         if (groupData.isEmpty) {
-          return const Center(child: Text('No invitation data available'));
+          return Center(child: Text('no_invitation_data'.tr));
         }
 
         final group = groupData;
@@ -144,7 +144,7 @@ class _InvitationViewState extends State<InvitationView> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                group['name'] ?? 'Group Name',
+                                group['name'] ?? 'group_name'.tr,
                                 style: GoogleFonts.montserrat(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -197,7 +197,7 @@ class _InvitationViewState extends State<InvitationView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Invitation Details',
+                      'invitation_details'.tr,
                       style: GoogleFonts.montserrat(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -210,9 +210,9 @@ class _InvitationViewState extends State<InvitationView> {
                       'Frequency',
                       group['frequency'] ?? 'Monthly',
                     ),
-                    _buildDetailRow('Duration', '${group['rounds']} rounds'),
+                    _buildDetailRow('duration'.tr, '${group['rounds']} ' + 'rounds'.tr),
                     if (group['startDate'] != null)
-                      _buildDetailRow('Start Date', group['startDate']),
+                      _buildDetailRow('start_date'.tr, group['startDate']),
                   ],
                 ),
               ),

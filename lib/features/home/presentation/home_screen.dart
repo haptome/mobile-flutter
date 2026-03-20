@@ -537,6 +537,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 itemBuilder: (context, index) {
                   final campaign = campaigns[index];
                   final imageUrl = campaign['image_url'] as String? ?? '';
+                  print ('===================================');
+                  print ('Loading data: $campaign');
+                  print ('Loading image: $imageUrl');
+                  print ('====================================');
                   
                   return GestureDetector(
                     onTap: () => _homeController.onCampaignTap(campaign),
@@ -574,6 +578,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   );
                                 },
                                 errorBuilder: (context, error, stackTrace) {
+                                  debugPrint('Image load error for URL: $imageUrl');
+                                  debugPrint('Error: $error');
                                   return Container(
                                     color: AppColors.lightBorder,
                                     child: const Center(
@@ -587,15 +593,34 @@ class _HomeScreenState extends State<HomeScreen> {
                                 },
                               )
                             : Container(
-                                color: AppColors.lightBorder,
+                                color: AppColors.primary.withValues(alpha: 0.1),
                                 child: Center(
-                                  child: Text(
-                                    campaign['title'] as String? ?? 'Campaign',
-                                    style: AppTextStyles.bodyMedium(
-                                      color: AppColors.lightTextPrimary,
-                                      isDark: false,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.campaign,
+                                          size: 28,
+                                          color: AppColors.primary,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Flexible(
+                                          child: Text(
+                                            campaign['title'] as String? ?? 'Campaign',
+                                            style: AppTextStyles.bodySmall(
+                                              color: AppColors.lightTextPrimary,
+                                              isDark: false,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    textAlign: TextAlign.center,
                                   ),
                                 ),
                               ),

@@ -55,52 +55,119 @@ class TermsConditionsView extends StatelessWidget {
             // Scrollable Content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Clause 1
-                    _buildClause(
-                      clause: '1. Acceptance of Terms',
-                      paragraphs: [
-                        'By accessing and using this application, you accept and agree to be bound by the terms and provision of this agreement.',
-                      ],
+                    // Intro
+                    Text(
+                      'terms_intro'.tr,
+                      style: GoogleFonts.lato(
+                        fontSize: 14,
+                        height: 1.6,
+                        color: const Color(0xFF494949),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'terms_consent'.tr,
+                      style: GoogleFonts.lato(
+                        fontSize: 14,
+                        height: 1.6,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF494949),
+                      ),
                     ),
                     const SizedBox(height: 24),
-                    // Clause 2
-                    _buildClause(
-                      clause: '2. User Responsibilities',
-                      paragraphs: [
-                        'You are responsible for maintaining the confidentiality of your account and password.',
-                        'You agree to accept responsibility for all activities that occur under your account.',
+                    
+                    // Section 1
+                    _buildSection(
+                      title: 'terms_section_1_title'.tr,
+                      content: ['terms_section_1_content'.tr],
+                    ),
+                    
+                    // Section 2
+                    _buildSection(
+                      title: 'terms_section_2_title'.tr,
+                      content: [
+                        'terms_section_2_eligibility'.tr,
+                        'terms_section_2_identification'.tr,
+                        'terms_section_2_kyc'.tr,
+                        'terms_section_2_one_account'.tr,
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    // Clause 3
-                    _buildClause(
-                      clause: '3. Service Description',
-                      paragraphs: [
-                        'The application provides digital equb services for financial savings and lending.',
-                        'Services are subject to availability and may be modified or discontinued at any time.',
+                    
+                    // Section 3
+                    _buildSection(
+                      title: 'terms_section_3_title'.tr,
+                      content: [
+                        'terms_section_3_commitment'.tr,
+                        'terms_section_3_lottery'.tr,
+                        'terms_section_3_transparency'.tr,
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    // Clause 4
-                    _buildClause(
-                      clause: '4. Privacy Policy',
-                      paragraphs: [
-                        'We collect and use personal information in accordance with our Privacy Policy.',
-                        'Your information will be protected and used only for providing our services.',
+                    
+                    // Section 4
+                    _buildSection(
+                      title: 'terms_section_4_title'.tr,
+                      content: [
+                        'terms_section_4_service_fees'.tr,
+                        'terms_section_4_deduction'.tr,
+                        'terms_section_4_channels'.tr,
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    // Clause 5
-                    _buildClause(
-                      clause: '5. Limitation of Liability',
-                      paragraphs: [
-                        'The service is provided "as is" without warranties of any kind, either express or implied.',
+                    
+                    // Section 5
+                    _buildSection(
+                      title: 'terms_section_5_title'.tr,
+                      content: [
+                        'terms_section_5_intro'.tr,
+                        'terms_section_5_late_fees'.tr,
+                        'terms_section_5_legal'.tr,
                       ],
                     ),
+                    
+                    // Section 6
+                    _buildSection(
+                      title: 'terms_section_6_title'.tr,
+                      content: ['terms_section_6_content'.tr],
+                    ),
+                    
+                    // Section 7
+                    _buildSection(
+                      title: 'terms_section_7_title'.tr,
+                      content: [
+                        'terms_section_7_outages'.tr,
+                        'terms_section_7_substitute'.tr,
+                        'terms_section_7_payout'.tr,
+                        'terms_section_7_blacklist'.tr,
+                        'terms_section_7_sos'.tr,
+                        'terms_section_7_user_error'.tr,
+                        'terms_section_7_indirect'.tr,
+                      ],
+                    ),
+                    
+                    // Section 8
+                    _buildSection(
+                      title: 'terms_section_8_title'.tr,
+                      content: ['terms_section_8_content'.tr],
+                    ),
+                    
+                    // Section 9
+                    _buildSection(
+                      title: 'terms_section_9_title'.tr,
+                      content: [
+                        'terms_section_9_mediation'.tr,
+                        'terms_section_9_jurisdiction'.tr,
+                      ],
+                    ),
+                    
+                    // Section 10
+                    _buildSection(
+                      title: 'terms_section_10_title'.tr,
+                      content: ['terms_section_10_content'.tr],
+                    ),
+                    
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -113,7 +180,7 @@ class TermsConditionsView extends StatelessWidget {
                 vertical: 16.0,
               ),
               child: AppButton(
-                text: 'Agree & Continue'.tr,
+                text: 'agree_continue'.tr,
                 onPressed: controller.onAgreeContinue,
                 isLoading: controller.isAgreeing.value,
                 isFullWidth: false,
@@ -125,36 +192,54 @@ class TermsConditionsView extends StatelessWidget {
     );
   }
 
-  Widget _buildClause({
-    required String clause,
-    required List<String> paragraphs,
+  Widget _buildSection({
+    required String title,
+    required List<String> content,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '$clause',
-          style: GoogleFonts.lato(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF494949),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.lato(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF494949),
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
-        ...paragraphs.map(
-          (paragraph) => Padding(
-            padding: const EdgeInsets.only(bottom: 12.0),
-            child: Text(
-              paragraph,
-              style: GoogleFonts.lato(
-                fontSize: 16,
-                height: 1.5,
-                color: const Color(0xFF494949),
+          const SizedBox(height: 12),
+          ...content.map(
+            (paragraph) => Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '• ',
+                    style: GoogleFonts.lato(
+                      fontSize: 16,
+                      height: 1.6,
+                      color: const Color(0xFF494949),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      paragraph,
+                      style: GoogleFonts.lato(
+                        fontSize: 15,
+                        height: 1.6,
+                        color: const Color(0xFF494949),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

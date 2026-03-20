@@ -35,6 +35,25 @@ class ApiResponse<T> {
           : null,
     );
   }
+
+  factory ApiResponse.success(T data, {String? message}) {
+    return ApiResponse<T>(
+      success: true,
+      data: data,
+      message: message,
+    );
+  }
+
+  factory ApiResponse.error(String message, {String? code}) {
+    return ApiResponse<T>(
+      success: false,
+      message: message,
+      error: ApiError(
+        code: code ?? 'UNKNOWN_ERROR',
+        message: message,
+      ),
+    );
+  }
 }
 
 class ApiError {

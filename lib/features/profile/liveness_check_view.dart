@@ -2,6 +2,9 @@
 // Author: Auto-generated
 // Linked Spec Section: KYC ID & Liveness Flow - Liveness Check
 
+import 'package:et_digital_equb/core/services/camera_service.dart';
+import 'package:et_digital_equb/core/services/face_detection_service.dart';
+import 'package:et_digital_equb/core/services/liveness_detection_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:camera/camera.dart';
@@ -34,27 +37,40 @@ class _LivenessCheckViewState extends State<LivenessCheckView>
     
     // Check if services are available (mobile only)
     try {
+      // Check if services are registered
+      if (!Get.isRegistered<CameraService>()) {
+        throw Exception('CameraService not registered');
+      }
+      if (!Get.isRegistered<FaceDetectionService>()) {
+        throw Exception('FaceDetectionService not registered');
+      }
+      if (!Get.isRegistered<LivenessDetectionService>()) {
+        throw Exception('LivenessDetectionService not registered');
+      }
+      
       // Initialize controller with dependencies
       controller = Get.put(LivenessController(
-        cameraService: Get.find(),
-        faceService: Get.find(),
-        livenessService: Get.find(),
+        cameraService: Get.find<CameraService>(),
+        faceService: Get.find<FaceDetectionService>(),
+        livenessService: Get.find<LivenessDetectionService>(),
       ));
       
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _initializeLiveness();
       });
     } catch (e) {
-      // Services not available (likely running on web)
+      // Services not available (likely running on web or services not initialized)
+      print('[LivenessCheckView] Error initializing services: $e');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Get.snackbar(
-          'Platform Not Supported',
-          'Camera features are only available on mobile devices',
+          'Initialization Error',
+          'Failed to initialize camera services: ${e.toString()}',
           backgroundColor: Colors.red,
           colorText: Colors.white,
           snackPosition: SnackPosition.TOP,
+          duration: const Duration(seconds: 4),
         );
-        Future.delayed(const Duration(seconds: 2), () {
+        Future.delayed(const Duration(seconds: 4), () {
           Get.back();
         });
       });
@@ -64,13 +80,19 @@ class _LivenessCheckViewState extends State<LivenessCheckView>
   Future<void> _initializeLiveness() async {
     if (controller == null) return;
     
+    print('[LivenessCheckView] Initializing liveness check...');
+    
     final screenSize = MediaQuery.of(context).size;
     frameGeometry = FrameGeometry.forFaceDetection(screenSize: screenSize);
     
+    print('[LivenessCheckView] Starting liveness check...');
     await controller!.startLivenessCheck();
+    
+    print('[LivenessCheckView] Liveness check started, camera controller: ${controller!.cameraController != null}');
     
     // Listen for completion
     ever(controller!.state, (state) {
+      print('[LivenessCheckView] State changed to: $state');
       if (state == LivenessState.success) {
         _handleSuccess();
       } else if (state == LivenessState.timeout || state == LivenessState.error) {

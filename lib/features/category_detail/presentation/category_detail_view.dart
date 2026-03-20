@@ -37,7 +37,7 @@ class CategoryDetailView extends StatelessWidget {
               onPressed: () => Get.back(),
             ),
           ),
-          body: const Center(child: Text('Category not found')),
+          body: Center(child: Text('category_not_found'.tr)),
         );
       }
       Get.put(CategoryDetailController(category: category));
@@ -92,7 +92,7 @@ class CategoryDetailView extends StatelessWidget {
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () => controller.loadGroups(),
-                  child: const Text('Retry'),
+                  child: Text('retry'.tr),
                 ),
               ],
             ),
@@ -102,7 +102,7 @@ class CategoryDetailView extends StatelessWidget {
         if (controller.groups.isEmpty) {
           return Center(
             child: Text(
-              'No groups found in this category',
+              'no_groups_found_category'.tr,
               style: GoogleFonts.montserrat(
                 fontSize: 16,
                 color: AppColors.textLightGray,
@@ -131,29 +131,34 @@ class CategoryDetailView extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                 ),
                 color: AppColors.white,
-                child: ExpansionTile(
-                  tilePadding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.paddingMedium,
-                  ),
-                  childrenPadding: const EdgeInsets.all(AppSizes.paddingMedium),
-                  initiallyExpanded: true,
-                  title: Text(
-                    entry.key[0].toUpperCase() + entry.key.substring(1),
-                    style: GoogleFonts.montserrat(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.splashBackground,
+                child: Theme(
+                                  data: Theme.of(context).copyWith(
+                                    dividerColor: Colors.transparent,
+                                  ),
+                  child: ExpansionTile(
+                    tilePadding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.paddingMedium,
                     ),
+                    childrenPadding: const EdgeInsets.all(AppSizes.paddingMedium),
+                    initiallyExpanded: true,
+                    title: Text(
+                      entry.key[0].toUpperCase() + entry.key.substring(1),
+                      style: GoogleFonts.montserrat(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.splashBackground,
+                      ),
+                    ),
+                    children: entry.value.map((g) {
+                      final isMember = controller.isUserMember(g);
+                      return EkubListItem.fromGroup(
+                        g,
+                        onJoin: isMember ? null : () => controller.onJoinTap(g),
+                        onTap: isMember ? () => controller.onGroupTap(g) : null,
+                        showJoin: !isMember,
+                      );
+                    }).toList(),
                   ),
-                  children: entry.value.map((g) {
-                    final isMember = controller.isUserMember(g);
-                    return EkubListItem.fromGroup(
-                      g,
-                      onJoin: isMember ? null : () => controller.onJoinTap(g),
-                      onTap: isMember ? () => controller.onGroupTap(g) : null,
-                      showJoin: !isMember,
-                    );
-                  }).toList(),
                 ),
               ),
           ],

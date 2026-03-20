@@ -82,6 +82,8 @@ class CategoryDetailController extends GetxController {
       if (kDebugMode) {
         print('Error loading user groups: $e');
       }
+      // Don't show error to user, just log it
+      userGroupIds.clear(); // Ensure we have a clean state
     }
   }
 
@@ -259,229 +261,232 @@ class _JoinGroupBottomSheetState extends State<_JoinGroupBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: Column(
-        children: [
-          // Handle bar
-          Container(
-            margin: EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
-            ),
+    return SafeArea(
+      maintainBottomViewPadding: true,
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
           ),
-
-          // Title
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Text(
-              'Join ${widget.group.name}',
-              style: GoogleFonts.montserrat(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
+        ),
+        child: Column(
+          children: [
+            // Handle bar
+            Container(
+              margin: EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-          ),
-
-          // Scrollable content
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+      
+            // Title
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Text(
+                'Join ${widget.group.name}',
+                style: GoogleFonts.montserrat(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+      
+            // Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Terms and Conditions Section
+                    Text(
+                      'Terms and Conditions',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      height: 150,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        border: Border.all(color: const Color(0xFFD8DADC), width: 1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      child: SingleChildScrollView(
+                        child: Text(
+                          'By joining this group, you agree to:\n\n'
+                          '1. Ensure all contributions are made on time\n'
+                          '2. Follow the rotation method selected by the group\n'
+                          '3. Maintain transparency in all transactions\n'
+                          '4. Resolve disputes fairly and promptly\n'
+                          '5. Comply with all applicable laws and regulations\n\n'
+                          'Additional terms may apply based on the group rules below.',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ),
+      
+                    const SizedBox(height: 20),
+      
+                    // Group Rules Section
+                    Text(
+                      'Group Rules',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        border: Border.all(color: const Color(0xFFD8DADC), width: 1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      child: SingleChildScrollView(
+                        child: Text(
+                          _generateGroupRules(),
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ),
+      
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+      
+            // Terms acceptance checkbox and buttons
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: Offset(0, -5),
+                  ),
+                ],
+              ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Terms and Conditions Section
-                  Text(
-                    'Terms and Conditions',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 150,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      border: Border.all(color: const Color(0xFFD8DADC), width: 1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: SingleChildScrollView(
-                      child: Text(
-                        'By joining this group, you agree to:\n\n'
-                        '1. Ensure all contributions are made on time\n'
-                        '2. Follow the rotation method selected by the group\n'
-                        '3. Maintain transparency in all transactions\n'
-                        '4. Resolve disputes fairly and promptly\n'
-                        '5. Comply with all applicable laws and regulations\n\n'
-                        'Additional terms may apply based on the group rules below.',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          color: Colors.black87,
+                  // Checkbox
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Checkbox(
+                          value: termsAccepted,
+                          onChanged: (value) {
+                            setState(() {
+                              termsAccepted = value ?? false;
+                            });
+                          },
+                          activeColor: const Color(0xFFBBBB32),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Group Rules Section
-                  Text(
-                    'Group Rules',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      border: Border.all(color: const Color(0xFFD8DADC), width: 1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: SingleChildScrollView(
-                      child: Text(
-                        _generateGroupRules(),
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          color: Colors.black87,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'I agree to the group terms and conditions',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-
-                  const SizedBox(height: 20),
+      
+                  const SizedBox(height: 16),
+      
+                  // Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 48,
+                          child: OutlinedButton(
+                            onPressed: () => Get.back(),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: const Color(0xFFD8DADC)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: SizedBox(
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: termsAccepted
+                                ? () => Get.back(result: {'confirmed': true})
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: termsAccepted
+                                  ? const Color(0xFFBBBB32)
+                                  : const Color(0xFFBBBB32).withOpacity(0.5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: Text(
+                              'Join',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-          ),
-
-          // Terms acceptance checkbox and buttons
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: Offset(0, -5),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // Checkbox
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Checkbox(
-                        value: termsAccepted,
-                        onChanged: (value) {
-                          setState(() {
-                            termsAccepted = value ?? false;
-                          });
-                        },
-                        activeColor: const Color(0xFFBBBB32),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'I agree to the group terms and conditions',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          color: Colors.black,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 48,
-                        child: OutlinedButton(
-                          onPressed: () => Get.back(),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: const Color(0xFFD8DADC)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: Text(
-                            'Cancel',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: SizedBox(
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: termsAccepted
-                              ? () => Get.back(result: {'confirmed': true})
-                              : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: termsAccepted
-                                ? const Color(0xFFBBBB32)
-                                : const Color(0xFFBBBB32).withOpacity(0.5),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: Text(
-                            'Join',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

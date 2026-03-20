@@ -172,70 +172,75 @@ class _YourEkubsViewState extends State<YourEkubsView> {
                                     ),
                                   ],
                                 ),
-                                child: ExpansionTile(
-                                  title: Text(
-                                    '${'completed_ekubs'.tr} (${controller.completedEkubs.length})',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.darkTextSecondary,
-                                    ),
+                                child: Theme(
+                                  data: Theme.of(context).copyWith(
+                                    dividerColor: Colors.transparent,
                                   ),
-                                  trailing: Obx(
-                                    () => Icon(
-                                      controller.showCompletedEkubs.value
-                                          ? Icons.expand_less
-                                          : Icons.expand_more,
-                                      color: AppColors.primary,
+                                  child: ExpansionTile(
+                                    title: Text(
+                                      '${'completed_ekubs'.tr} (${controller.completedEkubs.length})',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.darkTextSecondary,
+                                      ),
                                     ),
+                                    trailing: Obx(
+                                      () => Icon(
+                                        controller.showCompletedEkubs.value
+                                            ? Icons.expand_less
+                                            : Icons.expand_more,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                    children: [
+                                      ListView.builder(
+                                        shrinkWrap: true,
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        itemCount:
+                                            controller.completedEkubs.length,
+                                        itemBuilder: (context, index) {
+                                          final ekubData =
+                                              controller.completedEkubs[index];
+                                          // Calculate duration based on frequency and number of rounds
+                                          String duration;
+                                          if (ekubData['frequency']
+                                              .toLowerCase()
+                                              .contains('week')) {
+                                            duration =
+                                                '${(ekubData['totalRounds'] ~/ 4).toInt()} ${'months'.tr}';
+                                          } else if (ekubData['frequency']
+                                              .toLowerCase()
+                                              .contains('month')) {
+                                            duration =
+                                                '${ekubData['totalRounds']} ${'months'.tr}';
+                                          } else {
+                                            // daily
+                                            duration =
+                                                '${(ekubData['totalRounds'] ~/ 30).toInt()} ${'months'.tr}';
+                                          }
+                                  
+                                          return CompletedEkubCard(
+                                            id: ekubData['id'],
+                                            name: ekubData['title'],
+                                            amount: ekubData['amount'],
+                                            round: ekubData['completedRounds'],
+                                            frequency: ekubData['frequency'],
+                                            duration: duration,
+                                            totalAmount: ekubData['totalAmount'],
+                                            onTap: () => controller.onEkubTap(
+                                              ekubData['id'],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                    onExpansionChanged: (bool expanded) {
+                                      controller.showCompletedEkubs.value =
+                                          expanded;
+                                    },
                                   ),
-                                  children: [
-                                    ListView.builder(
-                                      shrinkWrap: true,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      itemCount:
-                                          controller.completedEkubs.length,
-                                      itemBuilder: (context, index) {
-                                        final ekubData =
-                                            controller.completedEkubs[index];
-                                        // Calculate duration based on frequency and number of rounds
-                                        String duration;
-                                        if (ekubData['frequency']
-                                            .toLowerCase()
-                                            .contains('week')) {
-                                          duration =
-                                              '${(ekubData['totalRounds'] ~/ 4).toInt()} ${'months'.tr}';
-                                        } else if (ekubData['frequency']
-                                            .toLowerCase()
-                                            .contains('month')) {
-                                          duration =
-                                              '${ekubData['totalRounds']} ${'months'.tr}';
-                                        } else {
-                                          // daily
-                                          duration =
-                                              '${(ekubData['totalRounds'] ~/ 30).toInt()} ${'months'.tr}';
-                                        }
-
-                                        return CompletedEkubCard(
-                                          id: ekubData['id'],
-                                          name: ekubData['title'],
-                                          amount: ekubData['amount'],
-                                          round: ekubData['completedRounds'],
-                                          frequency: ekubData['frequency'],
-                                          duration: duration,
-                                          totalAmount: ekubData['totalAmount'],
-                                          onTap: () => controller.onEkubTap(
-                                            ekubData['id'],
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                  onExpansionChanged: (bool expanded) {
-                                    controller.showCompletedEkubs.value =
-                                        expanded;
-                                  },
                                 ),
                               ),
                           ],

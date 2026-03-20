@@ -66,7 +66,7 @@ class _VerificationViewState extends State<VerificationView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Verify Your Identity',
+          'verify_your_identity'.tr,
           style: GoogleFonts.montserrat(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -75,7 +75,7 @@ class _VerificationViewState extends State<VerificationView> {
         ),
         const SizedBox(height: AppSizes.spacingSmall),
         Text(
-          'Verify your identity with an ID and a clear selfie.',
+          'verify_identity_desc'.tr,
           style: AppTextStyles.bodyMedium(color: AppColors.lightTextSecondary),
         ),
         const SizedBox(height: AppSizes.spacingMedium),
@@ -117,7 +117,7 @@ class _VerificationViewState extends State<VerificationView> {
           ),
           const SizedBox(height: AppSizes.spacingSmall),
           AppButton(
-            text: 'Start ID Verification',
+            text: 'start_id_verification'.tr,
             type: ButtonType.primary,
             textStyle: AppTextStyles.bodySmall(
               color: AppColors.white,
@@ -210,7 +210,7 @@ class _VerificationViewState extends State<VerificationView> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Completed',
+                    'completed'.tr,
                     style: AppTextStyles.bodySmall(
                       color: AppColors.lightTextSecondary,
                     ),
@@ -254,7 +254,7 @@ class _VerificationViewState extends State<VerificationView> {
                 ? Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      'Uploading... ${(_controller.uploadProgress.value * 100).toStringAsFixed(0)}%',
+                      'uploading'.tr + '... ${(_controller.uploadProgress.value * 100).toStringAsFixed(0)}%',
                       style: AppTextStyles.bodySmall(color: AppColors.primary),
                     ),
                   )
@@ -272,7 +272,7 @@ class _VerificationViewState extends State<VerificationView> {
             children: [
               Expanded(
                 child: AppButton(
-                  text: 'Change',
+                  text: 'change'.tr,
                   type: ButtonType.primary,
                   textStyle: AppTextStyles.bodySmall(
                     color: AppColors.white,
@@ -290,7 +290,7 @@ class _VerificationViewState extends State<VerificationView> {
               const SizedBox(width: 12),
               Expanded(
                 child: AppButton(
-                  text: 'Remove',
+                  text: 'remove'.tr,
                   type: ButtonType.outlined,
                   textStyle: AppTextStyles.bodySmall(
                     color: AppColors.primary,
@@ -363,7 +363,7 @@ class _VerificationViewState extends State<VerificationView> {
           child: Column(
             children: [
               Text(
-                'Checking! Please wait...',
+                'checking_please_wait'.tr,
                 style: GoogleFonts.montserrat(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
@@ -373,7 +373,7 @@ class _VerificationViewState extends State<VerificationView> {
               ),
               const SizedBox(height: 11),
               Text(
-                'Your account is being checked before ready to use.',
+                'account_being_checked'.tr,
                 style: const TextStyle(
                   fontFamily: 'Roboto',
                   fontSize: 14,
@@ -537,7 +537,7 @@ class DashedBorderPainter extends CustomPainter {
           child: Column(
             children: [
               Text(
-                'Congratulations!',
+                'verified'.tr + '!',
                 style: GoogleFonts.montserrat(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
@@ -547,7 +547,7 @@ class DashedBorderPainter extends CustomPainter {
               ),
               const SizedBox(height: 11),
               Text(
-                'Your account is ready to use. You will be redirected to the home page in a few seconds.',
+                'account_ready'.tr,
                 style: const TextStyle(
                   fontFamily: 'Roboto',
                   fontSize: 14,

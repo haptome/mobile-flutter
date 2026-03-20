@@ -1,3 +1,4 @@
+import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_sizes.dart';
@@ -38,7 +39,7 @@ class SectionHeader extends StatelessWidget {
             GestureDetector(
               onTap: onViewAll,
               child: Text(
-                'View All',
+                'view_all'.tr,
                 style: AppTextStyles.bodyMedium(
                   color: AppColors.splashBackground,
                   isDark: false,

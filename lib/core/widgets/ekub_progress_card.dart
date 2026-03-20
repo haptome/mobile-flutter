@@ -72,12 +72,16 @@ class EkubProgressCard extends StatelessWidget {
                   color: AppColors.borderLightGray,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  '$frequency $amount',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.black,
+                SizedBox(
+                  width: 120,
+                  child: Text(
+                    '$frequency $amount',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.black,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
               ],

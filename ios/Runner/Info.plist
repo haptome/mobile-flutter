@@ -55,5 +55,18 @@
 	<string>We need access to your photo library to select documents for KYC verification.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>We need access to save captured ID documents to your photo library.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.etdigital.etequb</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>etequb</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

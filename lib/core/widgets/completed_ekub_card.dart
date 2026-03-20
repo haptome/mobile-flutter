@@ -42,13 +42,10 @@ class _CompletedEkubCardState extends State<CompletedEkubCard> {
       decoration: BoxDecoration(
         color: AppColors.lightBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(
+          color: AppColors.lightBorder.withOpacity(0.3),
+          width: 1,
+        ),
       ),
       child: Column(
         children: [
@@ -58,7 +55,9 @@ class _CompletedEkubCardState extends State<CompletedEkubCard> {
               setState(() => _isExpanded = !_isExpanded);
               widget.onTap?.call();
             },
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius: _isExpanded 
+                ? const BorderRadius.vertical(top: Radius.circular(12))
+                : BorderRadius.circular(12),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
@@ -96,12 +95,14 @@ class _CompletedEkubCardState extends State<CompletedEkubCard> {
               ),
             ),
           ),
-          // Divider
+          // Divider (only when expanded)
           if (_isExpanded)
-            const Divider(
+            Divider(
               height: 1,
               thickness: 1,
-              color: AppColors.borderLightGray,
+              color: AppColors.lightBorder.withOpacity(0.3),
+              indent: 16,
+              endIndent: 16,
             ),
           // Expanded content
           if (_isExpanded) ...[

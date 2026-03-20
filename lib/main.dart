@@ -11,6 +11,7 @@ import 'package:et_digital_equb/controllers/upcoming_payments_controller.dart';
 import 'package:et_digital_equb/controllers/your_ekubs_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -22,12 +23,14 @@ import 'core/theme/app_theme.dart';
 import 'core/routes/app_routes.dart';
 import 'core/services/storage_service.dart';
 import 'core/services/api_service.dart';
+import 'core/services/lottery_service.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/kyc_service.dart';
 import 'core/services/group_service.dart';
 import 'core/services/permission_service.dart';
 import 'core/services/payment_service.dart';
 import 'core/services/fcm_service.dart';
+import 'core/services/deep_link_service.dart';
 import 'core/services/cloudinary_service.dart';
 import 'core/services/upload_queue.dart';
 import 'core/services/camera_service.dart';
@@ -41,6 +44,17 @@ import 'translations/app_translations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Set dark status bar globally
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
 
   // Initialize Firebase (required for FCM)
   if (!kIsWeb) {
@@ -62,6 +76,8 @@ void main() async {
 
   final apiService = Get.put(ApiService(), permanent: true);
   await apiService.init();
+
+  final lotteryService = Get.put(LotteryService(), permanent: true);
 
   final authService = Get.put(AuthService(), permanent: true);
   await authService.init();
@@ -98,17 +114,21 @@ void main() async {
 
   // Register KYC-related services (only on mobile, not web)
   if (!kIsWeb) {
+    debugPrint('[Main] Registering KYC services for mobile platform');
     Get.put(CameraService(), permanent: true);
+    debugPrint('[Main] CameraService registered');
     Get.put(EdgeDetectionService(), permanent: true);
+    debugPrint('[Main] EdgeDetectionService registered');
     Get.put(ImageQualityService(), permanent: true);
+    debugPrint('[Main] ImageQualityService registered');
     Get.put(FaceDetectionService(), permanent: true);
+    debugPrint('[Main] FaceDetectionService registered');
     Get.put(LivenessDetectionService(), permanent: true);
+    debugPrint('[Main] LivenessDetectionService registered');
+  } else {
+    debugPrint('[Main] Skipping KYC services registration (running on web)');
   }
-    Get.put(CameraService(), permanent: true);
-    Get.put(EdgeDetectionService(), permanent: true);
-    Get.put(ImageQualityService(), permanent: true);
-    Get.put(FaceDetectionService(), permanent: true);
-    Get.put(LivenessDetectionService(), permanent: true);
+  
   // Register Group service
   Get.put(GroupService(), permanent: true);
 
@@ -121,6 +141,7 @@ void main() async {
   // Initialize FCM service (for push notifications)
   if (!kIsWeb) {
     Get.put(FcmService(), permanent: true);
+    Get.put(DeepLinkService(), permanent: true);
   }
 
   // Initialize Language Controller

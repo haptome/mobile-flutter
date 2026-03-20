@@ -5,7 +5,6 @@
 import 'package:et_digital_equb/core/widgets/custom_back_button.dart';
 import 'package:et_digital_equb/core/widgets/faq_item.dart';
 import 'package:et_digital_equb/core/widgets/search_bar_widget.dart';
-import 'package:et_digital_equb/core/widgets/tab_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../controllers/faq_controller.dart';
@@ -51,12 +50,43 @@ class FaqView extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Tab selector
-            Obx(
-              () => TabSelector(
-                tabs: controller.tabs,
-                selectedIndex: controller.selectedTabIndex.value,
-                onTabSelected: controller.onTabSelected,
+            // Category dropdown
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Obx(
+                () => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.borderLightGray),
+                  ),
+                  child: DropdownButton<int>(
+                    value: controller.selectedTabIndex.value,
+                    isExpanded: true,
+                    underline: const SizedBox(),
+                    icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.primary),
+                    items: List.generate(
+                      controller.tabs.length,
+                      (index) => DropdownMenuItem<int>(
+                        value: index,
+                        child: Text(
+                          controller.tabs[index],
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.lightTextPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      if (value != null) {
+                        controller.onTabSelected(value);
+                      }
+                    },
+                  ),
+                ),
               ),
             ),
             // Search section
@@ -131,10 +161,12 @@ class FaqView extends StatelessWidget {
                   itemCount: controller.filteredFaqs.length,
                   itemBuilder: (context, index) {
                     final faq = controller.filteredFaqs[index];
+                    final questionKey = faq['question']?.toString() ?? '';
+                    final answerKey = faq['answer']?.toString() ?? '';
                     return FaqItem(
-                      id: faq['id'] ?? '',
-                      question: faq['question'] ?? '',
-                      answer: faq['answer'] ?? '',
+                      id: faq['id']?.toString() ?? '',
+                      question: questionKey.tr,
+                      answer: answerKey.tr,
                       usersAsked: faq['usersAsked'] ?? 0,
                       userAvatars: faq['userAvatars'] != null
                           ? List<String>.from(faq['userAvatars'] as List)

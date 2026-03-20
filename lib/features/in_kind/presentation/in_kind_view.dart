@@ -57,7 +57,7 @@ class _InKindViewState extends State<InKindView> {
                                 ElevatedButton(
                                   onPressed: () =>
                                       _controller.loadInKindCategories(),
-                                  child: const Text('Retry'),
+                                  child: Text('retry'.tr),
                                 ),
                               ],
                             ),

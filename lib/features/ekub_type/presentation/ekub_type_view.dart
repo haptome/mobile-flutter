@@ -94,7 +94,7 @@ class EkubTypeView extends StatelessWidget {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => controller.loadCategories(),
-                child: const Text('Retry'),
+                child: Text('retry'.tr),
               ),
             ],
           ),
@@ -103,9 +103,9 @@ class EkubTypeView extends StatelessWidget {
     }
 
     if (controller.categories.isEmpty) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.all(AppSizes.paddingLarge),
-        child: Center(child: Text('No categories found')),
+        child: Center(child: Text('no_categories_found'.tr)),
       );
     }
 

@@ -128,20 +128,32 @@ class LivenessController extends GetxController {
   /// Start the liveness check flow
   Future<void> startLivenessCheck() async {
     try {
+      print('[LivenessController] Starting liveness check...');
       _reset();
       state.value = LivenessState.aligningFace;
       instructionText.value = 'Position your face in the frame';
       progress.value = 0.0;
 
+      print('[LivenessController] Initializing camera...');
       await _cameraService.initialize(
         direction: CameraLensDirection.front,
         resolution: ResolutionPreset.medium,
       );
+      print('[LivenessController] Camera initialized successfully');
+      print('[LivenessController] Camera controller initialized: ${_cameraService.controller?.value.isInitialized}');
 
+      print('[LivenessController] Initializing face detection service...');
       await _faceService.initialize();
+      print('[LivenessController] Face detection service initialized');
+      
       _startSessionTimer();
       _startFrameProcessing();
+      print('[LivenessController] Liveness check started successfully');
+      
+      // Force UI update
+      update();
     } catch (e) {
+      print('[LivenessController] Error starting liveness check: $e');
       _handleError('Failed to start liveness check: $e');
     }
   }
@@ -176,6 +188,8 @@ class LivenessController extends GetxController {
       if (_recentFrames.length > _maxFrameHistory) {
         _recentFrames.removeAt(0);
       }
+
+      print('[LivenessController] Frame processed - state: ${state.value}, faceDetected: true');
 
       switch (state.value) {
         case LivenessState.aligningFace:
@@ -214,7 +228,10 @@ class LivenessController extends GetxController {
 
   /// Process frame during face alignment phase
   void _processAligningFace(FaceDetectionResult faceResult) {
+    print('[LivenessController] Processing aligning face - isFrontal: ${faceResult.isFrontal}, isSuitable: ${faceResult.isSuitableForLiveness}');
+    
     if (faceResult.isFrontal && faceResult.isSuitableForLiveness) {
+      print('[LivenessController] Face aligned! Moving to passive liveness');
       state.value = LivenessState.passiveLiveness;
       instructionText.value = 'Hold still';
       _passiveLivenessStartTime = DateTime.now();
@@ -227,8 +244,11 @@ class LivenessController extends GetxController {
   /// Process frame during passive liveness phase
   void _processPassiveLiveness(FaceDetectionResult faceResult) {
     final isStable = _livenessService.validateStability(_passiveLivenessDuration);
+    
+    print('[LivenessController] Passive liveness - isStable: $isStable, frameCount: ${_livenessService.frameCount}');
 
     if (isStable) {
+      print('[LivenessController] Passive liveness validated! Generating challenge');
       _generateChallenge();
       state.value = LivenessState.activeChallenge;
       _challengeStartTime = DateTime.now();
@@ -258,13 +278,18 @@ class LivenessController extends GetxController {
     final challenge = currentChallenge.value!;
     bool challengeCompleted = false;
 
+    print('[LivenessController] Processing challenge: ${challenge.type}');
+
     if (challenge.isBlinkChallenge()) {
       challengeCompleted = _checkBlinkChallenge(challenge);
+      print('[LivenessController] Blink challenge completed: $challengeCompleted');
     } else if (challenge.isHeadMovement()) {
       challengeCompleted = _checkHeadMovementChallenge(challenge, faceResult);
+      print('[LivenessController] Head movement challenge completed: $challengeCompleted');
     }
 
     if (challengeCompleted) {
+      print('[LivenessController] Challenge completed successfully!');
       _handleChallengeSuccess();
     } else {
       if (_challengeStartTime != null) {

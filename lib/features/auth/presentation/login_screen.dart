@@ -138,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) {
           if (response.success) {
             // Navigate to OTP screen after successful OTP request
-            Navigator.of(context).pushNamed(
+            Navigator.of(context).pushReplacementNamed(
               AppRoutes.otp,
               arguments: {'phoneNumber': fullPhone, 'isFromLogin': true},
             );

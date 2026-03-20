@@ -125,45 +125,97 @@ class YourEkubsController extends GetxController {
   }
 
   Map<String, dynamic> _groupToEkubMap(Group group) {
-    // Calculate completed rounds based on start date and frequency
-    final completedRounds = _calculateCompletedRounds(
-      group.startDate,
-      group.frequency,
-      group.targetMembers,
-    );
-    final totalRounds = group.targetMembers;
+    try {
+      // Calculate completed rounds based on start date and frequency
+      final completedRounds = _calculateCompletedRounds(
+        group.startDate,
+        group.frequency,
+        group.targetMembers,
+      );
+      final totalRounds = group.targetMembers;
 
-    return {
-      'id': group.id,
-      'title': group.name,
-      'frequency': group.frequency,
-      'amount': '${group.contributionAmount.toCurrencyShort()}',
-      'completedRounds': completedRounds,
-      'totalRounds': totalRounds,
-      'type': 'cash',
-      'group': group, // Store the full group object for navigation
-    };
+      // Safely format the contribution amount
+      String formattedAmount;
+      try {
+        formattedAmount = group.contributionAmount.toCurrencyShort();
+      } catch (e) {
+        // Fallback if formatting fails
+        formattedAmount = 'ETB ${group.contributionAmount.toStringAsFixed(0)}';
+      }
+
+      return {
+        'id': group.id,
+        'title': group.name,
+        'frequency': group.frequency,
+        'amount': formattedAmount,
+        'completedRounds': completedRounds,
+        'totalRounds': totalRounds,
+        'type': 'cash',
+        'group': group, // Store the full group object for navigation
+      };
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error converting group to ekub map: $e');
+      }
+      // Return a safe fallback
+      return {
+        'id': group.id,
+        'title': group.name,
+        'frequency': group.frequency,
+        'amount': 'ETB ${group.contributionAmount.toStringAsFixed(0)}',
+        'completedRounds': 0,
+        'totalRounds': group.targetMembers,
+        'type': 'cash',
+        'group': group,
+      };
+    }
   }
 
   Map<String, dynamic> _inKindGroupToEkubMap(InKindGroup group) {
-    // Calculate completed rounds based on start date and frequency
-    final completedRounds = _calculateCompletedRounds(
-      group.startDate,
-      group.frequency,
-      group.targetMembers,
-    );
-    final totalRounds = group.targetMembers;
+    try {
+      // Calculate completed rounds based on start date and frequency
+      final completedRounds = _calculateCompletedRounds(
+        group.startDate,
+        group.frequency,
+        group.targetMembers,
+      );
+      final totalRounds = group.targetMembers;
 
-    return {
-      'id': group.id,
-      'title': group.name,
-      'frequency': group.frequency,
-      'amount': '${group.contributionAmount.toCurrencyShort()}',
-      'completedRounds': completedRounds,
-      'totalRounds': totalRounds,
-      'type': 'in_kind',
-      'group': group,
-    };
+      // Safely format the contribution amount
+      String formattedAmount;
+      try {
+        formattedAmount = group.contributionAmount.toCurrencyShort();
+      } catch (e) {
+        // Fallback if formatting fails
+        formattedAmount = 'ETB ${group.contributionAmount.toStringAsFixed(0)}';
+      }
+
+      return {
+        'id': group.id,
+        'title': group.name,
+        'frequency': group.frequency,
+        'amount': formattedAmount,
+        'completedRounds': completedRounds,
+        'totalRounds': totalRounds,
+        'type': 'in_kind',
+        'group': group,
+      };
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error converting in-kind group to ekub map: $e');
+      }
+      // Return a safe fallback
+      return {
+        'id': group.id,
+        'title': group.name,
+        'frequency': group.frequency,
+        'amount': 'ETB ${group.contributionAmount.toStringAsFixed(0)}',
+        'completedRounds': 0,
+        'totalRounds': group.targetMembers,
+        'type': 'in_kind',
+        'group': group,
+      };
+    }
   }
 
   /// Calculate completed rounds based on start date and frequency
@@ -172,33 +224,45 @@ class YourEkubsController extends GetxController {
     String frequency,
     int targetMembers,
   ) {
-    if (startDate == null) return 0;
+    try {
+      if (startDate == null) return 0;
 
-    final now = DateTime.now();
-    
-    // If start date is in the future, no rounds completed yet
-    if (startDate.isAfter(now)) return 0;
+      final now = DateTime.now();
+      
+      // If start date is in the future, no rounds completed yet
+      if (startDate.isAfter(now)) return 0;
 
-    final daysSinceStart = now.difference(startDate).inDays;
+      final daysSinceStart = now.difference(startDate).inDays;
 
-    int completedRounds;
-    switch (frequency.toLowerCase()) {
-      case 'daily':
-        completedRounds = daysSinceStart;
-        break;
-      case 'weekly':
-        completedRounds = (daysSinceStart / 7).floor();
-        break;
-      case 'monthly':
-        // Calculate months difference more accurately
-        completedRounds = _calculateMonthsDifference(startDate, now);
-        break;
-      default:
-        completedRounds = 0;
+      int completedRounds;
+      switch (frequency.toLowerCase()) {
+        case 'daily':
+          completedRounds = daysSinceStart;
+          break;
+        case 'weekly':
+          completedRounds = (daysSinceStart / 7).floor();
+          break;
+        case 'monthly':
+          // Calculate months difference more accurately
+          completedRounds = _calculateMonthsDifference(startDate, now);
+          break;
+        case 'hourly':
+          // Handle hourly frequency
+          final hoursSinceStart = now.difference(startDate).inHours;
+          completedRounds = hoursSinceStart;
+          break;
+        default:
+          completedRounds = 0;
+      }
+
+      // Cap at target members (can't have more completed rounds than total rounds)
+      return completedRounds.clamp(0, targetMembers);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error calculating completed rounds: $e');
+      }
+      return 0; // Safe fallback
     }
-
-    // Cap at target members (can't have more completed rounds than total rounds)
-    return completedRounds.clamp(0, targetMembers);
   }
 
   /// Calculate the number of months between two dates
@@ -210,26 +274,58 @@ class YourEkubsController extends GetxController {
       months--;
     }
     
-    return months.clamp(0, double.infinity.toInt());
+    return months.clamp(0, 999999); // Use a large finite number instead of infinity
   }
 
   Map<String, dynamic> _groupToCompletedEkubMap(Group group) {
-    // For completed groups, all rounds are completed
-    final totalRounds = group.targetMembers;
-    final completedRounds = totalRounds; // All rounds completed
-    final totalAmount = group.contributionAmount * totalRounds;
+    try {
+      // For completed groups, all rounds are completed
+      final totalRounds = group.targetMembers;
+      final completedRounds = totalRounds; // All rounds completed
+      final totalAmount = group.contributionAmount * totalRounds;
 
-    return {
-      'id': group.id,
-      'title': group.name,
-      'frequency': group.frequency,
-      'amount': '${group.contributionAmount.toCurrencyShort()}',
-      'completedRounds': completedRounds,
-      'totalRounds': totalRounds,
-      'totalAmount': '${totalAmount.toCurrencyShort()}',
-      'type': 'cash_completed',
-      'group': group,
-    };
+      // Safely format amounts
+      String formattedAmount;
+      String formattedTotalAmount;
+      try {
+        formattedAmount = group.contributionAmount.toCurrencyShort();
+        formattedTotalAmount = totalAmount.toCurrencyShort();
+      } catch (e) {
+        // Fallback if formatting fails
+        formattedAmount = 'ETB ${group.contributionAmount.toStringAsFixed(0)}';
+        formattedTotalAmount = 'ETB ${totalAmount.toStringAsFixed(0)}';
+      }
+
+      return {
+        'id': group.id,
+        'title': group.name,
+        'frequency': group.frequency,
+        'amount': formattedAmount,
+        'completedRounds': completedRounds,
+        'totalRounds': totalRounds,
+        'totalAmount': formattedTotalAmount,
+        'type': 'cash_completed',
+        'group': group,
+      };
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error converting completed group to ekub map: $e');
+      }
+      // Return a safe fallback
+      final totalRounds = group.targetMembers;
+      final totalAmount = group.contributionAmount * totalRounds;
+      return {
+        'id': group.id,
+        'title': group.name,
+        'frequency': group.frequency,
+        'amount': 'ETB ${group.contributionAmount.toStringAsFixed(0)}',
+        'completedRounds': totalRounds,
+        'totalRounds': totalRounds,
+        'totalAmount': 'ETB ${totalAmount.toStringAsFixed(0)}',
+        'type': 'cash_completed',
+        'group': group,
+      };
+    }
   }
 
   Future<void> onRefresh() async {

@@ -44,21 +44,21 @@ class CloudinaryConfig {
       case Environment.development:
         return CloudinaryConfig(
           cloudName: 'dglbocbnt',
-          uploadPreset: 'unsigned_dev_preset',
+          uploadPreset: 'development',
           apiKey: '676919573513538',
           environment: Environment.development,
         );
       case Environment.staging:
         return CloudinaryConfig(
           cloudName: 'dglbocbnt',
-          uploadPreset: 'unsigned_staging_preset',
+          uploadPreset: 'development',
           apiKey: '676919573513538',
           environment: Environment.staging,
         );
       case Environment.production:
         return CloudinaryConfig(
           cloudName: 'dglbocbnt',
-          uploadPreset: 'unsigned_prod_preset',
+          uploadPreset: 'development',
           apiKey: '676919573513538',
           environment: Environment.production,
         );

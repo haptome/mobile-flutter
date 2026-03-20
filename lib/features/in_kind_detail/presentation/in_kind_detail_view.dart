@@ -1,6 +1,7 @@
 // Purpose: In-Kind Group Detail page - shows in-kind group details, members, join button
 // Author: Auto-generated
 
+import 'package:et_digital_equb/core/extensions/number_formatting.dart';
 import 'package:et_digital_equb/core/widgets/scaffold_with_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -9,6 +10,21 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../models/group_model.dart';
 import '../../../../controllers/in_kind_detail_controller.dart';
+
+// Helper functions
+String _formatCurrencyShort(num value) {
+  if (value >= 1000000) {
+    return '${(value / 1000000).toStringAsFixed(1)}M';
+  } else if (value >= 1000) {
+    return '${(value / 1000).toStringAsFixed(1)}K';
+  }
+  return value.toStringAsFixed(0);
+}
+
+String _formatDate(DateTime date) {
+  final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return '${months[date.month - 1]} ${date.day}';
+}
 
 class InKindDetailView extends StatelessWidget {
   const InKindDetailView({super.key});
@@ -47,171 +63,99 @@ class InKindDetailView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Hero image area
-            SizedBox(
-              child: Center(
-                child: Card(
-                  color: AppColors.lightBackground,
-                  shadowColor: AppColors.black.withOpacity(0.4),
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            // Hero Card - Compact like group detail
+            Card(
+              color: AppColors.lightBackground,
+              shadowColor: AppColors.black.withOpacity(0.4),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        if (group.imageUrl != null &&
-                            group.imageUrl!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                group.imageUrl!,
-                                height: 120,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(Icons.error);
-                                },
-                              ),
-                            ),
+                        SizedBox(
+                          width: 50,
+                          child: Text(
+                            group.name,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.splashBackground,
+                            ).copyWith(overflow: TextOverflow.ellipsis),
                           ),
-                        if (group.description != null &&
-                            group.description!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Text(
-                              group.description!,
-                              style: GoogleFonts.montserrat(
-                                fontSize: 14,
-                                color: AppColors.textLightGray,
-                              ),
-                            ),
-                          ),
-                        // Show inventory item details for in-kind groups
-                        if (group.inventoryItemName != null &&
-                            group.inventoryItemName!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              children: [
-                                if (group.inventoryItemImageUrl != null &&
-                                    group.inventoryItemImageUrl!.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: Image.network(
-                                        group.inventoryItemImageUrl!,
-                                        height: 40,
-                                        width: 40,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                              return const Icon(
-                                                Icons.error,
-                                                size: 40,
-                                              );
-                                            },
-                                      ),
-                                    ),
-                                  ),
-                                Expanded(
-                                  child: Text(
-                                    group.inventoryItemName!,
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.splashBackground,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Text(
-                              group.name,
-                              style: GoogleFonts.montserrat(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.splashBackground,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Container(
-                              width: 1,
-                              height: 15,
-                              color: AppColors.borderLightGray,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '${group.frequency[0].toUpperCase()}${group.frequency.substring(1)} Group',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 14,
-                                color: AppColors.textLightGray,
-                              ),
-                            ),
-                          ],
                         ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.confirmation_number,
-                                  size: 16,
-                                  color: Colors.teal,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '№ ET-${group.id.substring(0, 9)}',
-                                  style: GoogleFonts.montserrat(
-                                    color: AppColors.textLightGray,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                const Icon(
-                                  Icons.schedule,
-                                  size: 16,
-                                  color: Colors.teal,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Duration: ${(group.targetMembers / (group.frequency == 'weekly' ? 4 : 1))} months',
-                                  style: GoogleFonts.montserrat(
-                                    color: AppColors.textLightGray,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Text(
-                              'Pool: ETB ${((group.contributionAmount * group.targetMembers).toStringAsFixed(0))}',
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.splashBackground,
-                              ),
-                            ),
-                          ],
+                        Container(
+                          width: 1,
+                          height: 15,
+                          color: AppColors.borderLightGray,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${group.frequency[0].toUpperCase()}${group.frequency.substring(1)} ${group.contributionAmount.toCurrencyShort()}',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14,
+                            color: AppColors.textLightGray,
+                          ),
                         ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.confirmation_number,
+                              size: 16,
+                              color: Colors.teal,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '№ ET-${group.id.substring(0, 9)}',
+                              style: GoogleFonts.montserrat(
+                                color: AppColors.textLightGray,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Icon(
+                              Icons.schedule,
+                              size: 16,
+                              color: Colors.teal,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${(group.targetMembers / (group.frequency == 'weekly' ? 4 : 1)).toStringAsFixed(0)} M',
+                              style: GoogleFonts.montserrat(
+                                color: AppColors.textLightGray,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          '${_formatCurrencyShort(group.contributionAmount * group.targetMembers)}',
+                          style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.splashBackground,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
 
             const SizedBox(height: 10),
 
-            // Progress Card
+            // Progress Card - Match group detail styling
             Card(
               color: AppColors.lightBackground,
               shadowColor: AppColors.black.withOpacity(0.4),
@@ -220,19 +164,18 @@ class InKindDetailView extends StatelessWidget {
               ),
               elevation: 1,
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Equb Progress',
+                      'ekub_progress'.tr,
                       style: GoogleFonts.montserrat(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
                     const SizedBox(height: 6),
-                    // Progress section - no Obx needed since group data is static
                     Builder(
                       builder: (context) {
                         final currentRound = group.currentMembers;
@@ -285,18 +228,28 @@ class InKindDetailView extends StatelessWidget {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Rounds Completed',
-                                      style: GoogleFonts.montserrat(
-                                        color: AppColors.textLightGray,
-                                        fontSize: 9,
+                                    SizedBox(
+                                      width: 70,
+                                      height: 30,
+                                      child: Text(
+                                        'rounds_completed'.tr,
+                                        style: GoogleFonts.montserrat(
+                                          color: AppColors.textLightGray,
+                                          fontSize: 9,
+                                        ),
+                                        textAlign: TextAlign.center,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(
-                                      '$roundsCompleted',
-                                      style: GoogleFonts.montserrat(
-                                        fontWeight: FontWeight.bold,
+                                    SizedBox(
+                                      width: 70,
+                                      height: 30,
+                                      child: Text(
+                                        '$roundsCompleted',
+                                        style: GoogleFonts.montserrat(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
                                       ),
                                     ),
                                   ],
@@ -304,18 +257,28 @@ class InKindDetailView extends StatelessWidget {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Rounds Remaining',
-                                      style: GoogleFonts.montserrat(
-                                        color: AppColors.textLightGray,
-                                        fontSize: 9,
+                                    SizedBox(
+                                      width: 70,
+                                      height: 30,
+                                      child: Text(
+                                        'rounds_remaining'.tr,
+                                        style: GoogleFonts.montserrat(
+                                          color: AppColors.textLightGray,
+                                          fontSize: 9,
+                                        ),
+                                        textAlign: TextAlign.center,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(
-                                      '$roundsRemaining',
-                                      style: GoogleFonts.montserrat(
-                                        fontWeight: FontWeight.bold,
+                                    SizedBox(
+                                      width: 70,
+                                      height: 30,
+                                      child: Text(
+                                        '$roundsRemaining',
+                                        style: GoogleFonts.montserrat(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
                                       ),
                                     ),
                                   ],
@@ -323,18 +286,28 @@ class InKindDetailView extends StatelessWidget {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Total Pool',
-                                      style: GoogleFonts.montserrat(
-                                        color: AppColors.textLightGray,
-                                        fontSize: 9,
+                                    SizedBox(
+                                      height: 30,
+                                      width: 70,
+                                      child: Text(
+                                        'total_pool'.tr,
+                                        style: GoogleFonts.montserrat(
+                                          color: AppColors.textLightGray,
+                                          fontSize: 9,
+                                        ),
+                                        textAlign: TextAlign.center,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(
-                                      '${((group.contributionAmount * group.targetMembers).toStringAsFixed(0))}',
-                                      style: GoogleFonts.montserrat(
-                                        fontWeight: FontWeight.bold,
+                                    SizedBox(
+                                      width: 70,
+                                      height: 30,
+                                      child: Text(
+                                        '${_formatCurrencyShort(group.contributionAmount * group.targetMembers)}',
+                                        style: GoogleFonts.montserrat(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
                                       ),
                                     ),
                                   ],
@@ -342,18 +315,28 @@ class InKindDetailView extends StatelessWidget {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Next Draw',
-                                      style: GoogleFonts.montserrat(
-                                        color: AppColors.textLightGray,
-                                        fontSize: 9,
+                                    SizedBox(
+                                      height: 30,
+                                      width: 70,
+                                      child: Text(
+                                        'next_draw'.tr,
+                                        style: GoogleFonts.montserrat(
+                                          color: AppColors.textLightGray,
+                                          fontSize: 9,
+                                        ),
+                                        textAlign: TextAlign.center,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(
-                                      '${group.startDate != null ? '${group.startDate!.month}/${group.startDate!.day}' : 'Soon'}',
-                                      style: GoogleFonts.montserrat(
-                                        fontWeight: FontWeight.bold,
+                                    SizedBox(
+                                      height: 30,
+                                      width: 70,
+                                      child: Text(
+                                        '${group.startDate != null ? _formatDate(group.startDate!) : 'Dec 15'}',
+                                        style: GoogleFonts.montserrat(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
                                       ),
                                     ),
                                   ],
@@ -381,9 +364,9 @@ class InKindDetailView extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildTab(controller, 'Members', 0),
-                  _buildTab(controller, 'Payments', 1),
-                  _buildTab(controller, 'History', 2),
+                  _buildTab(controller, 'members'.tr, 0),
+                  _buildTab(controller, 'payments'.tr, 1),
+                  _buildTab(controller, 'History'.tr, 2),
                 ],
               ),
             ),
@@ -414,7 +397,7 @@ class InKindDetailView extends StatelessWidget {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'Total Members - ${group.currentMembers} (Of ${group.targetMembers})',
+                                    'total_members'.tr + ' - ${group.currentMembers} (' + 'of'.tr + ' ${group.targetMembers})',
                                     style: GoogleFonts.montserrat(
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -439,8 +422,8 @@ class InKindDetailView extends StatelessWidget {
                                           horizontal: 14,
                                         ),
                                       ),
-                                      child: const Text(
-                                        'Invite',
+                                      child: Text(
+                                        'invite'.tr,
                                         style: TextStyle(color: Colors.white),
                                       ),
                                     ),
@@ -479,11 +462,11 @@ class InKindDetailView extends StatelessWidget {
                                         final statusText =
                                             member.status.toLowerCase() ==
                                                 'active'
-                                            ? 'Active'
+                                            ? 'active'.tr
                                             : member.status.toLowerCase() ==
                                                   'pending'
-                                            ? 'Pending'
-                                            : 'Removed';
+                                            ? 'pending'.tr
+                                            : 'removed'.tr;
 
                                         return Column(
                                           children: [
@@ -567,8 +550,8 @@ class InKindDetailView extends StatelessWidget {
                                               controller.toggleShowAllMembers,
                                           child: Text(
                                             controller.showAllMembers.value
-                                                ? 'View Less'
-                                                : 'View More',
+                                                ? 'view_less'.tr
+                                                : 'view_more'.tr,
                                             style: GoogleFonts.montserrat(
                                               color: const Color(0xffc6c92a),
                                             ),
@@ -586,7 +569,7 @@ class InKindDetailView extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Group Payments',
+                                'group_payments'.tr,
                                 style: GoogleFonts.montserrat(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -601,9 +584,9 @@ class InKindDetailView extends StatelessWidget {
                                 }
 
                                 if (controller.payments.isEmpty) {
-                                  return const Padding(
+                                  return Padding(
                                     padding: EdgeInsets.all(16.0),
-                                    child: Text('No payments found'),
+                                    child: Text('no_payments_found'.tr),
                                   );
                                 }
 
@@ -667,7 +650,7 @@ class InKindDetailView extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Group History',
+                                'history'.tr,
                                 style: GoogleFonts.montserrat(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -682,9 +665,9 @@ class InKindDetailView extends StatelessWidget {
                                 }
 
                                 if (controller.history.isEmpty) {
-                                  return const Padding(
+                                  return Padding(
                                     padding: EdgeInsets.all(16.0),
-                                    child: Text('No history found'),
+                                    child: Text('no_history_found'.tr),
                                   );
                                 }
 
@@ -719,7 +702,7 @@ class InKindDetailView extends StatelessWidget {
                             ],
                           );
                         default:
-                          return const Text('Unknown tab');
+                          return Text('unknown_tab'.tr);
                       }
                     }),
                   ],

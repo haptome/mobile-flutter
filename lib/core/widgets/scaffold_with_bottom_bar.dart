@@ -34,47 +34,49 @@ class ScaffoldWithBottomBar extends StatelessWidget {
       backgroundColor: backgroundColor,
       floatingActionButton: floatingActionButton,
       body: body,
-      bottomNavigationBar: Obx(
-        () => CustomBottomBar(
-          index: bottomNavController.index.value,
-          items: [
-            BottomBarItem(
-              selectedIcon: AppAssets.homeIcon,
-              unselectedIcon: AppAssets.homeIcon,
-              label: 'home'.tr,
-              onClick: (i) {
-                bottomNavController.switchTab(i);
-                Get.offAllNamed('/home');
-              },
-            ),
-            BottomBarItem(
-              selectedIcon: AppAssets.personsIcon,
-              unselectedIcon: AppAssets.personsIcon,
-              label: 'your_ekubs'.tr,
-              onClick: (i) {
-                bottomNavController.switchTab(i);
-                Get.offAllNamed('/ekubs');
-              },
-            ),
-            BottomBarItem(
-              selectedIcon: AppAssets.transactionIcon,
-              unselectedIcon: AppAssets.transactionIcon,
-              label: 'transactions'.tr,
-              onClick: (i) {
-                bottomNavController.switchTab(i);
-                Get.offAllNamed('/transactions');
-              },
-            ),
-            BottomBarItem(
-              selectedIcon: AppAssets.profileIcon,
-              unselectedIcon: AppAssets.profileIcon,
-              label: 'profile'.tr,
-              onClick: (i) {
-                bottomNavController.switchTab(i);
-                Get.offAllNamed('/profile');
-              },
-            ),
-          ],
+      bottomNavigationBar: SafeArea(
+        child: Obx(
+          () => CustomBottomBar(
+            index: bottomNavController.index.value,
+            items: [
+              BottomBarItem(
+                selectedIcon: AppAssets.homeIcon,
+                unselectedIcon: AppAssets.homeIcon,
+                label: 'home'.tr,
+                onClick: (i) {
+                  bottomNavController.switchTab(i);
+                  Get.offAllNamed('/home');
+                },
+              ),
+              BottomBarItem(
+                selectedIcon: AppAssets.personsIcon,
+                unselectedIcon: AppAssets.personsIcon,
+                label: 'your_ekubs'.tr,
+                onClick: (i) {
+                  bottomNavController.switchTab(i);
+                  Get.offAllNamed('/ekubs');
+                },
+              ),
+              BottomBarItem(
+                selectedIcon: AppAssets.transactionIcon,
+                unselectedIcon: AppAssets.transactionIcon,
+                label: 'transactions'.tr,
+                onClick: (i) {
+                  bottomNavController.switchTab(i);
+                  Get.offAllNamed('/transactions');
+                },
+              ),
+              BottomBarItem(
+                selectedIcon: AppAssets.profileIcon,
+                unselectedIcon: AppAssets.profileIcon,
+                label: 'profile'.tr,
+                onClick: (i) {
+                  bottomNavController.switchTab(i);
+                  Get.offAllNamed('/profile');
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

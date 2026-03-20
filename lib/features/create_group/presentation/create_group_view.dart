@@ -105,7 +105,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Create New Ekub Group',
+                            'create_new_ekub_group'.tr,
                             style: GoogleFonts.montserrat(
                               fontSize: 20,
                               fontWeight: FontWeight.w500,
@@ -113,7 +113,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                             ),
                           ),
                           Text(
-                            'Fill in the details to create a new Equb group.',
+                            'fill_details_create_group'.tr,
                             style: GoogleFonts.montserrat(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
@@ -198,10 +198,10 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                           String stepTitle = '';
                           switch (controller.currentStep.value) {
                             case 0:
-                              stepTitle = 'Basic Information';
+                              stepTitle = 'basic_information'.tr;
                               break;
                             case 1:
-                              stepTitle = 'Financial Settings';
+                              stepTitle = 'financial_settings'.tr;
                               break;
                             case 2:
                               stepTitle = 'Review & Create';
@@ -274,7 +274,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                               ),
                             )
                           : Text(
-                              isLastStep ? 'Create Group' : 'Continue',
+                              isLastStep ? 'create_group'.tr : 'continue'.tr,
                               style: GoogleFonts.montserrat(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -300,7 +300,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           // Group Name
           const SizedBox(height: 8),
           Text(
-            'Group Name *',
+            'group_name_required'.tr,
             style: GoogleFonts.montserrat(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -311,7 +311,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           TextField(
             controller: _groupNameController,
             decoration: InputDecoration(
-              hintText: 'Enter group name',
+              hintText: 'enter_group_name'.tr,
               hintStyle: TextStyle(
                 fontSize: 16,
                 color: Colors.black.withOpacity(0.5),
@@ -325,7 +325,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           // Group Purpose
           const SizedBox(height: 12),
           Text(
-            'Equb Purpose *',
+            'equb_purpose_required'.tr,
             style: GoogleFonts.montserrat(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -336,7 +336,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           TextField(
             controller: _groupPurposeController,
             decoration: InputDecoration(
-              hintText: 'Enter group purpose',
+              hintText: 'enter_group_purpose'.tr,
               hintStyle: TextStyle(
                 fontSize: 16,
                 color: Colors.black.withOpacity(0.5),
@@ -358,7 +358,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           // Contribution Amount
           const SizedBox(height: 8),
           Text(
-            'Contribution Amount *',
+            'contribution_amount_required'.tr,
             style: GoogleFonts.montserrat(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -370,7 +370,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
             controller: _contributionAmountController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              hintText: 'Enter contribution amount',
+              hintText: 'enter_contribution_amount'.tr,
               hintStyle: TextStyle(
                 fontSize: 16,
                 color: Colors.black.withOpacity(0.5),
@@ -422,8 +422,8 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                       : controller.selectedCategoryId.value,
                   hint: Text(
                     controller.isLoadingCategories.value
-                        ? 'Loading categories...'
-                        : 'Select category',
+                        ? 'loading_categories'.tr
+                        : 'select_category'.tr,
                     style: TextStyle(
                       fontSize: 16,
                       color: controller.isLoadingCategories.value
@@ -466,7 +466,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           // Frequency
           const SizedBox(height: 12),
           Text(
-            'Contribution Frequency *',
+            'contribution_frequency_required'.tr,
             style: GoogleFonts.montserrat(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -488,7 +488,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                   isExpanded: true,
                   value: controller.frequency.value,
                   hint: Text(
-                    'Select frequency',
+                    'select_frequency'.tr,
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.black.withOpacity(0.5),
@@ -529,7 +529,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           // Target Members
           const SizedBox(height: 12),
           Text(
-            'Target Members *',
+            'target_members_required'.tr,
             style: GoogleFonts.montserrat(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -541,7 +541,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
             controller: _targetMembersController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              hintText: 'Enter target members',
+              hintText: 'enter_target_members'.tr,
               hintStyle: TextStyle(
                 fontSize: 16,
                 color: Colors.black.withOpacity(0.5),
@@ -559,7 +559,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           // Minimum Members
           const SizedBox(height: 12),
           Text(
-            'Minimum Members *',
+            'minimum_members_required'.tr,
             style: GoogleFonts.montserrat(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -571,7 +571,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
             controller: _minMembersController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              hintText: 'Enter minimum members',
+              hintText: 'enter_minimum_members'.tr,
               hintStyle: TextStyle(
                 fontSize: 16,
                 color: Colors.black.withOpacity(0.5),
@@ -598,7 +598,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           // Group Type
           const SizedBox(height: 8),
           Text(
-            'Group Type *',
+            'group_type_required'.tr,
             style: GoogleFonts.montserrat(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -620,7 +620,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                   isExpanded: true,
                   value: controller.groupType.value,
                   hint: Text(
-                    'Select group type',
+                    'select_group_type'.tr,
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.black.withOpacity(0.5),
@@ -661,7 +661,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           // Rotation Method
           const SizedBox(height: 12),
           Text(
-            'Rotation Method *',
+            'rotation_method_required'.tr,
             style: GoogleFonts.montserrat(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -683,7 +683,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                   isExpanded: true,
                   value: controller.rotationMethod.value,
                   hint: Text(
-                    'Select rotation method',
+                    'select_rotation_method'.tr,
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.black.withOpacity(0.5),
@@ -696,7 +696,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                           value: value,
                           child: Text(
                             value == 'me_first' 
-                              ? 'Me First' 
+                              ? 'me_first'.tr 
                               : value[0].toUpperCase() + value.substring(1),
                             style: TextStyle(
                               fontSize: 16,
@@ -726,7 +726,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           // Service Charge Percent
           const SizedBox(height: 12),
           Text(
-            'Service Charge (%) *',
+            'service_charge_required'.tr,
             style: GoogleFonts.montserrat(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -738,7 +738,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
             controller: _serviceChargeController,
             keyboardType: TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              hintText: 'Enter service charge',
+              hintText: 'enter_service_charge'.tr,
               hintStyle: TextStyle(
                 fontSize: 16,
                 color: Colors.black.withOpacity(0.5),
@@ -759,7 +759,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           // Start Date
           const SizedBox(height: 12),
           Text(
-            'Start Date',
+            'start_date_label'.tr,
             style: GoogleFonts.montserrat(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -794,7 +794,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                       () => Text(
                         controller.startDate.value != null
                             ? '${controller.startDate.value!.day}/${controller.startDate.value!.month}/${controller.startDate.value!.year}'
-                            : 'Select start date',
+                            : 'select_start_date'.tr,
                         style: TextStyle(
                           fontSize: 16,
                           color: controller.startDate.value != null
@@ -829,7 +829,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           
           // Group Rules TextField
           Text(
-            'Group Rules',
+            'group_rules'.tr,
             style: GoogleFonts.montserrat(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -853,7 +853,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                   controller: _groupRulesController,
                   maxLines: 8,
                   decoration: InputDecoration(
-                    hintText: 'Group rules will be auto-generated based on your settings',
+                    hintText: 'group_rules_auto_generated'.tr,
                     hintStyle: TextStyle(
                       fontSize: 14,
                       color: Colors.black.withOpacity(0.5),
@@ -907,9 +907,9 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                           fontWeight: FontWeight.w400,
                         ),
                         children: [
-                          TextSpan(text: 'I agree to the '),
+                          TextSpan(text: 'i_agree_to_the'.tr + ' '),
                           TextSpan(
-                            text: 'group terms and conditions',
+                            text: 'group_terms_conditions'.tr,
                             style: TextStyle(
                               decoration: TextDecoration.underline,
                               color: const Color(0xFFBBBB32),
@@ -934,7 +934,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          'Group Terms and Conditions',
+          'group_terms_conditions_title'.tr,
           style: GoogleFonts.montserrat(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -956,7 +956,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
-              'Close',
+              'close'.tr,
               style: GoogleFonts.montserrat(
                 color: const Color(0xFFBBBB32),
                 fontWeight: FontWeight.w500,

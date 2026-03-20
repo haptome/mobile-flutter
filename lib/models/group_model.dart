@@ -1,6 +1,8 @@
 // Purpose: Group model
 // Author: Auto-generated
 
+import 'package:et_digital_equb/core/extensions/number_formatting.dart';
+
 import 'category_model.dart' as category_models;
 
 class Group {
@@ -44,17 +46,30 @@ class Group {
     // helpers to safely parse numbers that may come as strings
     double parseDouble(dynamic v) {
       if (v == null) return 0.0;
-      if (v is num) return v.toDouble();
-      if (v is String) return double.tryParse(v) ?? 0.0;
+      if (v is num) {
+        if (!v.isFinite) return 0.0; // Handle Infinity and NaN
+        return v.toDouble();
+      }
+      if (v is String) {
+        final parsed = double.tryParse(v) ?? 0.0;
+        if (!parsed.isFinite) return 0.0; // Handle Infinity and NaN
+        return parsed;
+      }
       return 0.0;
     }
 
     int parseInt(dynamic v) {
       if (v == null) return 0;
       if (v is int) return v;
-      if (v is num) return v.toInt();
-      if (v is String)
-        return int.tryParse(v) ?? (double.tryParse(v)?.toInt() ?? 0);
+      if (v is num) {
+        if (!v.isFinite) return 0; // Handle Infinity and NaN
+        return v.toInt();
+      }
+      if (v is String) {
+        final parsed = int.tryParse(v) ?? (double.tryParse(v)?.toInt() ?? 0);
+        if (parsed.isInfinite || parsed.isNaN) return 0; // Handle special values
+        return parsed;
+      }
       return 0;
     }
 
@@ -157,17 +172,30 @@ class InKindGroup {
   factory InKindGroup.fromJson(Map<String, dynamic> json) {
     double parseDouble(dynamic v) {
       if (v == null) return 0.0;
-      if (v is num) return v.toDouble();
-      if (v is String) return double.tryParse(v) ?? 0.0;
+      if (v is num) {
+        if (!v.isFinite) return 0.0; // Handle Infinity and NaN
+        return v.toDouble();
+      }
+      if (v is String) {
+        final parsed = double.tryParse(v) ?? 0.0;
+        if (!parsed.isFinite) return 0.0; // Handle Infinity and NaN
+        return parsed;
+      }
       return 0.0;
     }
 
     int parseInt(dynamic v) {
       if (v == null) return 0;
       if (v is int) return v;
-      if (v is num) return v.toInt();
-      if (v is String)
-        return int.tryParse(v) ?? (double.tryParse(v)?.toInt() ?? 0);
+      if (v is num) {
+        if (!v.isFinite) return 0; // Handle Infinity and NaN
+        return v.toInt();
+      }
+      if (v is String) {
+        final parsed = int.tryParse(v) ?? (double.tryParse(v)?.toInt() ?? 0);
+        if (parsed.isInfinite || parsed.isNaN) return 0; // Handle special values
+        return parsed;
+      }
       return 0;
     }
 

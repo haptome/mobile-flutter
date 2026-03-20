@@ -12,7 +12,24 @@
           "package_name": "com.et_digital_equb"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "121555299558-59rae8jof4e0tsac7pu4mjsioi6ca1qg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.et_digital_equb",
+            "certificate_hash": "dce7b51d1e7eb4c69b4e15130d8f41bd5a32d327"
+          }
+        },
+        {
+          "client_id": "121555299558-vmffb2a34b05vk22ootsgu8lj1gbbfcu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.et_digital_equb",
+            "certificate_hash": "d1adabf31164b7fd3cd96a6ed483d35d572a4a61"
+          }
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCHT3J4BrlAJ7Wvs3JNUTQ9iLFeJMePECM"

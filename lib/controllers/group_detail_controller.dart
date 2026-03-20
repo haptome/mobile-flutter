@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 import 'package:et_digital_equb/core/services/group_service.dart';
+import 'package:et_digital_equb/core/services/auth_service.dart';
 import 'package:et_digital_equb/models/group_model.dart';
 import 'package:et_digital_equb/models/member_model.dart';
 import 'package:share_plus/share_plus.dart';
@@ -27,8 +28,26 @@ class GroupDetailController extends GetxController {
   final RxList<dynamic> lottery = <dynamic>[].obs;
   final RxList<dynamic> membersWithPaymentStatus = <dynamic>[].obs;
   final RxMap<String, dynamic> groupHistoryData = <String, dynamic>{}.obs;
+  final RxBool showLotteryDraw = false.obs;
+  final RxList<String> availableLotteryNumbers = <String>[].obs;
 
   GroupDetailController({required this.group});
+
+  /// Formats winner announcement with lottery number privacy protection
+  /// Uses lottery number for public announcements, real name for personalized messages
+  String _formatWinnerAnnouncement(Map<String, dynamic> winnerData) {
+    final userName = winnerData['user_name'] as String? ?? 'Unknown';
+    final lotteryNumber = winnerData['lottery_number'] as String?;
+    
+    // For public announcements, use lottery number if available
+    // This maintains privacy while still showing winner information
+    if (lotteryNumber != null && lotteryNumber.isNotEmpty) {
+      return 'Winner: #$lotteryNumber';
+    }
+    
+    // Fallback to user name if lottery number is not available
+    return 'Winner: $userName';
+  }
 
   void setActiveTab(int tabIndex) {
     activeTab.value = tabIndex;
@@ -122,7 +141,9 @@ class GroupDetailController extends GetxController {
           for (final winner in winnersData) {
             final winnerMap = winner as Map<String, dynamic>;
             historyList.add({
-              'action': 'Winner: ${winnerMap['user_name'] ?? 'Unknown'}',
+              'action': _formatWinnerAnnouncement(winnerMap),
+              'winner_name': winnerMap['user_name'] ?? 'Unknown',
+              'lottery_number': winnerMap['lottery_number'],
               'date': DateTime.parse(
                 winnerMap['payout_date'],
               ).toString().split(' ')[0],
@@ -166,6 +187,61 @@ class GroupDetailController extends GetxController {
     super.onInit();
     loadMembers();
     loadGroupDetails();
+    _updateLotteryNumbers();
+  }
+
+  /// Update available lottery numbers based on group members
+  void _updateLotteryNumbers() {
+    if (group.status == 'started') {
+      // Extract lottery numbers from members with payment status
+      final numbers = <String>[];
+      for (final member in membersWithPaymentStatus) {
+        if (member is Map<String, dynamic>) {
+          final lotteryNumber = member['lottery_number'] as String?;
+          if (lotteryNumber != null && lotteryNumber.isNotEmpty) {
+            numbers.add(lotteryNumber);
+          }
+        }
+      }
+      availableLotteryNumbers.assignAll(numbers);
+    }
+  }
+
+  /// Returns the current user's lottery number from membersWithPaymentStatus
+  String? get currentUserLotteryNumber {
+    try {
+      final currentUserId = Get.find<AuthService>().currentUser.value?.id;
+      if (currentUserId == null) return null;
+
+      for (final member in membersWithPaymentStatus) {
+        if (member is Map<String, dynamic>) {
+          final userId = member['user']?['id'] as String?;
+          if (userId == currentUserId) {
+            final raw = member['lottery_number'];
+            if (raw == null) return null;
+            // lottery_number comes as int from the backend — format to 3-digit string
+            if (raw is int) return raw.toString().padLeft(3, '0');
+            final s = raw.toString();
+            return s.isNotEmpty ? s.padLeft(3, '0') : null;
+          }
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Toggle lottery draw visibility
+  void toggleLotteryDraw() {
+    showLotteryDraw.value = !showLotteryDraw.value;
+  }
+
+  /// Check if lottery draw should be available
+  bool get canShowLotteryDraw {
+    // Access observable variables to make this getter reactive
+    // This ensures GetX can track changes to these observables
+    availableLotteryNumbers.length; // Access to make reactive
+    return true; // For demo purposes, always show
+    // return group.status == 'started' && availableLotteryNumbers.isNotEmpty; // Uncomment for production
   }
 
   Future<void> loadGroupDetails() async {
@@ -185,6 +261,7 @@ class GroupDetailController extends GetxController {
         if (membersData != null) {
           print('GroupDetailController.loadGroupDetails - Found ${membersData.length} members with payment status');
           membersWithPaymentStatus.assignAll(membersData);
+          _updateLotteryNumbers(); // Update lottery numbers when member data is loaded
         }
         
         // Pre-populate payments data (so it's available when switching tabs)
@@ -217,7 +294,9 @@ class GroupDetailController extends GetxController {
           for (final winner in winnersData) {
             final winnerMap = winner as Map<String, dynamic>;
             historyList.add({
-              'action': 'Winner: ${winnerMap['user_name'] ?? 'Unknown'}',
+              'action': _formatWinnerAnnouncement(winnerMap),
+              'winner_name': winnerMap['user_name'] ?? 'Unknown',
+              'lottery_number': winnerMap['lottery_number'],
               'date': DateTime.parse(
                 winnerMap['payout_date'],
               ).toString().split(' ')[0],

@@ -4,12 +4,13 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_sizes.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/app_button.dart';
-import '../../core/app_assets.dart';
+import '../../core/services/cloudinary_service.dart';
 
 class IdCardConfirmationView extends StatefulWidget {
   final String imagePath;
@@ -28,6 +29,7 @@ class IdCardConfirmationView extends StatefulWidget {
 class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
   bool _imageExists = false;
   bool _isLoading = true;
+  bool _isUploading = false;
 
   @override
   void initState() {
@@ -45,6 +47,67 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
       if (mounted) {
         setState(() {
           _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _uploadAndComplete() async {
+    if (!_imageExists) {
+      Get.snackbar(
+        'error'.tr,
+        'image_file_not_found'.tr,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+
+    setState(() {
+      _isUploading = true;
+    });
+
+    try {
+      // Get Cloudinary service
+      final cloudinaryService = Get.find<CloudinaryService>();
+
+      // Upload to Cloudinary
+      final uploadResult = await cloudinaryService.uploadImage(
+        filePath: widget.imagePath,
+        folder: 'kyc/id_documents',
+      );
+
+      if (!uploadResult.success || uploadResult.secureUrl == null) {
+        throw Exception(uploadResult.error ?? 'Upload failed');
+      }
+
+      // Show success message
+      Get.snackbar(
+        'success'.tr,
+        'id_uploaded_successfully'.tr,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: const Duration(seconds: 2),
+      );
+
+      // Navigate back to profile after a short delay
+      await Future.delayed(const Duration(milliseconds: 500));
+      Get.until((route) => route.isFirst);
+      
+    } catch (e) {
+      Get.snackbar(
+        'error'.tr,
+        'upload_failed'.tr + ': $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
         });
       }
     }
@@ -82,7 +145,7 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Photo ID Card',
+                                    'photo_id_card'.tr,
                                     style: GoogleFonts.montserrat(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -91,7 +154,7 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Please point the camera at the ID card',
+                                    'point_camera_id'.tr,
                                     style: AppTextStyles.bodyMedium(
                                       color: AppColors.lightTextSecondary,
                                     ),
@@ -115,7 +178,7 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Colors.black.withValues(alpha: 0.1),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
@@ -152,7 +215,7 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
                                                 ),
                                                 const SizedBox(height: 8),
                                                 Text(
-                                                  'Failed to load image',
+                                                  'failed_load_image'.tr,
                                                   style:
                                                       AppTextStyles.bodyMedium(
                                                         color: AppColors
@@ -180,7 +243,7 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
                                             ),
                                             const SizedBox(height: 8),
                                             Text(
-                                              'Image file not found',
+                                              'image_file_not_found'.tr,
                                               style: AppTextStyles.bodyMedium(
                                                 color: AppColors.textLightGray,
                                               ),
@@ -198,7 +261,7 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
                           children: [
                             Expanded(
                               child: AppButton(
-                                text: 'Try Again',
+                                text: 'try_again'.tr,
                                 type: ButtonType.outlined,
                                 textColor: AppColors.black,
                                 backgroundColor: AppColors.white,
@@ -211,18 +274,12 @@ class _IdCardConfirmationViewState extends State<IdCardConfirmationView> {
                             const SizedBox(width: AppSizes.spacingMedium),
                             Expanded(
                               child: AppButton(
-                                text: 'Continue',
+                                text: 'continue'.tr,
                                 type: ButtonType.primary,
                                 backgroundColor: AppColors.primary,
                                 borderRadius: 100,
-                                onPressed: () {
-                                  // Return result to verification view
-                                  Navigator.of(context).pop({
-                                    'imagePath': widget.imagePath,
-                                    'verificationMethod':
-                                        widget.verificationMethod,
-                                  });
-                                },
+                                isLoading: _isUploading,
+                                onPressed: _isUploading ? null : _uploadAndComplete,
                               ),
                             ),
                           ],

@@ -23,6 +23,7 @@ import '../../features/payment/presentation/select_payment_method_view.dart';
 import '../../features/payment/presentation/upcoming_payments_view.dart';
 import '../../features/payment/presentation/payment_webview.dart';
 import '../../features/lottery/presentation/lottery_view.dart';
+import '../../features/lottery_draw/presentation/lottery_draw_page.dart';
 import '../../features/completed_ekubs/presentation/completed_ekubs_view.dart';
 import '../../features/faq/presentation/faq_view.dart';
 import '../../controllers/your_ekubs_controller.dart';
@@ -38,6 +39,7 @@ import '../../controllers/in_kind_detail_controller.dart';
 import '../../controllers/payment_controller.dart';
 import '../../controllers/upcoming_payments_controller.dart';
 import '../../controllers/lottery_controller.dart';
+import '../../controllers/lottery_draw_controller.dart';
 import '../../controllers/completed_ekubs_controller.dart';
 import '../../controllers/faq_controller.dart';
 import '../../controllers/set_password_controller.dart';
@@ -50,6 +52,7 @@ import '../widgets/main_wrapper.dart';
 import '../../features/profile/set_password_view.dart';
 import '../../features/create_group/presentation/create_group_view.dart';
 import '../../features/terms/terms_conditions_view.dart';
+import '../../features/privacy/privacy_policy_view.dart';
 
 /// Application route names
 class AppRoutes {
@@ -77,11 +80,13 @@ class AppRoutes {
   static const String upcomingPayments = '/upcoming-payments';
   static const String paymentWebview = '/payment-webview';
   static const String lottery = '/lottery';
+  static const String lotteryDraw = '/lottery-draw';
   static const String completedEkubs = '/completed-ekubs';
   static const String faq = '/faq';
   static const String setPassword = '/set-password';
   static const String createGroup = '/create-group';
   static const String termsConditions = '/terms-conditions';
+  static const String privacyPolicy = '/privacy-policy';
   static const String inKindDetail = '/in-kind-detail';
 }
 
@@ -262,6 +267,15 @@ class AppRouter {
       }),
     ),
     GetPage(
+      name: AppRoutes.lotteryDraw,
+      page: () => const LotteryDrawPage(),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<LotteryDrawController>()) {
+          Get.put(LotteryDrawController());
+        }
+      }),
+    ),
+    GetPage(
       name: AppRoutes.completedEkubs,
       page: () => const CompletedEkubsView(),
       binding: BindingsBuilder(() {
@@ -297,6 +311,10 @@ class AppRouter {
           Get.put(TermsConditionsController());
         }
       }),
+    ),
+    GetPage(
+      name: AppRoutes.privacyPolicy,
+      page: () => const PrivacyPolicyView(),
     ),
   ];
 

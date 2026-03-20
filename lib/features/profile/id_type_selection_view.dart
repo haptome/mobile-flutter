@@ -24,7 +24,7 @@ class IdTypeSelectionView extends StatelessWidget {
           onPressed: () => Get.back(),
         ),
         title: Text(
-          'Select ID Type',
+          'select_id_type'.tr,
           style: AppTextStyles.h3(color: AppColors.black),
         ),
       ),
@@ -35,7 +35,7 @@ class IdTypeSelectionView extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Text(
-                'Choose the type of ID you want to verify',
+                'choose_id_type_desc'.tr,
                 style: AppTextStyles.bodyLarge(color: AppColors.lightTextSecondary),
               ),
             ),

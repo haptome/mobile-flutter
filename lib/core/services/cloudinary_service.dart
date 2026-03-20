@@ -592,7 +592,7 @@ class CloudinaryService extends GetxService {
   /// Perform the actual upload to Cloudinary
   ///
   /// This is a helper method that handles the actual Cloudinary SDK upload
-  /// with progress tracking and transformation parameters.
+  /// with progress tracking.
   ///
   /// [filePath] - Local file path to upload
   /// [folder] - Cloudinary folder path
@@ -609,27 +609,10 @@ class CloudinaryService extends GetxService {
     void Function(int, int)? onProgress,
     Uint8List? fileBytes,
   }) async {
-    // Prepare transformation string based on file type
-    String? transformation;
-    
-    if (fileType == FileType.image) {
-      // For images: auto quality, auto format, max dimensions 2048x2048, limit crop mode
-      transformation = 'q_auto,f_auto,w_${FileValidation.maxImageWidth},h_${FileValidation.maxImageHeight},c_limit';
-    } else if (fileType == FileType.video) {
-      // For videos: auto quality, auto format for video compression
-      transformation = 'q_auto,f_auto';
-    }
-
-    // Create optional parameters map
-    final optParams = <String, dynamic>{
-      'use_filename': false,
-      'unique_filename': true,
-    };
-
-    // Add transformation if specified
-    if (transformation != null) {
-      optParams['transformation'] = transformation;
-    }
+    // Note: Transformations are not included in optParams as they can cause
+    // 400 errors with some Cloudinary SDK versions. Instead, transformations
+    // should be applied via URL when retrieving images, or configured in the
+    // upload preset settings in Cloudinary dashboard.
 
     // Read file bytes if not provided
     late final Uint8List bytes;
@@ -659,7 +642,6 @@ class CloudinaryService extends GetxService {
       folder: folder,
       fileName: filePath.split('/').last,
       progressCallback: onProgress,
-      optParams: optParams,
     );
 
     // Perform the unsigned upload using Cloudinary SDK

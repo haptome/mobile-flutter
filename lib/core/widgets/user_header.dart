@@ -4,6 +4,7 @@
 
 import 'package:et_digital_equb/core/theme/app_sizes.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../theme/app_colors.dart';
 
 class UserHeader extends StatelessWidget {
@@ -77,7 +78,7 @@ class UserHeader extends StatelessWidget {
                 ),
               ),
               child: Text(
-                'Create Group',
+                'create_group'.tr,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 12,

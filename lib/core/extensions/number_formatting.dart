@@ -14,6 +14,12 @@ extension NumberFormatting on num {
   /// @param decimals Number of decimal places (default: 1)
   /// @param threshold Minimum value to format (default: 1000)
   String shorten({int decimals = 1, int threshold = 1000}) {
+    // Handle special numeric values
+    if (!isFinite) {
+      if (isInfinite) return '∞';
+      if (isNaN) return 'N/A';
+    }
+    
     if (this < threshold) {
       return toString();
     }
@@ -39,6 +45,12 @@ extension NumberFormatting on num {
   /// 1000 => "1 K"
   /// 1500000 => "1.5 M"
   String shortenWithSpace({int decimals = 1, int threshold = 1000}) {
+    // Handle special numeric values
+    if (!isFinite) {
+      if (isInfinite) return '∞';
+      if (isNaN) return 'N/A';
+    }
+    
     if (this < threshold) {
       return toString();
     }

@@ -3,6 +3,7 @@
 // Linked Spec Section: FR01-FR03
 
 import 'package:et_digital_equb/core/services/auth_service.dart';
+import 'package:et_digital_equb/core/services/storage_service.dart';
 import 'package:et_digital_equb/core/widgets/country_code_picker.dart';
 import 'package:et_digital_equb/core/utils/device_info.dart';
 import 'package:et_digital_equb/core/routes/app_routes.dart';
@@ -137,7 +138,7 @@ class AuthController extends GetxController {
           response.message ?? 'OTP verified successfully',
           snackPosition: SnackPosition.BOTTOM,
         );
-        Get.offAllNamed('/home');
+        await _navigateAfterAuth();
       } else {
         errorMessage.value = response.error?.message ?? 'Invalid OTP';
         Get.snackbar(
@@ -236,8 +237,8 @@ class AuthController extends GetxController {
           response.message ?? 'Login successful',
           snackPosition: SnackPosition.BOTTOM,
         );
-        // Navigate to home screen
-        Get.offAllNamed('/home');
+        // Navigate to home screen (or pending invitation if one exists)
+        await _navigateAfterAuth();
       } else {
         errorMessage.value = response.error?.message ?? 'Login failed';
         Get.snackbar(
@@ -307,5 +308,28 @@ class AuthController extends GetxController {
     workStatus.value = '';
     errorMessage.value = '';
     isOtpSent.value = false;
+  }
+
+  /// Navigate after successful auth — checks for a pending invitation deep link first
+  Future<void> _navigateAfterAuth() async {
+    final storage = StorageService.to;
+    final pendingGroupId = storage.getString('pending_invitation_group_id');
+    final pendingCode = storage.getString('pending_invitation_code');
+
+    if (pendingGroupId != null && pendingGroupId.isNotEmpty &&
+        pendingCode != null && pendingCode.isNotEmpty) {
+      // Clear the stored pending invitation
+      await storage.saveString('pending_invitation_group_id', '');
+      await storage.saveString('pending_invitation_code', '');
+
+      // Navigate to home first, then push invitation screen on top
+      Get.offAllNamed('/home');
+      Get.toNamed(
+        '/invitation',
+        arguments: {'groupId': pendingGroupId, 'inviteCode': pendingCode},
+      );
+    } else {
+      Get.offAllNamed('/home');
+    }
   }
 }

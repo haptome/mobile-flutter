@@ -74,7 +74,7 @@ class _ProfileViewState extends State<ProfileView> {
                             profileImageUrl: user['profileImageUrl'] as String?,
                             userName: user['name'] ?? 'user_name'.tr,
                             phoneNumber: user['phone'] ?? '',
-                            idNumber: user['idNumber'] ?? '',
+                            
                             location: user['location'] ?? '',
                             level: user['level'] ?? '1',
                             onEditProfile: controller.onEditProfile,
@@ -135,6 +135,11 @@ class _ProfileViewState extends State<ProfileView> {
                         icon: Iconsax.document_text_1,
                         label: 'terms_conditions'.tr,
                         onTap: controller.onTermsConditionsTap,
+                      ),
+                      SectionItem(
+                        icon: Iconsax.shield_tick,
+                        label: 'privacy_policy'.tr,
+                        onTap: controller.onPrivacyPolicyTap,
                       ),
                       SectionItem(
                         icon: Icons.help_outline,

@@ -13,7 +13,7 @@ import '../../core/utils/security_utils.dart';
 import 'widgets/camera_frame_overlay.dart';
 import 'widgets/instruction_overlay.dart';
 import 'widgets/success_animation.dart';
-import 'liveness_check_view.dart';
+import 'id_card_confirmation_view.dart';
 
 class IdCaptureView extends StatefulWidget {
   final IDType idType;
@@ -51,8 +51,8 @@ class _IdCaptureViewState extends State<IdCaptureView>
       // Services not available (likely running on web)
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Get.snackbar(
-          'Platform Not Supported',
-          'Camera features are only available on mobile devices',
+          'platform_not_supported'.tr,
+          'camera_mobile_only'.tr,
           backgroundColor: Colors.red,
           colorText: Colors.white,
           snackPosition: SnackPosition.TOP,
@@ -90,8 +90,20 @@ class _IdCaptureViewState extends State<IdCaptureView>
           IDTypeInfo.fromType(widget.idType).requiresBackSide) {
         // Controller will handle switching to back side automatically
       } else {
-        // All sides captured, navigate to liveness check
-        Get.off(() => const LivenessCheckView());
+        // All sides captured, navigate to confirmation screen
+        final captureResult = controller!.isFrontSide.value 
+            ? controller!.frontCaptureResult.value 
+            : controller!.backCaptureResult.value;
+            
+        if (captureResult != null) {
+          // Dispose camera before navigating
+          controller!.onClose();
+          
+          Get.off(() => IdCardConfirmationView(
+            imagePath: captureResult.path,
+            verificationMethod: 'id_card',
+          ));
+        }
       }
     });
   }
@@ -100,7 +112,7 @@ class _IdCaptureViewState extends State<IdCaptureView>
     if (controller == null) return;
     
     Get.snackbar(
-      'Capture Failed',
+      'capture_failed'.tr,
       controller!.errorMessage.value,
       backgroundColor: Colors.red,
       colorText: Colors.white,
@@ -239,7 +251,7 @@ class _IdCaptureViewState extends State<IdCaptureView>
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Tap to capture manually',
+                        'tap_capture_manually'.tr,
                         style: AppTextStyles.bodySmall(color: Colors.white),
                       ),
                     ],

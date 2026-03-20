@@ -47,7 +47,7 @@ class FormFieldWidget extends StatelessWidget {
         GestureDetector(
           onTap: isDropdown ? onTap : null,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 14),
             decoration: isDropdown
                 ? BoxDecoration(
                     color: AppColors.white,

@@ -59,7 +59,7 @@ class _DurationViewState extends State<DurationView> {
                                 const SizedBox(height: 16),
                                 ElevatedButton(
                                   onPressed: () => _controller.loadGroups(),
-                                  child: const Text('Retry'),
+                                  child: Text('retry'.tr),
                                 ),
                               ],
                             ),
@@ -67,11 +67,11 @@ class _DurationViewState extends State<DurationView> {
                         );
                       }
                       if (_controller.filteredGroups.isEmpty) {
-                        return const Padding(
+                        return Padding(
                           padding: EdgeInsets.all(AppSizes.paddingLarge),
                           child: Center(
                             child: Text(
-                              'No groups found for selected duration.',
+                              'no_groups_found_duration'.tr,
                             ),
                           ),
                         );
@@ -107,7 +107,7 @@ class _DurationViewState extends State<DurationView> {
               ),
               const SizedBox(width: AppSizes.spacingSmall),
               Text(
-                'Duration',
+                'duration_label'.tr,
                 style: GoogleFonts.montserrat(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -139,7 +139,7 @@ class _DurationViewState extends State<DurationView> {
           // All option
           Expanded(
             child: _buildFrequencyCard(
-              'All',
+              'all'.tr,
               counts.values.fold(0, (sum, count) => sum + count),
               isSelected: _controller.selectedFrequency.value == 'all',
               onTap: () => _controller.onFrequencyTap('all'),

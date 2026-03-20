@@ -77,6 +77,13 @@ class CameraService extends GetxService {
     bool enableAudio = false,
   }) async {
     try {
+      // Dispose any existing controller first
+      if (_controller != null) {
+        dispose();
+        // Longer delay to ensure camera is fully released (especially on Android)
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+
       // Get available cameras
       final cameras = await availableCameras();
       
@@ -90,6 +97,8 @@ class CameraService extends GetxService {
         orElse: () => cameras.first,
       );
 
+      print('[CameraService] Initializing camera: ${camera.name}, direction: ${camera.lensDirection}');
+
       // Create camera controller
       _controller = CameraController(
         camera,
@@ -100,6 +109,8 @@ class CameraService extends GetxService {
 
       // Initialize controller
       await _controller!.initialize();
+      
+      print('[CameraService] Camera initialized successfully: ${_controller!.value.isInitialized}');
 
       // Start frame streaming
       _startFrameStreaming();
@@ -107,6 +118,7 @@ class CameraService extends GetxService {
       // Start FPS tracking
       _startFpsTracking();
     } catch (e) {
+      print('[CameraService] Error initializing camera: $e');
       throw Exception('Failed to initialize camera: $e');
     }
   }

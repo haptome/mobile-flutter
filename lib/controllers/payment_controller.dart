@@ -173,41 +173,82 @@ class PaymentController extends GetxController {
       
       // Extract error message from response if available
       String errorMessage = 'Failed to process payment';
+      bool isDisqualified = false;
+      bool showRetryButton = true;
       
+      // Check if this is a DioException with response data
       if (e.toString().contains('DioException') || e.toString().contains('DioError')) {
-        // Try to extract the actual error message
-        if (e.toString().contains('Invalid API Key') || 
-            e.toString().contains('business can\'t accept payments')) {
+        // Try to parse the actual error message from the response
+        final errorString = e.toString();
+        
+        // Check for disqualification error
+        if (errorString.toLowerCase().contains('disqualified') ||
+            errorString.toLowerCase().contains('permanently disqualified')) {
+          isDisqualified = true;
+          showRetryButton = false;
+          errorMessage = 'You have been permanently disqualified from this group due to missed payments. You cannot make any future payments.';
+        }
+        // Other error handling
+        else if (errorString.contains('Invalid API Key') || 
+            errorString.contains('business can\'t accept payments')) {
           errorMessage = 'Payment service is temporarily unavailable. Please contact support or try again later.';
-        } else if (e.toString().contains('400')) {
+        } else if (errorString.contains('400')) {
           errorMessage = 'Invalid payment request. Please check your details and try again.';
-        } else if (e.toString().contains('401') || e.toString().contains('403')) {
+        } else if (errorString.contains('401') || errorString.contains('403')) {
           errorMessage = 'Payment authorization failed. Please login again.';
-        } else if (e.toString().contains('404')) {
+        } else if (errorString.contains('404')) {
           errorMessage = 'Payment service not found. Please contact support.';
-        } else if (e.toString().contains('500') || e.toString().contains('502') || e.toString().contains('503')) {
+        } else if (errorString.contains('500') || errorString.contains('502') || errorString.contains('503')) {
           errorMessage = 'Payment server error. Please try again later.';
-        } else if (e.toString().contains('timeout') || e.toString().contains('connection')) {
+        } else if (errorString.contains('timeout') || errorString.contains('connection')) {
           errorMessage = 'Connection timeout. Please check your internet and try again.';
         }
       }
       
-      Get.snackbar(
-        'Payment Error',
-        errorMessage,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 5),
-        mainButton: TextButton(
-          onPressed: () {
-            Get.back(); // Close snackbar
-            // Optionally retry
-            proceedToPayment(method, groupId, amount, cycleNumber: cycleNumber);
-          },
-          child: const Text('Retry', style: TextStyle(color: Colors.white)),
-        ),
-      );
+      // Show appropriate error message
+      if (isDisqualified) {
+        // Special handling for disqualified members - use dialog for emphasis
+        Get.dialog(
+          AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.block, color: Colors.red),
+                SizedBox(width: 8),
+                Text('Account Disqualified'),
+              ],
+            ),
+            content: Text(errorMessage),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Get.back(); // Close dialog
+                  Get.back(); // Close payment sheet
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+          barrierDismissible: false,
+        );
+      } else {
+        // Generic error handling with optional retry
+        Get.snackbar(
+          'Payment Error',
+          errorMessage,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 5),
+          mainButton: showRetryButton ? TextButton(
+            onPressed: () {
+              Get.back(); // Close snackbar
+              // Retry payment
+              proceedToPayment(method, groupId, amount, cycleNumber: cycleNumber);
+            },
+            child: const Text('Retry', style: TextStyle(color: Colors.white)),
+          ) : null,
+        );
+      }
     } finally {
       isLoading.value = false;
     }

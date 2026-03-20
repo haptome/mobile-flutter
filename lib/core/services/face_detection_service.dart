@@ -114,6 +114,8 @@ class FaceDetectionService extends GetxService {
       // Determine if face is frontal (within ±10 degrees)
       final isFrontal = yaw.abs() <= 10 && pitch.abs() <= 10;
 
+      print('[FaceDetectionService] Face detected - yaw: $yaw, pitch: $pitch, isFrontal: $isFrontal, leftEye: $leftEyeOpen, rightEye: $rightEyeOpen');
+
       // Create face detection result
       return FaceDetectionResult(
         faceBounds: face.boundingBox,

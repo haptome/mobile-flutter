@@ -10,7 +10,6 @@ class ProfileUserCard extends StatelessWidget {
   final String? profileImageUrl;
   final String userName;
   final String phoneNumber;
-  final String idNumber;
   final String location;
   final String level;
   final VoidCallback? onEditProfile;
@@ -20,7 +19,6 @@ class ProfileUserCard extends StatelessWidget {
     this.profileImageUrl,
     required this.userName,
     required this.phoneNumber,
-    required this.idNumber,
     required this.location,
     required this.level,
     this.onEditProfile,
@@ -139,14 +137,14 @@ class ProfileUserCard extends StatelessWidget {
                         color: AppColors.textLightGray,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${'id'.tr}: $idNumber',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textLightGray,
-                      ),
-                    ),
+                    // const SizedBox(height: 4),
+                    // Text(
+                    //   '${'id'.tr}: $idNumber',
+                    //   style: const TextStyle(
+                    //     fontSize: 14,
+                    //     color: AppColors.textLightGray,
+                    //   ),
+                    // ),
                     const SizedBox(height: 4),
                     Text(
                       location,

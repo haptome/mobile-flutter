@@ -1,3 +1,4 @@
+import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
@@ -111,7 +112,7 @@ class GroupCard extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   child: ElevatedButton(
                     onPressed: onTap,
-                    child: const Text('View'),
+                    child: Text('view'.tr),
                   ),
                 ),
               ],

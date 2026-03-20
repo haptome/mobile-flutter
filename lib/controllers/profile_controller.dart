@@ -248,13 +248,25 @@ class ProfileController extends GetxController {
           );
         }
       } else {
+        // Get detailed error message
+        final errorMessage = uploadResult.error?.userMessage ?? 
+                           uploadResult.error?.message ?? 
+                           'Failed to upload image';
+        
         Get.snackbar(
           'Error',
-          uploadResult.error?.userMessage ?? 'Failed to upload image',
+          errorMessage,
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red,
           colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
+        
+        // Log the error for debugging
+        print('[ProfileController] Upload failed: ${uploadResult.error?.code} - ${uploadResult.error?.message}');
+        if (uploadResult.error?.details != null) {
+          print('[ProfileController] Error details: ${uploadResult.error?.details}');
+        }
       }
     } catch (e) {
       Get.snackbar(
@@ -307,6 +319,10 @@ class ProfileController extends GetxController {
 
   void onTermsConditionsTap() {
     Get.toNamed(AppRoutes.termsConditions);
+  }
+
+  void onPrivacyPolicyTap() {
+    Get.toNamed(AppRoutes.privacyPolicy);
   }
 
   void onFaqTap() {

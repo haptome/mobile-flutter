@@ -3,6 +3,7 @@
 // Linked Spec Section: KYC Liveness Detection
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -43,8 +44,8 @@ class _LivenessVideoViewState extends State<LivenessVideoView> {
       if (!permissionsGranted) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Camera and storage permissions are required to record videos'),
+            SnackBar(
+              content: Text('camera_storage_video_permissions'.tr),
               backgroundColor: Colors.red,
             ),
           );
@@ -57,7 +58,7 @@ class _LivenessVideoViewState extends State<LivenessVideoView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Permission error: ' + e.toString())),
+          SnackBar(content: Text('permission_error'.tr + ': ' + e.toString())),
         );
       }
     }
@@ -88,7 +89,7 @@ class _LivenessVideoViewState extends State<LivenessVideoView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error initializing camera: $e')),
+          SnackBar(content: Text('error_initializing_camera'.tr + ': $e')),
         );
       }
     }
@@ -125,7 +126,7 @@ class _LivenessVideoViewState extends State<LivenessVideoView> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error starting recording: $e')));
+        ).showSnackBar(SnackBar(content: Text('error_starting_recording'.tr + ': $e')));
       }
     }
   }
@@ -150,7 +151,7 @@ class _LivenessVideoViewState extends State<LivenessVideoView> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error stopping recording: $e')));
+        ).showSnackBar(SnackBar(content: Text('error_stopping_recording'.tr + ': $e')));
       }
     }
   }
@@ -224,7 +225,7 @@ class _LivenessVideoViewState extends State<LivenessVideoView> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Liveness Check',
+                                'liveness_check'.tr,
                                 style: GoogleFonts.montserrat(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -234,8 +235,8 @@ class _LivenessVideoViewState extends State<LivenessVideoView> {
                               const SizedBox(height: 4),
                               Text(
                                 _isRecording
-                                    ? 'Recording... Please follow the instructions'
-                                    : 'Record a short video of yourself',
+                                    ? 'recording_follow_instructions'.tr
+                                    : 'record_short_video'.tr,
                                 style: AppTextStyles.bodyMedium(
                                   color: Colors.white.withOpacity(0.9),
                                 ),

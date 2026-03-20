@@ -8,6 +8,7 @@ import 'package:et_digital_equb/core/services/api_service.dart';
 import 'package:et_digital_equb/core/services/storage_service.dart';
 import 'package:et_digital_equb/models/category_model.dart' as category_models;
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeController extends GetxController {
   final AuthService _authService = AuthService.to;
@@ -217,10 +218,6 @@ class HomeController extends GetxController {
       
       final response = await _apiService.dio.get(
         '/users/marketing/campaigns',
-        queryParameters: {
-          'status': 'active',
-          'limit': 10,
-        },
       );
 
       print('HomeController.loadMarketingCampaigns - Response: ${response.statusCode}');
@@ -231,12 +228,12 @@ class HomeController extends GetxController {
           marketingCampaigns.value = campaigns.map((campaign) {
             return {
               'id': campaign['id'],
-              'title': campaign['title'] ?? '',
-              'description': campaign['description'] ?? '',
-              'image_url': campaign['image_url'] ?? '',
-              'link_url': campaign['link_url'] ?? '',
-              'start_date': campaign['start_date'],
-              'end_date': campaign['end_date'],
+              'title': campaign['name'] ?? '',
+              'description': campaign['name'] ?? '', // Use name as description fallback
+              'image_url': campaign['imagelink'] ?? '',
+              'link_url': campaign['link'] ?? '',
+              'created_at': campaign['created_at'],
+              'creator_name': campaign['creator_name'] ?? '',
             };
           }).toList();
           print('HomeController.loadMarketingCampaigns - Loaded ${marketingCampaigns.length} campaigns');
@@ -254,13 +251,31 @@ class HomeController extends GetxController {
     }
   }
 
-  void onCampaignTap(Map<String, dynamic> campaign) {
+  void onCampaignTap(Map<String, dynamic> campaign) async {
     final linkUrl = campaign['link_url'] as String?;
     if (linkUrl != null && linkUrl.isNotEmpty) {
-      // Navigate to link or open in browser
-      print('Campaign tapped: $linkUrl');
-      // You can use url_launcher to open external links
-      // or navigate to internal routes
+      try {
+        final uri = Uri.parse(linkUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(
+            uri,
+            mode: LaunchMode.externalApplication,
+          );
+        } else {
+          Get.snackbar(
+            'error'.tr,
+            'cannot_open_link'.tr,
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
+      } catch (e) {
+        print('Error launching URL: $e');
+        Get.snackbar(
+          'error'.tr,
+          'invalid_link'.tr,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
     }
   }
 }
