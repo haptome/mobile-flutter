@@ -175,20 +175,27 @@ class HomeController extends GetxController {
         limit: 100, // Get more groups to count frequencies
       );
 
+      print('HomeController.loadDurationGroups - Response: ${response.success}, message: ${response.message}');
+
       if (response.success && response.data != null) {
         final groups = response.data!;
+        print('HomeController.loadDurationGroups - Got ${groups.length} groups');
         final counts = <String, int>{};
 
         // Count groups by frequency
         for (var group in groups) {
           final frequency = group.frequency.toLowerCase();
+          print('HomeController.loadDurationGroups - Group ${group.name} frequency: $frequency');
           counts[frequency] = (counts[frequency] ?? 0) + 1;
         }
 
+        print('HomeController.loadDurationGroups - Counts: $counts');
         durationGroupsCount.value = counts;
+      } else {
+        print('HomeController.loadDurationGroups - Failed or no data: ${response.message}');
       }
     } catch (e) {
-      // Silently handle error
+      print('HomeController.loadDurationGroups - Error: $e');
     } finally {
       isLoadingDuration.value = false;
     }

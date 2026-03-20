@@ -80,14 +80,14 @@ class Group {
       leaderId: json['leader_id'] as String?,
       categoryId: json['category_id'] as String?,
       contributionAmount: parseDouble(json['contribution_amount']),
-      frequency: json['frequency'] as String,
+      frequency: (json['frequency'] as String? ?? '').toLowerCase(),
       minMembers: parseInt(json['min_members']),
       targetMembers: parseInt(json['target_members']),
       currentMembers: parseInt(json['current_members']),
       startDate: json['start_date'] != null
           ? DateTime.parse(json['start_date'] as String)
           : null,
-      rotationMethod: json['rotation_method'] as String,
+      rotationMethod: json['rotation_method'] as String? ?? '',
       serviceChargePercent: parseDouble(json['service_charge_percent']),
       status: json['status'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),

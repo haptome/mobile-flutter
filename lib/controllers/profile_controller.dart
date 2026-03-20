@@ -329,6 +329,10 @@ class ProfileController extends GetxController {
     Get.toNamed(AppRoutes.faq);
   }
 
+  void onAboutTap() {
+    Get.toNamed(AppRoutes.about);
+  }
+
   void onLogout() {
     Get.dialog(
       AlertDialog(

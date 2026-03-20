@@ -37,7 +37,7 @@ class GroupDetailController extends GetxController {
   /// Uses lottery number for public announcements, real name for personalized messages
   String _formatWinnerAnnouncement(Map<String, dynamic> winnerData) {
     final userName = winnerData['user_name'] as String? ?? 'Unknown';
-    final lotteryNumber = winnerData['lottery_number'] as String?;
+    final lotteryNumber = winnerData['lottery_number']?.toString();
     
     // For public announcements, use lottery number if available
     // This maintains privacy while still showing winner information
@@ -143,7 +143,7 @@ class GroupDetailController extends GetxController {
             historyList.add({
               'action': _formatWinnerAnnouncement(winnerMap),
               'winner_name': winnerMap['user_name'] ?? 'Unknown',
-              'lottery_number': winnerMap['lottery_number'],
+              'lottery_number': winnerMap['lottery_number']?.toString(),
               'date': DateTime.parse(
                 winnerMap['payout_date'],
               ).toString().split(' ')[0],
@@ -197,7 +197,7 @@ class GroupDetailController extends GetxController {
       final numbers = <String>[];
       for (final member in membersWithPaymentStatus) {
         if (member is Map<String, dynamic>) {
-          final lotteryNumber = member['lottery_number'] as String?;
+          final lotteryNumber = member['lottery_number']?.toString();
           if (lotteryNumber != null && lotteryNumber.isNotEmpty) {
             numbers.add(lotteryNumber);
           }
@@ -296,7 +296,7 @@ class GroupDetailController extends GetxController {
             historyList.add({
               'action': _formatWinnerAnnouncement(winnerMap),
               'winner_name': winnerMap['user_name'] ?? 'Unknown',
-              'lottery_number': winnerMap['lottery_number'],
+              'lottery_number': winnerMap['lottery_number']?.toString(),
               'date': DateTime.parse(
                 winnerMap['payout_date'],
               ).toString().split(' ')[0],

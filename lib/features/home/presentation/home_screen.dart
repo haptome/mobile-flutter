@@ -23,7 +23,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final HomeController _homeController;
   PageController? _carouselController;
-  int _currentCarouselIndex = 0;
+  final RxInt _currentCarouselIndex = 0.obs;
   Timer? _carouselTimer;
 
   @override
@@ -53,24 +53,15 @@ class _HomeScreenState extends State<HomeScreen> {
       if (_carouselController != null && _carouselController!.hasClients) {
         final campaigns = _homeController.marketingCampaigns;
         if (campaigns.isEmpty) return;
-        
-        // Only auto-scroll if user hasn't interacted recently
-        if (_carouselController!.page?.round() == _currentCarouselIndex) {
-          int nextIndex = (_currentCarouselIndex + 1) % campaigns.length;
-          _carouselController!
-              .animateToPage(
-                nextIndex,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              )
-              .then((_) {
-                // Update the current index only after animation completes
-                if (mounted) {
-                  setState(() {
-                    _currentCarouselIndex = nextIndex;
-                  });
-                }
-              });
+
+        if (_carouselController!.page?.round() == _currentCarouselIndex.value) {
+          int nextIndex = (_currentCarouselIndex.value + 1) % campaigns.length;
+          _carouselController!.animateToPage(
+            nextIndex,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+          _currentCarouselIndex.value = nextIndex;
         }
       }
     });
@@ -79,10 +70,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onPageChanged() {
     if (_carouselController != null && _carouselController!.hasClients) {
       int currentPage = _carouselController!.page?.round() ?? 0;
-      if (currentPage != _currentCarouselIndex) {
-        setState(() {
-          _currentCarouselIndex = currentPage;
-        });
+      if (currentPage != _currentCarouselIndex.value) {
+        _currentCarouselIndex.value = currentPage;
       }
     }
   }
@@ -476,7 +465,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: PageView.builder(
                   controller: _carouselController,
                   onPageChanged: (index) {
-                    _currentCarouselIndex = index;
+                    _currentCarouselIndex.value = index;
                   },
                   itemCount: fallbackImages.length,
                   itemBuilder: (context, index) {
@@ -509,7 +498,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
                   fallbackImages.length,
-                  (index) => _buildDot(isActive: index == _currentCarouselIndex),
+                  (index) => Obx(() => _buildDot(isActive: index == _currentCarouselIndex.value)),
                 ),
               ),
             ],
@@ -531,16 +520,12 @@ class _HomeScreenState extends State<HomeScreen> {
               child: PageView.builder(
                 controller: _carouselController,
                 onPageChanged: (index) {
-                  _currentCarouselIndex = index;
+                  _currentCarouselIndex.value = index;
                 },
                 itemCount: campaigns.length,
                 itemBuilder: (context, index) {
                   final campaign = campaigns[index];
                   final imageUrl = campaign['image_url'] as String? ?? '';
-                  print ('===================================');
-                  print ('Loading data: $campaign');
-                  print ('Loading image: $imageUrl');
-                  print ('====================================');
                   
                   return GestureDetector(
                     onTap: () => _homeController.onCampaignTap(campaign),
@@ -636,7 +621,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
                 campaigns.length,
-                (index) => _buildDot(isActive: index == _currentCarouselIndex),
+                (index) => Obx(() => _buildDot(isActive: index == _currentCarouselIndex.value)),
               ),
             ),
           ],

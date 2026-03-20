@@ -146,6 +146,13 @@ class _ProfileViewState extends State<ProfileView> {
                         label: 'faq'.tr,
                         onTap: controller.onFaqTap,
                       ),
+                      // About Section
+                      SectionHeader(title: 'about_app'.tr),
+                      SectionItem(
+                        icon: Iconsax.info_circle,
+                        label: 'about_app'.tr,
+                        onTap: controller.onAboutTap,
+                      ),
                       // Logout Button
                       LogoutButton(onLogout: controller.onLogout),
                       const SizedBox(height: 16),

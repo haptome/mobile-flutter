@@ -53,6 +53,8 @@ import '../../features/profile/set_password_view.dart';
 import '../../features/create_group/presentation/create_group_view.dart';
 import '../../features/terms/terms_conditions_view.dart';
 import '../../features/privacy/privacy_policy_view.dart';
+import '../../features/profile/about_view.dart';
+import '../../controllers/privacy_policy_controller.dart';
 
 /// Application route names
 class AppRoutes {
@@ -88,6 +90,7 @@ class AppRoutes {
   static const String termsConditions = '/terms-conditions';
   static const String privacyPolicy = '/privacy-policy';
   static const String inKindDetail = '/in-kind-detail';
+  static const String about = '/about';
 }
 
 /// Route configuration for the app
@@ -315,6 +318,15 @@ class AppRouter {
     GetPage(
       name: AppRoutes.privacyPolicy,
       page: () => const PrivacyPolicyView(),
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<PrivacyPolicyController>()) {
+          Get.put(PrivacyPolicyController());
+        }
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.about,
+      page: () => const AboutView(),
     ),
   ];
 

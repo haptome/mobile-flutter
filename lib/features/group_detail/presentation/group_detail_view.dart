@@ -319,7 +319,7 @@ class GroupDetailView extends StatelessWidget {
                       const SizedBox(height: 12),
                       ...recentWinners.map((winner) {
                         final winnerMap = winner as Map<String, dynamic>;
-                        final lotteryNumber = winnerMap['lottery_number'] as String?;
+                        final lotteryNumber = winnerMap['lottery_number']?.toString();
                         final cycleNumber = winnerMap['cycle_number'] ?? 0;
                         final amount = winnerMap['amount'] ?? 0;
                         final date = winnerMap['date'] ?? '';
@@ -1003,12 +1003,12 @@ class GroupDetailView extends StatelessWidget {
                                                   // Show lottery number if group is started and lottery number exists
                                                   if (shouldShowLotteryNumber(group?.status, 
                                                       (member is Map<String, dynamic>) 
-                                                          ? member['lottery_number'] as String?
+                                                          ? member['lottery_number']?.toString()
                                                           : member.lotteryNumber)) ...[
                                                     const SizedBox(width: 8),
                                                     LotteryNumberBadge(
                                                       lotteryNumber: (member is Map<String, dynamic>) 
-                                                          ? member['lottery_number'] as String
+                                                          ? member['lottery_number']?.toString() ?? ''
                                                           : member.lotteryNumber!,
                                                     ),
                                                   ],
