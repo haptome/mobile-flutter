@@ -48,18 +48,33 @@ class DeepLinkService extends GetxService {
   }
 
   /// Check for initial deep link when app launches
+  /// Stores the link — navigation happens after splash completes via [processPendingLink]
   Future<void> _checkInitialLink() async {
     try {
       final initialLink = await _appLinks.getInitialLink();
       if (initialLink != null) {
-        _handleDeepLink(initialLink);
+        final linkModel = _parseDeepLink(initialLink);
+        if (linkModel != null) {
+          _currentLink.value = linkModel;
+          // Don't navigate yet — splash will call processPendingLink after navigating to home
+        }
       }
     } catch (e) {
       print('Failed to get initial link: $e');
     }
   }
 
-  /// Handle incoming deep link URI
+  /// Called by splash screen after it has navigated to home/login.
+  /// Processes any deep link that arrived during cold start.
+  void processPendingLink() {
+    final link = _currentLink.value;
+    if (link != null) {
+      _currentLink.value = null;
+      _routeToDestination(link);
+    }
+  }
+
+  /// Handle incoming deep link URI (app already running)
   void _handleDeepLink(Uri? uri) {
     if (uri == null) return;
 
@@ -103,7 +118,8 @@ class DeepLinkService extends GetxService {
             type: DeepLinkType.invitation,
             path: uri.path,
             parameters: uri.queryParameters,
-            groupId: uri.queryParameters['groupId'],
+            // Support both etequb://invite/<groupId> and etequb://invite?groupId=<id>
+            groupId: path.length > 1 ? path[1] : uri.queryParameters['groupId'],
             inviteCode: uri.queryParameters['code'],
           );
 
@@ -210,10 +226,8 @@ class DeepLinkService extends GetxService {
   /// Handle invitation links
   void _handleInvitationLink(DeepLinkModel link) {
     final groupId = link.groupId;
-    final inviteCode = link.inviteCode;
 
-    if (groupId == null || inviteCode == null) {
-      // Invalid invitation link
+    if (groupId == null) {
       Get.snackbar(
         'Invalid Link',
         'This invitation link is invalid or expired.',
@@ -226,26 +240,24 @@ class DeepLinkService extends GetxService {
     final authService = AuthService.to;
     final storageService = StorageService.to;
     if (!authService.isAuthenticated.value) {
-      // Store the invitation data for after login
+      // Store the group id for after login
       storageService.saveString('pending_invitation_group_id', groupId);
-      storageService.saveString('pending_invitation_code', inviteCode);
 
       // Navigate to login
       Get.offAllNamed(AppRoutes.login);
 
       Get.snackbar(
         'Invitation Received',
-        'Please log in to accept this invitation.',
+        'Please log in to join this group.',
         snackPosition: SnackPosition.BOTTOM,
       );
       return;
     }
 
-    // User is authenticated, navigate to invitation screen
-    Get.toNamed(
-      '/invitation',
-      arguments: {'groupId': groupId, 'inviteCode': inviteCode},
-    );
+    // Small delay to ensure navigator is ready (app may be resuming from background)
+    Future.delayed(const Duration(milliseconds: 300), () {
+      Get.toNamed(AppRoutes.groupInvite, arguments: {'groupId': groupId});
+    });
   }
 
   /// Handle group detail links
@@ -295,14 +307,9 @@ class DeepLinkService extends GetxService {
     );
   }
 
-  /// Generate invitation link for sharing
-  String generateInvitationLink(String groupId, String inviteCode) {
-    return 'etequb://invite?groupId=$groupId&code=$inviteCode';
-  }
-
-  /// Generate universal link for invitation
-  String generateUniversalInvitationLink(String groupId, String inviteCode) {
-    return 'https://etequb.com/invite/$groupId?code=$inviteCode';
+  /// Generate invitation link for sharing (custom scheme — always opens the app)
+  String generateInvitationLink(String groupId) {
+    return 'etequb://invite/$groupId';
   }
 
   /// Launch URL (for sharing invitation links)

@@ -55,6 +55,7 @@ import '../../features/terms/terms_conditions_view.dart';
 import '../../features/privacy/privacy_policy_view.dart';
 import '../../features/profile/about_view.dart';
 import '../../controllers/privacy_policy_controller.dart';
+import '../../features/group_invite/presentation/group_invite_view.dart';
 
 /// Application route names
 class AppRoutes {
@@ -91,6 +92,7 @@ class AppRoutes {
   static const String privacyPolicy = '/privacy-policy';
   static const String inKindDetail = '/in-kind-detail';
   static const String about = '/about';
+  static const String groupInvite = '/group-invite';
 }
 
 /// Route configuration for the app
@@ -327,6 +329,10 @@ class AppRouter {
     GetPage(
       name: AppRoutes.about,
       page: () => const AboutView(),
+    ),
+    GetPage(
+      name: AppRoutes.groupInvite,
+      page: () => const GroupInviteView(),
     ),
   ];
 

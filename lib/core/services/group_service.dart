@@ -485,21 +485,11 @@ class GroupService extends GetxService {
 
   /// Generate an invite link for a group
   Future<ApiResponse<String>> generateInviteLink(String groupId) async {
-    try {
-      // For now, we'll return a mock invite link
-      // In the future, this will call the actual backend endpoint
-      return ApiResponse<String>(
-        success: true,
-        data: 'https://et-ekub.com/join-group/$groupId',
-        message: 'Invite link generated successfully',
-      );
-    } catch (e) {
-      return ApiResponse<String>(
-        success: false,
-        data: null,
-        message: 'Failed to generate invite link',
-      );
-    }
+    return ApiResponse<String>(
+      success: true,
+      data: 'https://etequb.com/invite/$groupId',
+      message: 'Invite link generated successfully',
+    );
   }
 
   /// Get comprehensive group history

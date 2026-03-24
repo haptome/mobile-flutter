@@ -114,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             );
             // Navigate to home screen
-            Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+            Get.offAllNamed(AppRoutes.home);
           } else {
             // Show error message
             ScaffoldMessenger.of(context).showSnackBar(

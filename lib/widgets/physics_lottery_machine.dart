@@ -334,38 +334,38 @@ class _PhysicsLotteryMachineState extends State<PhysicsLotteryMachine>
               // ),
               
               // Premium machine top
-              Positioned(
-                top: 0,
-                child: Container(
-                  width: 80,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(40),
-                    ),
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.white.withValues(alpha: 0.9),
-                        Colors.grey.shade300,
-                        Colors.grey.shade600,
-                      ],
-                    ),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              // Positioned(
+              //   top: 0,
+              //   child: Container(
+              //     width: 80,
+              //     height: 50,
+              //     decoration: BoxDecoration(
+              //       borderRadius: const BorderRadius.vertical(
+              //         top: Radius.circular(40),
+              //       ),
+              //       gradient: LinearGradient(
+              //         begin: Alignment.topCenter,
+              //         end: Alignment.bottomCenter,
+              //         colors: [
+              //           Colors.white.withValues(alpha: 0.9),
+              //           Colors.grey.shade300,
+              //           Colors.grey.shade600,
+              //         ],
+              //       ),
+              //       border: Border.all(
+              //         color: Colors.white.withValues(alpha: 0.5),
+              //         width: 2,
+              //       ),
+              //       boxShadow: [
+              //         BoxShadow(
+              //           color: Colors.white.withValues(alpha: 0.3),
+              //           blurRadius: 10,
+              //           spreadRadius: 2,
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
               
               // Premium machine base
               Positioned(
@@ -399,26 +399,7 @@ class _PhysicsLotteryMachineState extends State<PhysicsLotteryMachine>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'PHYSICS LOTTERY',
-                        style: GoogleFonts.orbitron(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.amber,
-                          letterSpacing: 3,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'MACHINE',
-                        style: GoogleFonts.orbitron(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white70,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+                      
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

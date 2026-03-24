@@ -39,6 +39,7 @@ import 'core/services/image_quality_service.dart';
 import 'core/services/face_detection_service.dart';
 import 'core/services/liveness_detection_service.dart';
 import 'core/utils/app_signature_helper.dart';
+import 'core/utils/device_info.dart';
 import 'config/cloudinary_config.dart';
 import 'translations/app_translations.dart';
 
@@ -73,6 +74,9 @@ void main() async {
   // Initialize services before running the app
   final storageService = Get.put(StorageService(), permanent: true);
   await storageService.init();
+
+  // Pre-warm device ID cache so getDeviceId() is ready synchronously
+  await DeviceInfo.getDeviceIdAsync();
 
   final apiService = Get.put(ApiService(), permanent: true);
   await apiService.init();

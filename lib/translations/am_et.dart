@@ -783,5 +783,16 @@ const Map<String, String> amET = {
   'pre_draw_notification_body': 'ለ{groupName} የዑደት {cycleNumber} ስዕል 5 ደቂቃ ቀረ። ቀጥታ ለማየት ይንኩ!',
   'drawing_starts_in': 'ስዕል የሚጀምረው በ',
   'get_ready_message': 'አሸናፊውን ለማየት ዝግጁ ይሁኑ!',
+
+  // Transaction Card
+  'deposit': 'ገቢ',
+  'withdrawal': 'ወጪ',
+  'failed': 'ያልተሳካ',
+  'rewards': 'ሽልማት',
+  'equb_name_colon': 'የእቁብ ስም:',
+  'date_colon': 'ቀን:',
+  'transaction_id_colon': 'የግብይት መለያ:',
+  'rounds_colon': 'ዙሮች:',
+  'amount_colon': 'መጠን:',
 };
 

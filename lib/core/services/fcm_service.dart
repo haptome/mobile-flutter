@@ -126,11 +126,7 @@ class FcmService extends GetxService {
         debugPrint('FCM Token: $token');
         debugPrint('====================================================');
 
-        // Save token to storage
-        final storage = StorageService.to;
-        await storage.saveFcmToken(token);
-
-        // Send token to backend
+        // Send token to backend (saves to storage only if changed)
         await _sendTokenToServer(token);
       }
     } catch (e) {
@@ -144,17 +140,26 @@ class FcmService extends GetxService {
   /// Send FCM token to backend server
   Future<void> _sendTokenToServer(String token) async {
     try {
+      // Skip if token hasn't changed since last successful upload
+      final storage = StorageService.to;
+      final lastSentToken = await storage.getFcmToken();
+      if (lastSentToken == token) {
+        debugPrint('FCM token unchanged, skipping server update');
+        return;
+      }
+
       final apiService = ApiService.to;
-      
-      // Use the correct endpoint that matches the backend
       await apiService.userDio.put(
         '/users/me/fcm-token',
         data: {'fcm_token': token, 'device_type': _getDeviceType()},
       );
+
+      // Persist the token we just sent so we can skip next time
+      await storage.saveFcmToken(token);
       debugPrint('FCM token sent to server successfully');
     } catch (e) {
       debugPrint('Error sending FCM token to server: $e');
-      // Don't throw error, just log it - token will be sent on next app start
+      // Don't throw — token will be retried on next app start
     }
   }
 

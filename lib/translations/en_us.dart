@@ -849,5 +849,16 @@ const Map<String, String> enUS = {
   'pre_draw_notification_body': '5 minutes until Cycle {cycleNumber} drawing for {groupName}. Tap to watch live!',
   'drawing_starts_in': 'Drawing Starts In',
   'get_ready_message': 'Get ready to see the winner!',
+
+  // Transaction Card
+  'deposit': 'Deposit',
+  'withdrawal': 'Withdrawal',
+  'failed': 'Failed',
+  'rewards': 'Rewards',
+  'equb_name_colon': 'Equb Name:',
+  'date_colon': 'Date:',
+  'transaction_id_colon': 'Transaction ID:',
+  'rounds_colon': 'Rounds:',
+  'amount_colon': 'Amount:',
 };
 

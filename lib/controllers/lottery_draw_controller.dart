@@ -456,7 +456,7 @@ class LotteryDrawController extends GetxController {
         final cycleData = response.data!;
         final status = cycleData['status'] as String? ?? 'unknown';
         final nextDrawAt = cycleData['next_draw_at'] as String?;
-        final currentWinner = cycleData['current_winner'] as String?;
+        final currentWinner = cycleData['current_winner']?.toString();
         final cycleNumber = cycleData['cycle_number'] as int?;
         final groupName = cycleData['group_name'] as String?;
         final frequency = cycleData['frequency'] as String?;
@@ -620,7 +620,7 @@ class LotteryDrawController extends GetxController {
   }
 
   /// Check for draw result from API
-  Future<void> _checkForDrawResult() async {
+  Future<void> _checkForDrawResult({int retries = 0}) async {
     if (_groupId == null) return;
     
     try {
@@ -628,20 +628,27 @@ class LotteryDrawController extends GetxController {
       
       if (response.success && response.data != null) {
         final winnerData = response.data!;
-        final winnerNumber = winnerData['lottery_number'] as String?;
+        final winnerNumber = winnerData['lottery_number']?.toString();
         
         if (winnerNumber != null && winnerNumber.isNotEmpty) {
           _selectWinnerFromAPI(winnerNumber);
-        } else {
-          // No winner yet, check again in a few seconds
+        } else if (retries < 5) {
           Timer(const Duration(seconds: 2), () {
-            _checkForDrawResult();
+            _checkForDrawResult(retries: retries + 1);
           });
+        } else {
+          print('🎰 DEBUG: Max retries reached, falling back to random winner');
+          _selectRandomWinner();
         }
+      } else if (retries < 5) {
+        Timer(const Duration(seconds: 2), () {
+          _checkForDrawResult(retries: retries + 1);
+        });
+      } else {
+        _selectRandomWinner();
       }
     } catch (e) {
       print('🎰 ERROR: Failed to check draw result: $e');
-      // Fallback to random selection for demo
       _selectRandomWinner();
     }
   }

@@ -648,45 +648,45 @@ class _SimplePhysicsLotteryMachineState extends State<SimplePhysicsLotteryMachin
               // ),
               
               // Premium machine top
-              Positioned(
-                top: 0,
-                child: Container(
-                  width: 80,
-                  height: 78,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(40),
-                    ),
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.white.withValues(alpha: 0.9),
-                        Colors.grey.shade300.withValues(alpha: 0.9),
-                        Colors.grey.shade600.withValues(alpha: 0.9),
-                      ],
-                    ),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              // Positioned(
+              //   top: 0,
+              //   child: Container(
+              //     width: 80,
+              //     height: 78,
+              //     decoration: BoxDecoration(
+              //       borderRadius: const BorderRadius.vertical(
+              //         top: Radius.circular(40),
+              //       ),
+              //       gradient: LinearGradient(
+              //         begin: Alignment.topCenter,
+              //         end: Alignment.bottomCenter,
+              //         colors: [
+              //           Colors.white.withValues(alpha: 0.9),
+              //           Colors.grey.shade300.withValues(alpha: 0.9),
+              //           Colors.grey.shade600.withValues(alpha: 0.9),
+              //         ],
+              //       ),
+              //       border: Border.all(
+              //         color: Colors.white.withValues(alpha: 0.5),
+              //         width: 2,
+              //       ),
+              //       boxShadow: [
+              //         BoxShadow(
+              //           color: Colors.white.withValues(alpha: 0.3),
+              //           blurRadius: 10,
+              //           spreadRadius: 2,
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
               
               // Enhanced machine base with status display
               Positioned(
                 bottom: 0,
                 child: Container(
                   width: 300,
-                  height: 100,
+                  height: 40,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
                     gradient: LinearGradient(
@@ -713,26 +713,26 @@ class _SimplePhysicsLotteryMachineState extends State<SimplePhysicsLotteryMachin
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'LOTTERY MACHINE',
-                        style: GoogleFonts.orbitron(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary, // Brand yellow-green
-                          letterSpacing: 3,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
                       // Text(
                       //   'LOTTERY MACHINE',
                       //   style: GoogleFonts.orbitron(
-                      //     fontSize: 10,
-                      //     fontWeight: FontWeight.w600,
-                      //     color: Colors.white70,
-                      //     letterSpacing: 2,
+                      //     fontSize: 14,
+                      //     fontWeight: FontWeight.bold,
+                      //     color: AppColors.primary, // Brand yellow-green
+                      //     letterSpacing: 3,
                       //   ),
                       // ),
-                      const SizedBox(height: 6),
+                      // const SizedBox(height: 2),
+                      // // Text(
+                      // //   'LOTTERY MACHINE',
+                      // //   style: GoogleFonts.orbitron(
+                      // //     fontSize: 10,
+                      // //     fontWeight: FontWeight.w600,
+                      // //     color: Colors.white70,
+                      // //     letterSpacing: 2,
+                      // //   ),
+                      // // ),
+                      // const SizedBox(height: 6),
                       
                       // Enhanced status display
                       Row(

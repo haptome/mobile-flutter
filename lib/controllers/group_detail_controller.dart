@@ -460,37 +460,14 @@ class GroupDetailController extends GetxController {
   }
 
   Future<void> inviteToGroup() async {
-    try {
-      // Generate or get the invite link from the backend
-      final response = await _groupService.generateInviteLink(group.id);
+    final String inviteLink = 'https://etequb.com/invite/${group.id}';
+    final String message =
+        'Join my Equb group "${group.name}" on ET Digital Equb!\n\n'
+        'Tap to join: $inviteLink';
 
-      if (response.success && response.data != null) {
-        final String inviteLink = response.data!;
-        final String message =
-            'Join our Ekub group! ${group.name}. Click the link to join: $inviteLink';
-
-        Share.share(
-          message,
-          subject: 'Invite to join ${group.name} Ekub Group',
-        );
-      } else {
-        // Fallback to a default link if the API call fails
-        final String inviteLink = 'https://et-ekub.com/join-group/${group.id}';
-        final String message =
-            'Join our Ekub group! ${group.name}. Click the link to join: $inviteLink';
-
-        Share.share(
-          message,
-          subject: 'Invite to join ${group.name} Ekub Group',
-        );
-      }
-    } catch (e) {
-      // Fallback to a default link if there's an error
-      final String inviteLink = 'https://et-ekub.com/join-group/${group.id}';
-      final String message =
-          'Join our Ekub group! ${group.name}. Click the link to join: $inviteLink';
-
-      Share.share(message, subject: 'Invite to join ${group.name} Ekub Group');
-    }
+    Share.share(
+      message,
+      subject: 'Join ${group.name} on ET Digital Equb',
+    );
   }
 }

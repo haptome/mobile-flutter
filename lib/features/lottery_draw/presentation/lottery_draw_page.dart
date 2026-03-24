@@ -417,8 +417,8 @@ class _LotteryDrawPageState extends State<LotteryDrawPage> {
                     
                     // Premium winner display
                     Obx(() => Container(
-                      height: 30, // Reduced from 80
-                      width: 30, // Reduced from 80
+                      height: 80,
+                      width: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: controller.selectedWinner.value.isNotEmpty
@@ -607,6 +607,7 @@ class _LotteryDrawPageState extends State<LotteryDrawPage> {
 
                 // Countdown timer display in MM:SS format
                 Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 40,
                     vertical: 30,
@@ -633,13 +634,15 @@ class _LotteryDrawPageState extends State<LotteryDrawPage> {
                       ),
                     ],
                   ),
-                  child: Text(
-                    formattedTime,
-                    style: GoogleFonts.orbitron(
-                      fontSize: 80,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                      letterSpacing: 4,
+                  child: Center(
+                    child: Text(
+                      formattedTime,
+                      style: GoogleFonts.orbitron(
+                        fontSize: 70,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                        letterSpacing: 4,
+                      ),
                     ),
                   ),
                 ),

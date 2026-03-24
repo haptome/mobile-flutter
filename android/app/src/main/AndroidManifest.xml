@@ -4,6 +4,8 @@
     
     <!-- SMS Retriever API for OTP auto-fill (no SMS read permission needed) -->
     <uses-permission android:name="com.google.android.gms.auth.api.phone.permission.SEND" />
+    <!-- Required by flutter_otp_kit for SMS autofill -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
     
     <!-- Notification permissions for Android 13+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -22,7 +24,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" tools:replace="android:maxSdkVersion" />
     
     <application
-        android:label="ET Ekub"
+        android:label="ET Equb"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

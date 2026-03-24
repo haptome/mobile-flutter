@@ -7,6 +7,7 @@ import '../../../core/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/deep_link_service.dart';
 
 /// Custom splash screen that displays with a smooth animation
 class SplashScreen extends StatefulWidget {
@@ -70,6 +71,9 @@ class _SplashScreenState extends State<SplashScreen>
       // User is not authenticated, go to login
       Get.offAllNamed(AppRoutes.login);
     }
+
+    // Process any deep link that arrived during cold start
+    DeepLinkService.to.processPendingLink();
   }
 
   @override

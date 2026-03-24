@@ -200,6 +200,11 @@ class GroupDetailView extends StatelessWidget {
 
             const SizedBox(height: 10),
 
+            // Start date & status banner
+            _buildStartDateStatusBanner(group),
+
+            const SizedBox(height: 10),
+
             // Your Lottery Number card — shown when group is started
             if (group.status == 'started')
               Obx(() {
@@ -284,7 +289,7 @@ class GroupDetailView extends StatelessWidget {
               }
 
               // Get the most recent winner(s)
-              final recentWinners = controller.history.take(3).toList();
+              final recentWinners = controller.history.toList();
 
               return Card(
                 color: AppColors.lightBackground,
@@ -480,17 +485,17 @@ class GroupDetailView extends StatelessWidget {
 
                         double progressValue = 0.0;
                         if (controller.groupHistoryData.isNotEmpty) {
-                          final currentRound =
+                          final roundsCompleted =
                               controller.groupHistoryData['current_round']
                                   as int? ??
                               0;
-                          final totalRounds =
-                              (controller.groupHistoryData['schedule_cycles']
-                                      as int? ??
-                                  1) *
-                              group.targetMembers;
+                          final roundsRemaining =
+                              controller.groupHistoryData['rounds_remaining']
+                                  as int? ??
+                              0;
+                          final totalRounds = roundsCompleted + roundsRemaining;
                           progressValue = totalRounds > 0
-                              ? (currentRound / totalRounds)
+                              ? (roundsCompleted / totalRounds)
                               : 0.0;
                         } else {
                           progressValue =
@@ -1460,6 +1465,90 @@ class GroupDetailView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildStartDateStatusBanner(Group group) {
+    final isStarted = group.status == 'started';
+    final isActive = group.status == 'active';
+
+    if (!isStarted && !isActive) return const SizedBox.shrink();
+
+    final statusColor = isStarted ? Colors.green : Colors.teal;
+    final statusIcon = isStarted ? Icons.play_circle_fill : Icons.lock_open;
+    final statusLabel = isStarted ? 'Ekub Started' : 'Open to Join';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: statusColor.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(statusIcon, color: statusColor, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  statusLabel,
+                  style: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: statusColor,
+                  ),
+                ),
+                if (group.startDate != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'Starts: ${_formatDateTime(group.startDate!)}',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11,
+                      color: AppColors.textLightGray,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (group.startDate != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_today, size: 12, color: statusColor),
+                  const SizedBox(width: 4),
+                  Text(
+                    _formatDate(group.startDate!),
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: statusColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDateTime(DateTime date) {
+    const List<String> months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
+    final minute = date.minute.toString().padLeft(2, '0');
+    final period = date.hour >= 12 ? 'PM' : 'AM';
+    return '${months[date.month - 1]} ${date.day}, ${date.year}  $hour:$minute $period';
   }
 
   String _formatDate(DateTime date) {

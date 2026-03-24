@@ -64,29 +64,26 @@ class AuthController extends GetxController {
 
         if (otpSent) {
           isOtpSent.value = true;
-          // Navigate to OTP verification screen
-          Get.toNamed(
+          // Navigate to OTP screen, removing signup from the back stack
+          Get.offNamed(
             AppRoutes.otp,
             arguments: {
               'phoneNumber': fullPhone,
-              'isFromLogin': false, // This is registration, not login
+              'isFromLogin': false,
             },
           );
         } else {
-          // Registration succeeded but OTP sending failed
-          // Still allow user to proceed, perhaps with an option to resend OTP
           isOtpSent.value = false;
           Get.snackbar(
             'Warning',
             'Account registered but OTP not sent. You can request OTP again.',
             snackPosition: SnackPosition.BOTTOM,
           );
-          // Navigate to OTP screen anyway so user can request OTP manually
-          Get.toNamed(
+          Get.offNamed(
             AppRoutes.otp,
             arguments: {
               'phoneNumber': fullPhone,
-              'isFromLogin': false, // This is registration, not login
+              'isFromLogin': false,
             },
           );
         }
@@ -314,19 +311,16 @@ class AuthController extends GetxController {
   Future<void> _navigateAfterAuth() async {
     final storage = StorageService.to;
     final pendingGroupId = storage.getString('pending_invitation_group_id');
-    final pendingCode = storage.getString('pending_invitation_code');
 
-    if (pendingGroupId != null && pendingGroupId.isNotEmpty &&
-        pendingCode != null && pendingCode.isNotEmpty) {
+    if (pendingGroupId != null && pendingGroupId.isNotEmpty) {
       // Clear the stored pending invitation
       await storage.saveString('pending_invitation_group_id', '');
-      await storage.saveString('pending_invitation_code', '');
 
-      // Navigate to home first, then push invitation screen on top
+      // Navigate to home first, then push invite screen on top
       Get.offAllNamed('/home');
       Get.toNamed(
-        '/invitation',
-        arguments: {'groupId': pendingGroupId, 'inviteCode': pendingCode},
+        AppRoutes.groupInvite,
+        arguments: {'groupId': pendingGroupId},
       );
     } else {
       Get.offAllNamed('/home');

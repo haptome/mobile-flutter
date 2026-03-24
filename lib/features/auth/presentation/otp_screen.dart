@@ -33,6 +33,7 @@ class OtpScreen extends StatefulWidget {
 class _OtpScreenState extends State<OtpScreen> {
   bool _isVerifying = false;
   String? _appSignature;
+  bool _signatureLoaded = false;
 
   // Resend OTP state
   final AuthService _authService = AuthService.to;
@@ -49,8 +50,11 @@ class _OtpScreenState extends State<OtpScreen> {
 
   Future<void> _loadAppSignature() async {
     final sig = await AppSignatureHelper.getAppSignature();
-    if (mounted && sig != null) {
-      setState(() => _appSignature = sig);
+    if (mounted) {
+      setState(() {
+        _appSignature = sig;
+        _signatureLoaded = true;
+      });
     }
   }
 
@@ -152,7 +156,8 @@ class _OtpScreenState extends State<OtpScreen> {
             backgroundColor: AppColors.primary,
           ),
         );
-        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        // Clear entire navigation stack so back button can't return to auth screens
+        Get.offAllNamed(AppRoutes.home);
         return true;
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -276,7 +281,9 @@ class _OtpScreenState extends State<OtpScreen> {
                       margin: EdgeInsets.symmetric(
                         vertical: AppSizes.spacingMedium,
                       ),
-                      child: OtpKit(
+                      child: !_signatureLoaded
+                          ? const Center(child: CircularProgressIndicator())
+                          : OtpKit(
                         fieldCount: 6,
                         fieldConfig: OtpFieldConfig(
                           fieldWidth: 40,
@@ -292,15 +299,16 @@ class _OtpScreenState extends State<OtpScreen> {
                         smsConfig: OtpSmsConfig(
                           enableSmsAutofill: true,
                           enableSmartAuth: true,
+                          // SMS Retriever API: silent autofill when hash matches
                           enableSmsRetrieverAPI: true,
+                          // User Consent API: fallback — shows system prompt to confirm SMS
+                          // Works even when hash doesn't match (e.g. debug vs release builds)
                           enableSmsUserConsentAPI: true,
                           enableSmsValidation: true,
                           // Extracts any 6-digit code from the SMS body
                           smsValidationRegex: r'\b\d{6}\b',
                           smsTimeout: const Duration(minutes: 5),
                           enableSmsErrorHandling: true,
-                          // App signature hash for Android SMS Retriever API
-                          // Backend must append this to OTP SMS: "<#> code: 123456\n[hash]"
                           appSignature: _appSignature,
                         ),
                         primaryColor: AppColors.primary,
