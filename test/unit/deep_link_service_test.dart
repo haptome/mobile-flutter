@@ -19,11 +19,11 @@ void main() {
 
       final customLink = deepLinkService.generateInvitationLink(
         groupId,
-        inviteCode,
+        
       );
-      final universalLink = deepLinkService.generateUniversalInvitationLink(
+      final universalLink = deepLinkService.generateInvitationLink(
         groupId,
-        inviteCode,
+        
       );
 
       expect(

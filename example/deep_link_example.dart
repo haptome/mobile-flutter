@@ -14,15 +14,15 @@ void main() {
   // Generate custom scheme link (etequb://)
   final customLink = deepLinkService.generateInvitationLink(
     groupId,
-    inviteCode,
+   
   );
   print('Custom scheme link: $customLink');
   // Output: etequb://invite?groupId=group-123&code=invite-abc-xyz
 
   // Generate universal link (HTTPS)
-  final universalLink = deepLinkService.generateUniversalInvitationLink(
+  final universalLink = deepLinkService.generateInvitationLink(
     groupId,
-    inviteCode,
+  
   );
   print('Universal link: $universalLink');
   // Output: https://etequb.com/invite/group-123?code=invite-abc-xyz

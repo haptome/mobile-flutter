@@ -2,6 +2,7 @@
 // Author: haptome H.
 // Linked Spec Section: FR01-FR03
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
@@ -11,7 +12,9 @@ import '../../models/user_model.dart';
 class StorageService extends GetxService {
   static StorageService get to => Get.find();
 
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
   late SharedPreferences _prefs;
 
   Future<void> init() async {
@@ -20,36 +23,95 @@ class StorageService extends GetxService {
 
   // Secure Storage (for tokens)
   Future<void> saveAccessToken(String token) async {
-    await _secureStorage.write(key: 'access_token', value: token);
+    try {
+      await _secureStorage
+          .write(key: 'access_token', value: token)
+          .timeout(const Duration(seconds: 3));
+    } catch (e) {
+      debugPrint('[StorageService] saveAccessToken failed (degraded mode): $e');
+    }
   }
 
   Future<String?> getAccessToken() async {
-    return await _secureStorage.read(key: 'access_token');
+    try {
+      return await _secureStorage
+          .read(key: 'access_token')
+          .timeout(const Duration(seconds: 3), onTimeout: () => null);
+    } catch (e) {
+      debugPrint('[StorageService] getAccessToken failed (degraded mode): $e');
+      return null;
+    }
   }
 
   Future<void> saveRefreshToken(String token) async {
-    await _secureStorage.write(key: 'refresh_token', value: token);
+    try {
+      await _secureStorage
+          .write(key: 'refresh_token', value: token)
+          .timeout(const Duration(seconds: 3));
+    } catch (e) {
+      debugPrint('[StorageService] saveRefreshToken failed (degraded mode): $e');
+    }
   }
 
   Future<String?> getRefreshToken() async {
-    return await _secureStorage.read(key: 'refresh_token');
+    try {
+      return await _secureStorage
+          .read(key: 'refresh_token')
+          .timeout(const Duration(seconds: 3), onTimeout: () => null);
+    } catch (e) {
+      debugPrint('[StorageService] getRefreshToken failed (degraded mode): $e');
+      return null;
+    }
   }
 
   Future<void> saveFcmToken(String token) async {
-    await _secureStorage.write(key: 'fcm_token', value: token);
+    try {
+      await _secureStorage
+          .write(key: 'fcm_token', value: token)
+          .timeout(const Duration(seconds: 3));
+    } catch (e) {
+      debugPrint('[StorageService] saveFcmToken failed, falling back to prefs: $e');
+      await _prefs.setString('fcm_token', token);
+    }
   }
 
   Future<String?> getFcmToken() async {
-    return await _secureStorage.read(key: 'fcm_token');
+    try {
+      return await _secureStorage
+          .read(key: 'fcm_token')
+          .timeout(const Duration(seconds: 3), onTimeout: () => null);
+    } catch (e) {
+      debugPrint('[StorageService] getFcmToken failed (degraded mode): $e');
+      return null;
+    }
   }
 
   Future<void> clearFcmToken() async {
-    await _secureStorage.delete(key: 'fcm_token');
+    try {
+      await _secureStorage
+          .delete(key: 'fcm_token')
+          .timeout(const Duration(seconds: 3));
+    } catch (e) {
+      debugPrint('[StorageService] clearFcmToken failed, falling back to prefs: $e');
+      await _prefs.remove('fcm_token');
+    }
   }
 
   Future<void> clearTokens() async {
-    await _secureStorage.delete(key: 'access_token');
-    await _secureStorage.delete(key: 'refresh_token');
+    try {
+      await _secureStorage
+          .delete(key: 'access_token')
+          .timeout(const Duration(seconds: 3));
+    } catch (e) {
+      debugPrint('[StorageService] clearTokens (access_token) failed (degraded mode): $e');
+    }
+    try {
+      await _secureStorage
+          .delete(key: 'refresh_token')
+          .timeout(const Duration(seconds: 3));
+    } catch (e) {
+      debugPrint('[StorageService] clearTokens (refresh_token) failed (degraded mode): $e');
+    }
   }
 
   // User data storage (using SharedPreferences for JSON storage)
@@ -99,7 +161,13 @@ class StorageService extends GetxService {
   }
 
   Future<void> clearAll() async {
-    await _secureStorage.deleteAll();
+    try {
+      await _secureStorage
+          .deleteAll()
+          .timeout(const Duration(seconds: 3));
+    } catch (e) {
+      debugPrint('[StorageService] clearAll (secure) failed (degraded mode): $e');
+    }
     await _prefs.clear();
   }
 

@@ -57,10 +57,21 @@ void main() async {
     ),
   );
 
+  await _initServices().timeout(
+    const Duration(milliseconds: 10000),
+    onTimeout: () {
+      debugPrint('[Main] Init timeout — proceeding to runApp() in degraded mode');
+    },
+  );
+
+  runApp(const ETDigitalEqubApp());
+}
+
+Future<void> _initServices() async {
   // Initialize Firebase (required for FCM)
   if (!kIsWeb) {
     await Firebase.initializeApp();
-    
+
     // Register background message handler
     // This must be called before any other Firebase Messaging methods
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -81,58 +92,58 @@ void main() async {
   final apiService = Get.put(ApiService(), permanent: true);
   await apiService.init();
 
-  final lotteryService = Get.put(LotteryService(), permanent: true);
+  Get.put(LotteryService(), permanent: true);
 
   final authService = Get.put(AuthService(), permanent: true);
   await authService.init();
 
   // Initialize Cloudinary configuration
   final cloudinaryConfig = CloudinaryConfig.forEnvironment(Environment.production);
-  if (!cloudinaryConfig.validate()) {
-    throw Exception('Invalid Cloudinary configuration');
+  final cloudinaryAvailable = cloudinaryConfig.validate();
+  if (!cloudinaryAvailable) {
+    debugPrint('[Main] Cloudinary unavailable — running in degraded mode');
   }
 
-  // Initialize SharedPreferences for upload queue
-  final prefs = await SharedPreferences.getInstance();
-  
-  // Initialize Connectivity for network monitoring
-  final connectivity = Connectivity();
-  
-  // Create and register UploadQueue
-  final uploadQueue = UploadQueue(prefs, connectivity);
-  Get.put(uploadQueue, permanent: true);
-  
-  // Create and register CloudinaryService
-  final cloudinaryService = CloudinaryService(
-    cloudinaryConfig,
-    uploadQueue,
-    connectivity,
-  );
-  Get.put(cloudinaryService, permanent: true);
-  
-  // Start monitoring connectivity for automatic queue processing
-  uploadQueue.startMonitoring();
+  if (cloudinaryAvailable) {
+    // Initialize SharedPreferences for upload queue
+    final prefs = await SharedPreferences.getInstance();
+
+    // Initialize Connectivity for network monitoring
+    final connectivity = Connectivity();
+
+    // Create and register UploadQueue
+    final uploadQueue = UploadQueue(prefs, connectivity);
+    Get.put(uploadQueue, permanent: true);
+
+    // Create and register CloudinaryService
+    final cloudinaryService = CloudinaryService(
+      cloudinaryConfig,
+      uploadQueue,
+      connectivity,
+    );
+    Get.put(cloudinaryService, permanent: true);
+
+    // Start monitoring connectivity for automatic queue processing
+    uploadQueue.startMonitoring();
+  }
 
   // Register KYC service
   Get.put(KycService(), permanent: true);
 
-  // Register KYC-related services (only on mobile, not web)
+  // Register KYC-related services lazily (only on mobile, not web)
+  // Services are instantiated on first access during the KYC flow, not at startup
   if (!kIsWeb) {
-    debugPrint('[Main] Registering KYC services for mobile platform');
-    Get.put(CameraService(), permanent: true);
-    debugPrint('[Main] CameraService registered');
-    Get.put(EdgeDetectionService(), permanent: true);
-    debugPrint('[Main] EdgeDetectionService registered');
-    Get.put(ImageQualityService(), permanent: true);
-    debugPrint('[Main] ImageQualityService registered');
-    Get.put(FaceDetectionService(), permanent: true);
-    debugPrint('[Main] FaceDetectionService registered');
-    Get.put(LivenessDetectionService(), permanent: true);
-    debugPrint('[Main] LivenessDetectionService registered');
+    debugPrint('[Main] Registering KYC services for mobile platform (lazy)');
+    Get.lazyPut(() => CameraService(), fenix: true);
+    Get.lazyPut(() => EdgeDetectionService(), fenix: true);
+    Get.lazyPut(() => ImageQualityService(), fenix: true);
+    Get.lazyPut(() => FaceDetectionService(), fenix: true);
+    Get.lazyPut(() => LivenessDetectionService(), fenix: true);
+    debugPrint('[Main] KYC services registered lazily');
   } else {
     debugPrint('[Main] Skipping KYC services registration (running on web)');
   }
-  
+
   // Register Group service
   Get.put(GroupService(), permanent: true);
 
@@ -167,8 +178,6 @@ void main() async {
   if (kDebugMode && !kIsWeb) {
     AppSignatureHelper.printAppSignature();
   }
-
-  runApp(const ETDigitalEqubApp());
 }
 
 class ETDigitalEqubApp extends StatelessWidget {
