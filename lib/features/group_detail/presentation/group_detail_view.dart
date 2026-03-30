@@ -1,4 +1,4 @@
-// Purpose: Group Detail page - shows group details, members, join button
+ // Purpose: Group Detail page - shows group details, members, join button
 // Author: Auto-generated
 
 import 'package:et_digital_equb/controllers/group_detail_controller.dart';
