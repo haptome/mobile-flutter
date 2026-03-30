@@ -71,20 +71,18 @@ class YourEkubsController extends GetxController {
 
       final inKindGroupsResponse = await _groupService.getUserInKindGroups();
 
-      // Also fetch completed groups
-      final completedCashGroupsResponse = await _groupService.getGroups(
-        status: 'completed',
-        limit: 50,
-      );
-
-      // Separate completed groups
+      // Separate active vs completed from the user's own groups
       final List<Map<String, dynamic>> activeGroups = [];
       final List<Map<String, dynamic>> completedGroups = [];
 
-      // Add cash groups
+      // Add cash groups — split by status
       if (cashGroupsResponse.success && cashGroupsResponse.data != null) {
         for (var group in cashGroupsResponse.data!) {
-          activeGroups.add(_groupToEkubMap(group));
+          if (group.status == 'completed') {
+            completedGroups.add(_groupToCompletedEkubMap(group));
+          } else {
+            activeGroups.add(_groupToEkubMap(group));
+          }
         }
       }
 
@@ -92,14 +90,6 @@ class YourEkubsController extends GetxController {
       if (inKindGroupsResponse.success && inKindGroupsResponse.data != null) {
         for (var group in inKindGroupsResponse.data!) {
           activeGroups.add(_inKindGroupToEkubMap(group));
-        }
-      }
-
-      // Add completed cash groups
-      if (completedCashGroupsResponse.success &&
-          completedCashGroupsResponse.data != null) {
-        for (var group in completedCashGroupsResponse.data!) {
-          completedGroups.add(_groupToCompletedEkubMap(group));
         }
       }
 

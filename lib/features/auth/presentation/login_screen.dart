@@ -143,16 +143,29 @@ class _LoginScreenState extends State<LoginScreen> {
               arguments: {'phoneNumber': fullPhone, 'isFromLogin': true},
             );
           } else {
-            // Show error message
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  response.error?.message ??
-                      'failed_resend_otp'.tr,
+            // Check if the error is because the user doesn't exist
+            final msg = (response.error?.message ?? '').toLowerCase();
+            final isNotFound = msg.contains('not found') ||
+                msg.contains('no user') ||
+                msg.contains('user not found') ||
+                msg.contains('does not exist');
+
+            if (isNotFound) {
+              // User not registered — redirect to signup with phone pre-filled
+              Get.toNamed(
+                AppRoutes.signup,
+                arguments: {'phone': fullPhone},
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    response.error?.message ?? 'failed_resend_otp'.tr,
+                  ),
+                  backgroundColor: AppColors.lightError,
                 ),
-                backgroundColor: AppColors.lightError,
-              ),
-            );
+              );
+            }
           }
         }
       }

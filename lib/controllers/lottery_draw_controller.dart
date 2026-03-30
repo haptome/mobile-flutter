@@ -832,23 +832,23 @@ class LotteryDrawController extends GetxController {
     }
   }
 
-  /// Get formatted countdown display with enhanced information
+  /// Get formatted countdown display — days, hours, minutes, seconds as needed
   String get countdownDisplay {
     final totalSeconds = countdownSeconds.value;
-    
-    if (totalSeconds >= 3600) {
-      // More than 1 hour - show hours and minutes
-      final hours = totalSeconds ~/ 3600;
-      final minutes = (totalSeconds % 3600) ~/ 60;
-      return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
-    } else if (totalSeconds >= 60) {
-      // More than 1 minute - show minutes and seconds
-      final minutes = totalSeconds ~/ 60;
-      final seconds = totalSeconds % 60;
-      return '${minutes}:${seconds.toString().padLeft(2, '0')}';
+
+    final days = totalSeconds ~/ 86400;
+    final hours = (totalSeconds % 86400) ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+
+    if (days > 0) {
+      return '${days}d ${hours.toString().padLeft(2, '0')}h ${minutes.toString().padLeft(2, '0')}m ${seconds.toString().padLeft(2, '0')}s';
+    } else if (hours > 0) {
+      return '${hours}h ${minutes.toString().padLeft(2, '0')}m ${seconds.toString().padLeft(2, '0')}s';
+    } else if (minutes > 0) {
+      return '${minutes}m ${seconds.toString().padLeft(2, '0')}s';
     } else {
-      // Less than 1 minute - show seconds only
-      return '${totalSeconds}s';
+      return '${seconds}s';
     }
   }
 

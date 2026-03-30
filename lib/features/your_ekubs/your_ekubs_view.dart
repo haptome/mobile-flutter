@@ -22,6 +22,15 @@ class YourEkubsView extends StatefulWidget {
 
 class _YourEkubsViewState extends State<YourEkubsView> {
   @override
+  void initState() {
+    super.initState();
+    // Refresh every time the page is entered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.find<YourEkubsController>().loadUserGroups();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final controller = Get.find<YourEkubsController>();
     final authService = AuthService.to;

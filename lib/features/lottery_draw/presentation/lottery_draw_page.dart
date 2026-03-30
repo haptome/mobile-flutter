@@ -529,10 +529,25 @@ class _LotteryDrawPageState extends State<LotteryDrawPage> {
   }
 
   Widget _buildCountdownView(BuildContext context) {
-    final minutes = _timeUntilDraw!.inMinutes;
-    final seconds = _timeUntilDraw!.inSeconds % 60;
-    final formattedTime =
-        '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    final totalSeconds = _timeUntilDraw!.inSeconds;
+    final days = totalSeconds ~/ 86400;
+    final hours = (totalSeconds % 86400) ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+
+    String formattedTime;
+    if (days > 0) {
+      formattedTime =
+          '${days}d ${hours.toString().padLeft(2, '0')}h\n${minutes.toString().padLeft(2, '0')}m ${seconds.toString().padLeft(2, '0')}s';
+    } else if (hours > 0) {
+      formattedTime =
+          '${hours}h ${minutes.toString().padLeft(2, '0')}m\n${seconds.toString().padLeft(2, '0')}s';
+    } else if (minutes > 0) {
+      formattedTime =
+          '${minutes}m ${seconds.toString().padLeft(2, '0')}s';
+    } else {
+      formattedTime = '${seconds}s';
+    }
 
     return Scaffold(
       backgroundColor: AppColors.splashBackground,

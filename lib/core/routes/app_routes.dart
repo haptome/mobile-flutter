@@ -100,7 +100,10 @@ class AppRouter {
   static List<GetPage> getPages = [
     GetPage(name: AppRoutes.splash, page: () => const SplashScreen()),
     GetPage(name: AppRoutes.login, page: () => const LoginScreen()),
-    GetPage(name: AppRoutes.signup, page: () => const SignupScreen()),
+    GetPage(name: AppRoutes.signup, page: () {
+      final args = Get.arguments as Map<String, dynamic>?;
+      return SignupScreen(prefilledPhone: args?['phone'] as String?);
+    }),
     GetPage(
       name: AppRoutes.otp,
       page: () {

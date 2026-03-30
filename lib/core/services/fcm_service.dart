@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:et_digital_equb/core/services/storage_service.dart';
 import 'package:et_digital_equb/core/services/api_service.dart';
+import 'package:et_digital_equb/core/services/group_service.dart';
+import 'package:et_digital_equb/controllers/group_detail_controller.dart';
 
 class FcmService extends GetxService {
   static FcmService get to => Get.find();
@@ -275,6 +277,14 @@ class FcmService extends GetxService {
       case 'payment_success':
         _handlePaymentSuccess(metadata);
         break;
+      case 'payment_reminder':
+      case 'payment_reminder_early':
+      case 'payment_reminder_due':
+      case 'payment_reminder_overdue':
+      case 'payment_catchup_reminder':
+      case 'payment_due':
+        _handlePaymentReminder(data);
+        break;
       case 'group_invitation':
         _handleGroupInvitation(metadata);
         break;
@@ -344,22 +354,16 @@ class FcmService extends GetxService {
     final groupName = metadata['group_name'] as String? ?? 'Ekub Group';
     final lotteryNumber = metadata['lottery_number'] as String?;
     final cycleNumber = metadata['cycle_number'] as int?;
-    
+
     String message;
     if (lotteryNumber != null && lotteryNumber.isNotEmpty) {
       message = 'The winner for $groupName';
-      if (cycleNumber != null) {
-        message += ' cycle $cycleNumber';
-      }
+      if (cycleNumber != null) message += ' cycle $cycleNumber';
       message += ' is #$lotteryNumber';
     } else {
-      // Fallback if lottery number is not available
-      final winnerName = metadata['winner_name'] as String? ?? 'Unknown';
       message = 'The winner for $groupName';
-      if (cycleNumber != null) {
-        message += ' cycle $cycleNumber';
-      }
-      message += ' is $winnerName';
+      if (cycleNumber != null) message += ' cycle $cycleNumber';
+      message += ' has been announced';
     }
 
     Get.snackbar(
@@ -385,17 +389,11 @@ class FcmService extends GetxService {
   void _handlePersonalizedWinnerNotification(Map<String, dynamic> metadata) {
     debugPrint('Personalized winner notification received: $metadata');
     final groupName = metadata['group_name'] as String? ?? 'Ekub Group';
-    final amount = metadata['amount'] as num? ?? 0;
     final cycleNumber = metadata['cycle_number'] as int?;
-    
+
     String message = 'Congratulations! You won';
-    if (cycleNumber != null) {
-      message += ' cycle $cycleNumber of';
-    }
+    if (cycleNumber != null) message += ' cycle $cycleNumber of';
     message += ' $groupName';
-    if (amount > 0) {
-      message += ' and will receive ${amount.toStringAsFixed(0)} ETB';
-    }
 
     Get.snackbar(
       'Congratulations! 🎉🎊',
@@ -414,6 +412,48 @@ class FcmService extends GetxService {
         child: const Text('View Details', style: TextStyle(color: Colors.white)),
       ),
     );
+  }
+
+  /// Handle payment reminder — shows snackbar and deep-links to the group's payment tab
+  void _handlePaymentReminder(Map<String, dynamic> data) {
+    debugPrint('Payment reminder received: $data');
+    final groupId = data['group_id'] as String?;
+    final groupName = data['group_name'] as String? ?? 'your Ekub group';
+
+    Get.snackbar(
+      'Payment Reminder',
+      'Your contribution for $groupName is due. Tap to pay now.',
+      snackPosition: SnackPosition.TOP,
+      duration: const Duration(seconds: 6),
+      mainButton: TextButton(
+        onPressed: () {
+          if (groupId != null) _navigateToGroupPayments(groupId);
+        },
+        child: const Text('Pay Now'),
+      ),
+    );
+  }
+
+  /// Fetch the group by ID then navigate to its detail page with the Payments tab active
+  Future<void> _navigateToGroupPayments(String groupId) async {
+    try {
+      final response = await GroupService.to.getGroupById(groupId);
+      if (response.success && response.data != null) {
+        final group = response.data!;
+        // Replace any existing GroupDetailController so the new group loads cleanly
+        if (Get.isRegistered<GroupDetailController>()) {
+          Get.delete<GroupDetailController>();
+        }
+        Get.put(GroupDetailController(group: group));
+        // activeTab 1 = Payments
+        Get.find<GroupDetailController>().setActiveTab(1);
+        Get.toNamed('/group-detail', arguments: group);
+      } else {
+        debugPrint('Could not fetch group $groupId: ${response.message}');
+      }
+    } catch (e) {
+      debugPrint('Error navigating to group payments: $e');
+    }
   }
 
   /// Handle system announcement
@@ -484,6 +524,17 @@ class FcmService extends GetxService {
         break;
       case 'payment_success':
         Get.toNamed('/transactions');
+        break;
+      case 'payment_reminder':
+      case 'payment_reminder_early':
+      case 'payment_reminder_due':
+      case 'payment_reminder_overdue':
+      case 'payment_catchup_reminder':
+      case 'payment_due':
+        final payGroupId = data['group_id'] as String?;
+        if (payGroupId != null) {
+          _navigateToGroupPayments(payGroupId);
+        }
         break;
       case 'turn_notification':
         Get.toNamed('/your-ekubs');

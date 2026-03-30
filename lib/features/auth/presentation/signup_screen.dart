@@ -15,7 +15,8 @@ import '../../../../core/utils/device_info.dart';
 import '../../../../controllers/auth_controller.dart';
 
 class SignupScreen extends StatefulWidget {
-  const SignupScreen({super.key});
+  final String? prefilledPhone;
+  const SignupScreen({super.key, this.prefilledPhone});
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();
@@ -37,6 +38,18 @@ class _SignupScreenState extends State<SignupScreen> {
       _authController = Get.put(AuthController());
     } else {
       _authController = Get.find<AuthController>();
+    }
+
+    // Pre-fill phone if passed from login redirect
+    final phone = widget.prefilledPhone ?? Get.arguments?['phone'] as String?;
+    if (phone != null && phone.isNotEmpty) {
+      // Strip country code prefix if present (e.g. +251 → just the 9 digits)
+      final digits = phone.startsWith('+251')
+          ? phone.substring(4)
+          : phone.startsWith('251')
+              ? phone.substring(3)
+              : phone;
+      _phoneController.text = digits;
     }
   }
 
