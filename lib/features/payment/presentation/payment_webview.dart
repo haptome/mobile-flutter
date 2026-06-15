@@ -259,7 +259,10 @@ class _PaymentWebViewState extends State<PaymentWebView> {
             onReceivedError: (_, request, error) {
               // Silently ignore errors while we're already navigating away.
               if (_isHandlingCallback) return;
-              // Surface SSL / load errors to the user.
+              // Only surface the error when the MAIN frame fails to load.
+              // Sub-resource failures (e.g. payment-method logos blocked by
+              // Android ORB / CORS) are expected and must not alarm the user.
+              if (request.isForMainFrame != true) return;
               if (mounted) {
                 Get.snackbar(
                   'Error',

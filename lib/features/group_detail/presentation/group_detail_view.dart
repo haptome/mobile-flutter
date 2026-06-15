@@ -8,8 +8,8 @@ import 'package:et_digital_equb/core/widgets/current_cycle_card.dart';
 import 'package:et_digital_equb/core/widgets/payment_logo.dart';
 import 'package:et_digital_equb/core/widgets/payment_method_card.dart';
 import 'package:et_digital_equb/core/widgets/scaffold_with_bottom_bar.dart';
+import 'package:et_digital_equb/core/widgets/translated_text.dart';
 import 'package:et_digital_equb/features/payment/presentation/select_payment_method_view.dart';
-import 'package:et_digital_equb/widgets/lottery_number_badge.dart';
 import 'package:et_digital_equb/widgets/live_lottery_draw.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -60,7 +60,7 @@ class GroupDetailView extends StatelessWidget {
               onPressed: () => Get.back(),
             ),
           ),
-          body: const Center(child: Text('Group not found')),
+          body: Center(child: Text('group_not_found'.tr)),
         );
       }
       Get.put(GroupDetailController(group: group));
@@ -78,7 +78,7 @@ class GroupDetailView extends StatelessWidget {
           onPressed: () => Get.back(),
         ),
         centerTitle: false,
-        title: Text(
+        title: TranslatedText(
           group.name,
           style: GoogleFonts.montserrat(
             fontSize: 20,
@@ -87,13 +87,17 @@ class GroupDetailView extends StatelessWidget {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(
-          top: 16,
-          left: AppSizes.paddingLarge,
-          right: AppSizes.paddingLarge,
-          bottom: 32,
-        ),
+      body: RefreshIndicator(
+        onRefresh: controller.refresh,
+        color: AppColors.primary,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(
+            top: 16,
+            left: AppSizes.paddingLarge,
+            right: AppSizes.paddingLarge,
+            bottom: 32,
+          ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -122,7 +126,7 @@ class GroupDetailView extends StatelessWidget {
                           children: [
                             SizedBox(
                               width: 80,
-                              child: Text(
+                              child: TranslatedText(
                                 group.name,
                                 style: GoogleFonts.montserrat(
                                   fontSize: 18,
@@ -270,7 +274,7 @@ class GroupDetailView extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Text(
+                      TranslatedText(
                         group!.name,
                         style: GoogleFonts.montserrat(
                           fontSize: 11,
@@ -374,7 +378,7 @@ class GroupDetailView extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '${formatCurrencyShort(amount)} ETB',
+                                '${formatCurrencyShort(amount)} ${'etb'.tr}',
                                 style: GoogleFonts.montserrat(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
@@ -421,7 +425,6 @@ class GroupDetailView extends StatelessWidget {
                           if (controller.canShowLotteryDraw) {
                             return LotteryDrawButton(
                               onPressed: () {
-                                // Parse next draw date to pass as drawingTime for countdown
                                 DateTime? nextDrawDateTime;
                                 final nextDrawDateStr = controller.groupHistoryData['next_draw_date'] as String?;
                                 if (nextDrawDateStr != null) {
@@ -440,6 +443,17 @@ class GroupDetailView extends StatelessWidget {
                                 );
                               },
                               isEnabled: true,
+                              isReady: () {
+                                final s = controller.groupHistoryData['next_draw_date'] as String?;
+                                if (s == null) return false;
+                                try {
+                                  final t = DateTime.parse(s);
+                                  final diff = t.difference(DateTime.now()).inMinutes;
+                                  return diff >= 0 && diff <= 5;
+                                } catch (_) {
+                                  return false;
+                                }
+                              }(),
                               tooltip: 'Open lottery draw machine',
                             );
                           }
@@ -452,22 +466,20 @@ class GroupDetailView extends StatelessWidget {
                     Obx(
                       () => Text(
                         () {
-                          if (group == null) return 'Round 1 of 0';
+                          if (group == null) {
+                            return '${'round'.tr} 1 ${'of'.tr} 0';
+                          }
 
                           String roundText =
-                              'Round 1 of ${group.targetMembers}';
+                              '${'round'.tr} 1 ${'of'.tr} ${group.targetMembers}';
                           if (controller.groupHistoryData.isNotEmpty &&
                               controller.groupHistoryData['current_round'] !=
                                   null) {
                             final currentRound =
                                 controller.groupHistoryData['current_round']
                                     as int;
-                            final scheduleCycles =
-                                controller.groupHistoryData['schedule_cycles']
-                                    as int? ??
-                                1;
                             roundText =
-                                'Round $currentRound of ${group.targetMembers * scheduleCycles}';
+                                '${'round'.tr} $currentRound ${'of'.tr} ${group.targetMembers}';
                           }
                           return roundText;
                         }(),
@@ -720,7 +732,7 @@ class GroupDetailView extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Tabs (Members, Payments, History)
+            // Tabs (Payments, History)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               decoration: BoxDecoration(
@@ -730,9 +742,8 @@ class GroupDetailView extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildTab('Members', 0),
-                  _buildTab('Payments', 1),
-                  _buildTab('History', 2),
+                  _buildTab('Payments', 0),
+                  _buildTab('History', 1),
                 ],
               ),
             ),
@@ -760,391 +771,7 @@ class GroupDetailView extends StatelessWidget {
                       final controller = Get.find<GroupDetailController>();
 
                       switch (controller.activeTab.value) {
-                        case 0: // Members Tab
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Total Members - ${group?.currentMembers ?? 0}',
-                                    style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: 36,
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        controller.inviteToGroup();
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xffc6c92a,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        minimumSize: const Size(80, 36),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 14,
-                                        ),
-                                      ),
-                                      child: const Text(
-                                        'Invite',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Divider(color: Colors.grey[200]),
-                              // Members list - filtered to show only current user and leader
-                              Obx(() {
-                                if (group == null) {
-                                  return const SizedBox.shrink();
-                                }
-
-                                final currentUserId = Get.find<AuthService>().currentUser.value?.id;
-                                final allMembers =
-                                    controller
-                                        .membersWithPaymentStatus
-                                        .isNotEmpty
-                                    ? controller.membersWithPaymentStatus
-                                    : controller.members;
-                                
-                                // Filter to show only current user and leader
-                                final filteredMembers = allMembers.where((member) {
-                                  String? userId;
-                                  if (member is Map<String, dynamic>) {
-                                    userId = member['user']?['id'] as String?;
-                                  } else {
-                                    try {
-                                      userId = (member as dynamic).user?.id as String?;
-                                    } catch (e) {
-                                      userId = null;
-                                    }
-                                  }
-                                  
-                                  // Show if it's the current user OR the group leader
-                                  return userId == currentUserId || userId == group?.leaderId;
-                                }).toList();
-
-                                final displayCount = filteredMembers.length;
-
-                                return Column(
-                                  children: [
-                                    if (controller.isMembersLoading.value &&
-                                        filteredMembers.isEmpty) ...[
-                                      const Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                    ] else if (filteredMembers.isEmpty) ...[
-                                      const Padding(
-                                        padding: EdgeInsets.all(16.0),
-                                        child: Text('No member information available'),
-                                      ),
-                                    ] else ...[
-                                      ...List.generate(displayCount, (i) {
-                                        final member = filteredMembers[i];
-
-                                        // Determine status color and text
-                                        String statusText = 'on_hold'.tr;
-                                        Color statusColor = Colors.grey;
-                                        bool isCurrentUserPayment = false;
-                                        int? currentCycleNumber;
-
-                                        if (member is Map<String, dynamic>) {
-                                          // Check if this is the current user's payment
-                                          final userId =
-                                              member['user']?['id'] as String?;
-                                          final currentUserId =
-                                              Get.find<AuthService>()
-                                                  .currentUser
-                                                  .value
-                                                  ?.id;
-                                          isCurrentUserPayment =
-                                              userId == currentUserId;
-
-                                          // Get current cycle number from group history data
-                                          currentCycleNumber =
-                                              controller
-                                                      .groupHistoryData['current_round']
-                                                  as int?;
-
-                                          // Check if group start date is in the future (using date-only comparison)
-                                          final groupStartDate =
-                                              group?.startDate;
-                                          final today = DateTime.now();
-                                          final isFutureGroup =
-                                              groupStartDate != null &&
-                                              DateTime(
-                                                groupStartDate.year,
-                                                groupStartDate.month,
-                                                groupStartDate.day,
-                                              ).isAfter(
-                                                DateTime(
-                                                  today.year,
-                                                  today.month,
-                                                  today.day,
-                                                ),
-                                              );
-                                          print(
-                                            "isFutureGroup: $isFutureGroup, groupStartDate: ${groupStartDate?.toIso8601String()}, today: ${DateTime(today.year, today.month, today.day).toIso8601String()}",
-                                          );
-
-                                          if (isFutureGroup) {
-                                            // Future start date - show "On Hold"
-                                            statusText = 'on_hold'.tr;
-                                            statusColor = Colors.grey;
-                                          } else {
-                                            // Past start date - check payment status
-                                            final paymentStatus =
-                                                member['payment_status']
-                                                    as String?;
-
-                                            if (paymentStatus == 'success') {
-                                              statusText = 'Paid';
-                                              statusColor = Colors.green;
-                                            } else if (paymentStatus ==
-                                                'failed') {
-                                              statusText = 'Failed';
-                                              statusColor = Colors.red;
-                                            } else if (paymentStatus ==
-                                                'no_payment') {
-                                              // Show cycle info for unpaid members
-                                              if (currentCycleNumber != null) {
-                                                statusText =
-                                                    'R-$currentCycleNumber Not Paid';
-                                              } else {
-                                                statusText = 'not_paid'.tr;
-                                              }
-                                              statusColor = Colors.orange;
-                                            } else {
-                                              // Fallback
-                                              statusText = 'Unknown';
-                                              statusColor = Colors.grey;
-                                            }
-                                          }
-                                        }
-
-                                        return Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            ListTile(
-                                              leading: CircleAvatar(
-                                                radius: 20,
-                                                backgroundColor:
-                                                    Colors.grey.shade200,
-                                                child:
-                                                    member
-                                                        is Map<String, dynamic>
-                                                    ? (member['user']?['profile_pic_url'] !=
-                                                                  null &&
-                                                              member['user']?['profile_pic_url']!
-                                                                  .isNotEmpty
-                                                          ? ClipRRect(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    20,
-                                                                  ),
-                                                              child: Image.network(
-                                                                member['user']?['profile_pic_url'],
-                                                                width: 40,
-                                                                height: 40,
-                                                                fit: BoxFit
-                                                                    .cover,
-                                                              ),
-                                                            )
-                                                          : Icon(
-                                                              Icons.person,
-                                                              color: Colors
-                                                                  .black54,
-                                                            ))
-                                                    : (member.user.profilePicUrl !=
-                                                                  null &&
-                                                              member
-                                                                  .user
-                                                                  .profilePicUrl!
-                                                                  .isNotEmpty
-                                                          ? ClipRRect(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    20,
-                                                                  ),
-                                                              child: Image.network(
-                                                                member
-                                                                    .user
-                                                                    .profilePicUrl!,
-                                                                width: 40,
-                                                                height: 40,
-                                                                fit: BoxFit
-                                                                    .cover,
-                                                              ),
-                                                            )
-                                                          : Icon(
-                                                              Icons.person,
-                                                              color: Colors
-                                                                  .black54,
-                                                            )),
-                                              ),
-                                              title: Row(
-                                                children: [
-                                                  Text(
-                                                    (member is Map<String, dynamic>)
-                                                        ? (member['user']?['full_name'] ??
-                                                              'Unknown')
-                                                        : member.user.fullName,
-                                                    style: GoogleFonts.montserrat(
-                                                      fontWeight: FontWeight.w600,
-                                                      fontSize: 12,
-                                                    ),
-                                                  ),
-                                                  // Show lottery number if group is started and lottery number exists
-                                                  if (shouldShowLotteryNumber(group?.status, 
-                                                      (member is Map<String, dynamic>) 
-                                                          ? member['lottery_number']?.toString()
-                                                          : member.lotteryNumber)) ...[
-                                                    const SizedBox(width: 8),
-                                                    LotteryNumberBadge(
-                                                      lotteryNumber: (member is Map<String, dynamic>) 
-                                                          ? member['lottery_number']?.toString() ?? ''
-                                                          : member.lotteryNumber!,
-                                                    ),
-                                                  ],
-                                                ],
-                                              ),
-                                              subtitle: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    (member
-                                                            is Map<
-                                                              String,
-                                                              dynamic
-                                                            >)
-                                                        ? (member['user']?['phone'] ??
-                                                              '')
-                                                        : member.user.phone,
-                                                    style:
-                                                        GoogleFonts.montserrat(
-                                                          color: AppColors
-                                                              .textLightGray,
-                                                          fontSize: 12,
-                                                        ),
-                                                  ),
-                                                  if (member
-                                                          is Map<
-                                                            String,
-                                                            dynamic
-                                                          > &&
-                                                      member['last_payment_date'] !=
-                                                          null) ...[
-                                                    const SizedBox(height: 2),
-                                                    Text(
-                                                      () {
-                                                        try {
-                                                          final date =
-                                                              DateTime.parse(
-                                                                member['last_payment_date'],
-                                                              );
-                                                          return 'Last payment: ${_formatDate(date)}';
-                                                        } catch (e) {
-                                                          // If date parsing fails, show raw date or fallback
-                                                          return 'Last payment: ${member['last_payment_date']}';
-                                                        }
-                                                      }(),
-                                                      style:
-                                                          GoogleFonts.montserrat(
-                                                            color: AppColors
-                                                                .textLightGray,
-                                                            fontSize: 10,
-                                                          ),
-                                                    ),
-                                                  ],
-                                                ],
-                                              ),
-                                              trailing: GestureDetector(
-                                                // onTap:
-                                                //     isCurrentUserPayment &&
-                                                //         statusText != 'Paid' &&
-                                                //         statusText != 'on_hold'.tr &&
-                                                //         group != null
-                                                //     ? () {
-                                                //         // Capture non-null group reference
-                                                //         final nonNullGroup =
-                                                //             group!;
-                                                //         // Show payment method selection as bottom sheet
-                                                //         showModalBottomSheet(
-                                                //           context: Get.context!,
-                                                //           builder: (context) =>
-                                                //               SelectPaymentMethodView(
-                                                //                 ekubId:
-                                                //                     nonNullGroup
-                                                //                         .id,
-                                                //                 amount: nonNullGroup
-                                                //                     .contributionAmount
-                                                //                     .toDouble(),
-                                                //                 cycleNumber:
-                                                //                     currentCycleNumber,
-                                                //               ),
-                                                //           isScrollControlled:
-                                                //               true,
-                                                //           shape: const RoundedRectangleBorder(
-                                                //             borderRadius:
-                                                //                 BorderRadius.vertical(
-                                                //                   top:
-                                                //                       Radius.circular(
-                                                //                         20,
-                                                //                       ),
-                                                //                 ),
-                                                //           ),
-                                                //         );
-                                                //       }
-                                                //     : null,
-                                                child: Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 6,
-                                                        vertical: 6,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          20,
-                                                        ),
-                                                    color: statusColor,
-                                                  ),
-                                                  child: Text(
-                                                    statusText,
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 10,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            Divider(
-                                              color: Colors.grey[200],
-                                              indent: 72,
-                                            ),
-                                          ],
-                                        );
-                                      }),
-                                    ],
-                                  ],
-                                );
-                              }),
-                            ],
-                          );
-                        case 1: // Payments Tab
+                        case 0: // Payments Tab
                           // Ensure PaymentController is registered
                           if (!Get.isRegistered<PaymentController>()) {
                             Get.put(PaymentController());
@@ -1179,17 +806,16 @@ class GroupDetailView extends StatelessWidget {
                               );
                               if (activeCyclePayment is Map<String, dynamic>) {
                                 final cycleStatus = activeCyclePayment['payment_status'] as String?;
-                                if (cycleStatus == 'success' || cycleStatus == 'processing' || cycleStatus == 'initiated') {
-                                  paymentStatus = 'paid';
-                                } else {
-                                  paymentStatus = 'pending';
-                                }
+                                // Only 'success' means the payment was confirmed by the gateway.
+                                // 'processing' / 'initiated' mean a session was opened but not
+                                // yet confirmed — treat as pending so the user can still pay.
+                                paymentStatus = cycleStatus == 'success' ? 'paid' : 'pending';
                               }
                               // If no record for this cycle yet → pending (need to pay)
                             } else {
                               // Fallback: use overall payment_status only if no cycle history
                               final status = currentUserMember['payment_status'] as String?;
-                              if (status == 'success' || status == 'processing' || status == 'initiated') {
+                              if (status == 'success') {
                                 paymentStatus = 'paid';
                               }
                             }
@@ -1249,46 +875,16 @@ class GroupDetailView extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 12),
                                   
-                                  // Chapa
+                                  // AddisPay
                                   PaymentMethodCard(
-                                    id: 'chapa',
-                                    name: 'Chapa',
-                                    logo: const ChapaLogo(),
-                                    description: paymentController.chapaDescription,
-                                    isSelected: paymentController.selectedPaymentMethod.value == 'chapa',
-                                    // onTap: () => paymentController.selectPaymentMethod('chapa'),
+                                    id: 'addispay',
+                                    name: 'AddisPay',
+                                    logo: const AddisPayLogo(),
+                                    description: paymentController.addisPayDescription,
+                                    isSelected: paymentController.selectedPaymentMethod.value == 'addispay',
+                                    // onTap: () => paymentController.selectPaymentMethod('addispay'),
                                     // onProceed: () => paymentController.proceedToPayment(
-                                    //   'chapa',
-                                    //   group?.id,
-                                    //   group?.contributionAmount.toDouble(),
-                                    //   cycleNumber: activeCycleNumber,
-                                    // ),
-                                  ),
-                                  // Arifpay
-                                  PaymentMethodCard(
-                                    id: 'arifpay',
-                                    name: 'Arifpay',
-                                    logo: const ArifpayLogo(),
-                                    description: paymentController.arifpayDescription,
-                                    isSelected: paymentController.selectedPaymentMethod.value == 'arifpay',
-                                    // onTap: () => paymentController.selectPaymentMethod('arifpay'),
-                                    // onProceed: () => paymentController.proceedToPayment(
-                                    //   'arifpay',
-                                    //   group?.id,
-                                    //   group?.contributionAmount.toDouble(),
-                                    //   cycleNumber: activeCycleNumber,
-                                    // ),
-                                  ),
-                                  // SANTIM PAY
-                                  PaymentMethodCard(
-                                    id: 'santim_pay',
-                                    name: 'santim_pay'.tr,
-                                    logo: const SantimPayLogo(),
-                                    description: paymentController.santimPayDescription,
-                                    isSelected: paymentController.selectedPaymentMethod.value == 'santim_pay',
-                                    // onTap: () => paymentController.selectPaymentMethod('santim_pay'),
-                                    // onProceed: () => paymentController.proceedToPayment(
-                                    //   'santim_pay',
+                                    //   'addispay',
                                     //   group?.id,
                                     //   group?.contributionAmount.toDouble(),
                                     //   cycleNumber: activeCycleNumber,
@@ -1314,7 +910,7 @@ class GroupDetailView extends StatelessWidget {
                               ),
                             ),
                           );
-                        case 2: // History Tab
+                        case 1: // History Tab
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -1352,9 +948,9 @@ class GroupDetailView extends StatelessWidget {
                                 }).toList();
 
                                 if (userPayments.isEmpty) {
-                                  return const Padding(
+                                  return Padding(
                                     padding: EdgeInsets.all(16.0),
-                                    child: Text('No payment history found'),
+                                    child: Text('no_payment_history_found'.tr),
                                   );
                                 }
 
@@ -1391,7 +987,7 @@ class GroupDetailView extends StatelessWidget {
                                             ),
                                           ),
                                           title: Text(
-                                            'ETB ${payment['amount'] ?? group?.contributionAmount ?? 0}',
+                                            '${'etb'.tr} ${payment['amount'] ?? group?.contributionAmount ?? 0}',
                                             style: GoogleFonts.montserrat(
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -1464,8 +1060,9 @@ class GroupDetailView extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ), // closes RefreshIndicator
+  );
+}
 
   Widget _buildStartDateStatusBanner(Group group) {
     final isStarted = group.status == 'started';
