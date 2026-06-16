@@ -821,6 +821,22 @@ class GroupDetailView extends StatelessWidget {
                             }
                           }
                           
+                          // Drawing deadline for the active cycle — always means
+                          // "pay before this date to be eligible for the draw".
+                          // • started groups: use the exact date from DrawingSchedule.
+                          // • active (pre-start) groups: no DrawingSchedule yet, so
+                          //   estimate from start_date + cycle duration
+                          //   (monthly → 30 d, weekly/daily → 7 d).
+                          final drawDeadline = nextDrawDate != null
+                              ? DateTime.tryParse(nextDrawDate)
+                              : (group?.status == 'active' && group?.startDate != null
+                                  ? group!.startDate!.add(
+                                      group.frequency == 'monthly'
+                                          ? const Duration(days: 30)
+                                          : const Duration(days: 7),
+                                    )
+                                  : null);
+
                           return SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 16),
                             child: Obx(
@@ -838,14 +854,8 @@ class GroupDetailView extends StatelessWidget {
                                       child: CurrentCycleCard(
                                         cycleNumber: activeCycleNumber,
                                         totalCycles: group.targetMembers,
-                                        // For pre-start groups use start_date as the deadline
-                                        // so the user knows when they must pay by.
-                                        dueDate: group.status == 'active'
-                                          ? group.startDate
-                                          : (nextDrawDate != null ? DateTime.tryParse(nextDrawDate) : null),
-                                        drawingDate: nextDrawDate != null
-                                          ? DateTime.tryParse(nextDrawDate)
-                                          : null,
+                                        dueDate: drawDeadline,
+                                        drawingDate: drawDeadline,
                                         amount: group.contributionAmount.toDouble(),
                                         status: paymentStatus,
                                         winnerInfo: null, // Will be populated after drawing
