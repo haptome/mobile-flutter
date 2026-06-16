@@ -827,18 +827,24 @@ class GroupDetailView extends StatelessWidget {
                               () => Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  // Current Cycle Card — always show for started groups
-                                  if (group != null && group.status == 'started')
+                                  // Show the cycle card for:
+                                  //  • 'active'  — group approved, waiting for start_date.
+                                  //                Members can pre-pay cycle 1 so they are
+                                  //                eligible the moment the first drawing fires.
+                                  //  • 'started' — group running, normal mid-cycle payment.
+                                  if (group != null && (group.status == 'started' || group.status == 'active'))
                                     Padding(
                                       padding: const EdgeInsets.only(bottom: 16),
                                       child: CurrentCycleCard(
                                         cycleNumber: activeCycleNumber,
                                         totalCycles: group.targetMembers,
-                                        dueDate: nextDrawDate != null 
-                                          ? DateTime.tryParse(nextDrawDate) 
-                                          : null,
-                                        drawingDate: nextDrawDate != null 
-                                          ? DateTime.tryParse(nextDrawDate) 
+                                        // For pre-start groups use start_date as the deadline
+                                        // so the user knows when they must pay by.
+                                        dueDate: group.status == 'active'
+                                          ? group.startDate
+                                          : (nextDrawDate != null ? DateTime.tryParse(nextDrawDate) : null),
+                                        drawingDate: nextDrawDate != null
+                                          ? DateTime.tryParse(nextDrawDate)
                                           : null,
                                         amount: group.contributionAmount.toDouble(),
                                         status: paymentStatus,
