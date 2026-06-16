@@ -2,6 +2,7 @@
 // Author: haptome H.
 // Linked Spec Section: Payment Selection Page
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:et_digital_equb/core/services/api_service.dart';
@@ -22,14 +23,10 @@ class PaymentController extends GetxController {
   }
 
   // Payment method descriptions
-  final String chapaDescription =
-      'Secure and fast payment gateway. Pay with your mobile money.';
-  final String arifpayDescription =
-      'Secure payment gateway for Ethiopian businesses. Fast and reliable transactions.';
-  final String santimPayDescription =
-      'Simple and secure payment solution. Pay with ease using SANTIM PAY.';
+  final String addisPayDescription =
+      'Secure Ethiopian payment gateway. Pay with your bank, mobile money, or card.';
   final String telebirrDescription =
-      'Pay directly using your Telebirr account. Quick and convenient.';
+      'Pay directly using your TeleBirr account. Quick and convenient.';
 
   void selectPaymentMethod(String method) {
     if (selectedPaymentMethod.value == method) {
@@ -72,47 +69,69 @@ class PaymentController extends GetxController {
     isLoading.value = true;
 
     try {
-      // Prepare metadata
-      final metadata = {
+      // Prepare metadata (user_id is taken from JWT server-side — never send it in body)
+      final metadata = <String, dynamic>{
         'description': 'Ekub contribution payment',
-        'phone_number': currentUser.phone,
-        'first_name': currentUser.fullName?.split(' ').first ?? 'User',
-        'last_name': currentUser.fullName?.split(' ').skip(1).join(' ') ?? '',
       };
+      if (cycleNumber != null) metadata['cycle_number'] = cycleNumber;
+
+      // Route to the correct endpoint based on selected gateway
+      final String endpoint;
+      switch (method) {
+        case 'telebirr':
+          endpoint = '/payments/telebirr/create';
+          break;
+        case 'addispay':
+        default:
+          endpoint = '/payments/create';
+          break;
+      }
 
       // Create payment session
       final response = await apiService.dio.post(
-        '/payments/create',
+        endpoint,
         data: {
-          'user_id': currentUser.id,
           'group_id': groupId,
           'amount': amount,
-          'gateway': method,
-          'cycle_number': cycleNumber,
           'metadata': metadata,
         },
       );
 
       if (response.data['success'] == true) {
         final paymentData = response.data['data'];
-        final paymentUrl = paymentData['gateway_url'];
-        final paymentId = paymentData['paymentId'];
+        final paymentUrl = paymentData['gateway_url'] as String? ?? '';
+        final paymentId = paymentData['paymentId'] as String? ?? '';
+
+        // Guard: backend returned an empty checkout URL (e.g. stuck session)
+        if (paymentUrl.isEmpty) {
+          Get.snackbar(
+            'Payment Error',
+            'Payment session is unavailable. Please try again.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+          return;
+        }
 
         // Close the bottom sheet
         Get.back();
 
-        // Navigate to WebView for payment
+        // Navigate to WebView — pass gateway so the WebView knows which
+        // callback URL pattern to intercept.
         final result = await Get.toNamed(
           '/payment-webview',
           arguments: {
             'url': paymentUrl,
             'paymentId': paymentId,
+            'gateway': method, // 'addispay' | 'telebirr'
           },
         );
 
         // Handle payment result
-        if (result == true) {
-          // Payment successful
+        // WebView returns: 'success' | 'failed' | 'cancelled' | 'pending' | null
+        if (result == 'success') {
+          // Payment confirmed — show success and refresh data
           Get.snackbar(
             'Payment Successful',
             'Your payment has been processed successfully',
@@ -121,33 +140,55 @@ class PaymentController extends GetxController {
             colorText: Colors.white,
             duration: const Duration(seconds: 3),
           );
-          
+
           // Refresh group detail page if it exists
           try {
             if (Get.isRegistered<GroupDetailController>()) {
               final groupDetailController = Get.find<GroupDetailController>();
-              print('PaymentController - Refreshing group detail page');
               await groupDetailController.loadGroupDetails();
               await groupDetailController.loadMembers();
-              // Clear cached data to force reload on tab switch
               groupDetailController.payments.clear();
               groupDetailController.history.clear();
             }
-            
-            // Also refresh in-kind detail page if it exists
             if (Get.isRegistered<InKindDetailController>()) {
               final inKindDetailController = Get.find<InKindDetailController>();
-              print('PaymentController - Refreshing in-kind detail page');
               await inKindDetailController.loadGroupDetails();
               await inKindDetailController.loadMembers();
-              // Clear cached data to force reload on tab switch
               inKindDetailController.payments.clear();
               inKindDetailController.history.clear();
             }
           } catch (e) {
-            print('PaymentController - Error refreshing detail page: $e');
+            // Refresh errors are non-fatal
           }
-        } else if (result == false) {
+        } else if (result == 'pending') {
+          // Payment in flight — refresh so history tab shows latest DB state
+          try {
+            if (Get.isRegistered<GroupDetailController>()) {
+              final groupDetailController = Get.find<GroupDetailController>();
+              await groupDetailController.loadGroupDetails();
+              await groupDetailController.loadMembers();
+              groupDetailController.payments.clear();
+              groupDetailController.history.clear();
+            }
+            if (Get.isRegistered<InKindDetailController>()) {
+              final inKindDetailController = Get.find<InKindDetailController>();
+              await inKindDetailController.loadGroupDetails();
+              await inKindDetailController.loadMembers();
+              inKindDetailController.payments.clear();
+              inKindDetailController.history.clear();
+            }
+          } catch (e) {
+            // non-fatal
+          }
+          Get.snackbar(
+            'Payment Pending',
+            'Your payment is being processed. You will be notified once confirmed.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 5),
+          );
+        } else if (result == 'failed') {
           // Payment failed
           Get.snackbar(
             'Payment Failed',
@@ -158,7 +199,7 @@ class PaymentController extends GetxController {
             duration: const Duration(seconds: 3),
           );
         }
-        // If result is null, user cancelled
+        // 'cancelled' or null — user chose to leave; no snackbar needed
       } else {
         Get.snackbar(
           'Payment Error',
@@ -168,49 +209,47 @@ class PaymentController extends GetxController {
           colorText: Colors.white,
         );
       }
-    } catch (e) {
-      print('Payment error: $e');
-      
-      // Extract error message from response if available
+    } on DioException catch (e) {
+      // Extract the backend error message from the response body when available.
+      final responseData = e.response?.data;
+      final serverMessage = responseData is Map
+          ? (responseData['message'] ??
+              responseData['error']?['message'] ??
+              responseData['error'] as String?)
+          : null;
+      final statusCode = e.response?.statusCode ?? 0;
+
       String errorMessage = 'Failed to process payment';
       bool isDisqualified = false;
       bool showRetryButton = true;
-      
-      // Check if this is a DioException with response data
-      if (e.toString().contains('DioException') || e.toString().contains('DioError')) {
-        // Try to parse the actual error message from the response
-        final errorString = e.toString();
-        
-        // Check for disqualification error
-        if (errorString.toLowerCase().contains('disqualified') ||
-            errorString.toLowerCase().contains('permanently disqualified')) {
-          isDisqualified = true;
-          showRetryButton = false;
-          errorMessage = 'You have been permanently disqualified from this group due to missed payments. You cannot make any future payments.';
-        }
-        // Other error handling
-        else if (errorString.contains('Invalid API Key') || 
-            errorString.contains('business can\'t accept payments')) {
-          errorMessage = 'Payment service is temporarily unavailable. Please contact support or try again later.';
-        } else if (errorString.contains('400')) {
-          errorMessage = 'Invalid payment request. Please check your details and try again.';
-        } else if (errorString.contains('401') || errorString.contains('403')) {
-          errorMessage = 'Payment authorization failed. Please login again.';
-        } else if (errorString.contains('404')) {
-          errorMessage = 'Payment service not found. Please contact support.';
-        } else if (errorString.contains('500') || errorString.contains('502') || errorString.contains('503')) {
-          errorMessage = 'Payment server error. Please try again later.';
-        } else if (errorString.contains('timeout') || errorString.contains('connection')) {
-          errorMessage = 'Connection timeout. Please check your internet and try again.';
-        }
+
+      final msgLower = (serverMessage?.toString() ?? '').toLowerCase();
+      if (msgLower.contains('disqualified')) {
+        isDisqualified = true;
+        showRetryButton = false;
+        errorMessage =
+            'You have been permanently disqualified from this group due to '
+            'missed payments. You cannot make any further payments.';
+      } else if (serverMessage != null && serverMessage.isNotEmpty) {
+        errorMessage = serverMessage.toString();
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.sendTimeout) {
+        errorMessage = 'Connection timeout. Please check your internet and try again.';
+      } else if (statusCode == 401 || statusCode == 403) {
+        errorMessage = 'Payment authorization failed. Please log in again.';
+        showRetryButton = false;
+      } else if (statusCode == 404) {
+        errorMessage = 'Payment service not found. Please contact support.';
+        showRetryButton = false;
+      } else if (statusCode >= 500) {
+        errorMessage = 'Payment server error. Please try again later.';
       }
-      
-      // Show appropriate error message
+
       if (isDisqualified) {
-        // Special handling for disqualified members - use dialog for emphasis
         Get.dialog(
           AlertDialog(
-            title: Row(
+            title: const Row(
               children: [
                 Icon(Icons.block, color: Colors.red),
                 SizedBox(width: 8),
@@ -221,8 +260,8 @@ class PaymentController extends GetxController {
             actions: [
               TextButton(
                 onPressed: () {
-                  Get.back(); // Close dialog
-                  Get.back(); // Close payment sheet
+                  Get.back(); // close dialog
+                  Get.back(); // close payment sheet
                 },
                 child: const Text('OK'),
               ),
@@ -231,7 +270,6 @@ class PaymentController extends GetxController {
           barrierDismissible: false,
         );
       } else {
-        // Generic error handling with optional retry
         Get.snackbar(
           'Payment Error',
           errorMessage,
@@ -239,16 +277,28 @@ class PaymentController extends GetxController {
           backgroundColor: Colors.red,
           colorText: Colors.white,
           duration: const Duration(seconds: 5),
-          mainButton: showRetryButton ? TextButton(
-            onPressed: () {
-              Get.back(); // Close snackbar
-              // Retry payment
-              proceedToPayment(method, groupId, amount, cycleNumber: cycleNumber);
-            },
-            child: const Text('Retry', style: TextStyle(color: Colors.white)),
-          ) : null,
+          mainButton: showRetryButton
+              ? TextButton(
+                  onPressed: () {
+                    Get.back(); // close snackbar
+                    proceedToPayment(method, groupId, amount,
+                        cycleNumber: cycleNumber);
+                  },
+                  child: const Text('Retry',
+                      style: TextStyle(color: Colors.white)),
+                )
+              : null,
         );
       }
+    } catch (e) {
+      Get.snackbar(
+        'Payment Error',
+        'An unexpected error occurred. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
     } finally {
       isLoading.value = false;
     }

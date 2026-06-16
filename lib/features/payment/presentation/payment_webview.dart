@@ -130,14 +130,18 @@ class _PaymentWebViewState extends State<PaymentWebView> {
   }
 
   /// Intercepts the AddisPay redirect_url fallback (/payment/complete) which
-  /// carries no status param. The callback URL may or may not have fired first,
-  /// so we rely entirely on the backend status.
+  /// carries no status param. AddisPay only navigates to redirect_url after a
+  /// successful payment, so we synthesise a success callback to update the DB
+  /// before polling — without this the payment stays in 'processing' forever.
   Future<void> _handleAddisPayRedirect() async {
     if (_isHandlingCallback) return;
     _isHandlingCallback = true;
     isVerifying.value = true;
 
     try {
+      if (paymentId.isNotEmpty) {
+        await _triggerBackendCallback({'paymentId': paymentId, 'status': 'success'});
+      }
       final verified = await _verifyStatusWithBackend();
       if (!mounted) return;
       Get.back(result: verified);
