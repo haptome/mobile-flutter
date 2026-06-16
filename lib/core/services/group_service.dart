@@ -484,6 +484,30 @@ class GroupService extends GetxService {
   }
 
   /// Generate an invite link for a group
+  Future<ApiResponse<void>> leaveGroup(String groupId, String memberId) async {
+    try {
+      final response = await _apiService.groupDio.put(
+        '/groups/$groupId/members/$memberId/leave',
+      );
+      if (response.data['success'] == true) {
+        return ApiResponse<void>(
+          success: true,
+          message: response.data['data']?['message'] as String? ?? 'Left group successfully',
+        );
+      } else {
+        return ApiResponse<void>(
+          success: false,
+          message: response.data['message'] as String? ?? 'Failed to leave group',
+        );
+      }
+    } on DioException catch (e) {
+      return ApiResponse<void>(
+        success: false,
+        message: e.response?.data?['message'] as String? ?? 'Failed to leave group',
+      );
+    }
+  }
+
   Future<ApiResponse<String>> generateInviteLink(String groupId) async {
     return ApiResponse<String>(
       success: true,
@@ -541,11 +565,12 @@ class GroupService extends GetxService {
     required int minMembers,
     required String type,
     required String rotationMethod,
-    required double serviceChargePercent,
+    // service_charge_percent is intentionally NOT sent — backend enforces the
+    // platform rate (4.76%) server-side and rejects unknown fields via
+    // forbidNonWhitelisted: true.
+    // category_id is intentionally NOT sent — categories are assigned by the
+    // platform, not user-selectable when creating a group.
     String? startDate,
-    required String leaderId,
-    String? categoryId,
-    // required int durationMonths,
   }) async {
     try {
       final response = await _apiService.groupDio.post(
@@ -558,11 +583,7 @@ class GroupService extends GetxService {
           'min_members': minMembers,
           'type': type,
           'rotation_method': rotationMethod,
-          'service_charge_percent': serviceChargePercent,
           if (startDate != null) 'start_date': startDate,
-          'leaderId': leaderId,
-          if (categoryId != null) 'category_id': categoryId,
-          // 'duration_months': durationMonths,
         },
       );
 

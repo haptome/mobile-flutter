@@ -51,12 +51,10 @@ class GroupDetailController extends GetxController {
 
   void setActiveTab(int tabIndex) {
     activeTab.value = tabIndex;
-    // Load data for the selected tab if needed
-    if (tabIndex == 1) {
-      // Payments tab
+    // 0 = Payments, 1 = History
+    if (tabIndex == 0) {
       loadPayments();
-    } else if (tabIndex == 2) {
-      // History tab
+    } else if (tabIndex == 1) {
       loadHistory();
     }
   }
@@ -188,6 +186,19 @@ class GroupDetailController extends GetxController {
     loadMembers();
     loadGroupDetails();
     _updateLotteryNumbers();
+  }
+
+  /// Pull-to-refresh — reloads all group data
+  Future<void> refresh() async {
+    members.clear();
+    payments.clear();
+    history.clear();
+    membersWithPaymentStatus.clear();
+    groupHistoryData.clear();
+    await Future.wait([
+      loadMembers(),
+      loadGroupDetails(),
+    ]);
   }
 
   /// Update available lottery numbers based on group members
@@ -456,6 +467,74 @@ class GroupDetailController extends GetxController {
       );
     } finally {
       isMembersLoading.value = false;
+    }
+  }
+
+  Future<void> leaveGroup() async {
+    final currentUserId = Get.find<AuthService>().currentUser.value?.id;
+    if (currentUserId == null) return;
+
+    final myMember = members.firstWhereOrNull(
+      (m) => m.user.id == currentUserId && m.status == 'active',
+    );
+    if (myMember == null) return;
+
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Leave Group'),
+        content: const Text(
+          'Are you sure you want to leave this group? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Get.back(result: true),
+            child: const Text('Leave', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      isLoading.value = true;
+      final response = await _groupService.leaveGroup(group.id, myMember.id);
+
+      if (response.success) {
+        Get.back(); // pop group detail
+        Get.snackbar(
+          'Left Group',
+          response.message ?? 'You have left the group.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+      } else {
+        Get.snackbar(
+          'Error',
+          response.message ?? 'Failed to leave group.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'An unexpected error occurred.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 

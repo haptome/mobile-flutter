@@ -86,6 +86,21 @@ class GroupDetailView extends StatelessWidget {
             color: AppColors.splashBackground,
           ),
         ),
+        actions: [
+          Obx(() {
+            final currentUserId =
+                Get.find<AuthService>().currentUser.value?.id;
+            final isActiveMember = controller.members.any(
+              (m) => m.user.id == currentUserId && m.status == 'active',
+            );
+            if (!isActiveMember) return const SizedBox.shrink();
+            return IconButton(
+              icon: const Icon(Icons.exit_to_app, color: Colors.red),
+              tooltip: 'Leave Group',
+              onPressed: controller.leaveGroup,
+            );
+          }),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: controller.refresh,
