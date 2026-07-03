@@ -24,8 +24,13 @@ class BottomNavController extends GetxController {
 
     // Ensure the controller for the new tab is registered
     _ensureControllerRegistered(newIndex);
-    
-    // Notify the transactions controller when switching to transactions tab
+
+    // Refresh data when switching to relevant tabs
+    if (newIndex == 1 && Get.isRegistered<YourEkubsController>()) {
+      // Always reload "Your Ekubs" so newly created/joined groups appear immediately
+      Get.find<YourEkubsController>().loadUserGroups();
+    }
+
     if (newIndex == 2 && Get.isRegistered<TransactionsController>()) {
       final transactionsController = Get.find<TransactionsController>();
       transactionsController.loadTransactionsIfNeeded();

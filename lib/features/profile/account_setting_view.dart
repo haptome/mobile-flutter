@@ -7,6 +7,7 @@ import 'package:et_digital_equb/core/widgets/country_code_widget.dart';
 import 'package:et_digital_equb/core/widgets/custom_back_button.dart';
 import 'package:et_digital_equb/core/widgets/form_field_widget.dart';
 import 'package:et_digital_equb/core/widgets/profile_picture_selector.dart';
+import 'package:et_digital_equb/core/widgets/translated_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/account_setting_controller.dart';
@@ -29,7 +30,7 @@ class AccountSettingView extends StatelessWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            TranslatedText(
               'account_setting'.tr,
               style: const TextStyle(
                 fontSize: 20,
@@ -37,7 +38,7 @@ class AccountSettingView extends StatelessWidget {
                 color: AppColors.black,
               ),
             ),
-            Text(
+            TranslatedText(
               'manage_personal_account'.tr,
               style: const TextStyle(
                 fontSize: 12,

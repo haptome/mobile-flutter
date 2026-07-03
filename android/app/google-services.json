@@ -40,6 +40,25 @@
           "other_platform_oauth_client": []
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:121555299558:android:011e95919e0a50181d9f27",
+        "android_client_info": {
+          "package_name": "com.etequb"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHT3J4BrlAJ7Wvs3JNUTQ9iLFeJMePECM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
     }
   ],
   "configuration_version": "1"

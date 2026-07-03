@@ -3,10 +3,10 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/translated_text.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/app_assets.dart';
 import '../../controllers/set_password_controller.dart';
 import '../../../core/services/auth_service.dart';
 
@@ -269,8 +269,8 @@ class _SetPasswordBottomSheetContentState
               // Title
               Container(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  'Set Password',
+                child: TranslatedText(
+                  'set_password_title'.tr,
                   style: GoogleFonts.montserrat(
                     fontSize: 20,
                     fontWeight: FontWeight.w500,
@@ -284,8 +284,8 @@ class _SetPasswordBottomSheetContentState
               // Subtitle
               Container(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  '(optional) You can set password to log in.',
+                child: TranslatedText(
+                  'set_password_subtitle'.tr,
                   style: GoogleFonts.montserrat(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
@@ -303,15 +303,15 @@ class _SetPasswordBottomSheetContentState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Current Password Field (only shown if user has existing password)
+                      // Current Password Field
                       AnimatedCrossFade(
                         firstChild: Container(height: 0, width: 0),
 
                         secondChild: Column(
                           children: [
-                            const Text(
-                              'Current Password',
-                              style: TextStyle(
+                            TranslatedText(
+                              'current_password'.tr,
+                              style: const TextStyle(
                                 fontFamily: 'Montserrat',
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -320,7 +320,7 @@ class _SetPasswordBottomSheetContentState
                             ),
                             const SizedBox(height: 6),
                             AppTextField(
-                              hint: 'Current Password',
+                              hint: 'current_password'.tr,
                               controller: _currentPasswordController,
                               obscureText: _obscureCurrentPassword,
                               validator: _hasExistingPassword
@@ -346,9 +346,9 @@ class _SetPasswordBottomSheetContentState
                       ),
 
                       // New Password Field
-                      const Text(
-                        'Password',
-                        style: TextStyle(
+                      TranslatedText(
+                        'new_password'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Montserrat',
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -357,7 +357,7 @@ class _SetPasswordBottomSheetContentState
                       ),
                       const SizedBox(height: 6),
                       AppTextField(
-                        hint: 'New Password',
+                        hint: 'new_password'.tr,
                         controller: _newPasswordController,
                         obscureText: _obscureNewPassword,
                         validator: _validatePassword,
@@ -373,9 +373,9 @@ class _SetPasswordBottomSheetContentState
                       const SizedBox(height: 12),
 
                       // Confirm Password Field
-                      const Text(
-                        'Re-write password',
-                        style: TextStyle(
+                      TranslatedText(
+                        'rewrite_password'.tr,
+                        style: const TextStyle(
                           fontFamily: 'Montserrat',
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -384,7 +384,7 @@ class _SetPasswordBottomSheetContentState
                       ),
                       const SizedBox(height: 6),
                       AppTextField(
-                        hint: 'Confirm New Password',
+                        hint: 'confirm_new_password'.tr,
                         controller: _confirmPasswordController,
                         obscureText: _obscureConfirmPassword,
                         validator: _validateConfirmPassword,
@@ -643,7 +643,7 @@ class _SetPasswordViewState extends State<SetPasswordView> {
 
                 // Title
                 Text(
-                  'Set Password',
+                  'set_password_title'.tr,
                   style: GoogleFonts.montserrat(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -654,8 +654,8 @@ class _SetPasswordViewState extends State<SetPasswordView> {
                 const SizedBox(height: AppSizes.spacingSmall),
 
                 // Subtitle
-                Text(
-                  'Create a strong password for your account',
+                TranslatedText(
+                  'create_strong_password'.tr,
                   style: AppTextStyles.bodyMedium(
                     color: AppColors.lightTextSecondary,
                     isDark: false,

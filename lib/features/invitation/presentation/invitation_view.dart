@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/widgets/custom_back_button.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/translated_text.dart';
 import '../../../../controllers/invitation_controller.dart';
 
 class InvitationView extends StatefulWidget {
@@ -143,7 +144,7 @@ class _InvitationViewState extends State<InvitationView> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              TranslatedText(
                                 group['name'] ?? 'group_name'.tr,
                                 style: GoogleFonts.montserrat(
                                   fontSize: 20,
@@ -205,7 +206,7 @@ class _InvitationViewState extends State<InvitationView> {
                       ),
                     ),
                     const SizedBox(height: AppSizes.spacingMedium),
-                    _buildDetailRow('Amount', '${group['amount']} ETB'),
+                    _buildDetailRow('Amount', '${group['amount']} ${'etb'.tr}'),
                     _buildDetailRow(
                       'Frequency',
                       group['frequency'] ?? 'Monthly',

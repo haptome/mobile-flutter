@@ -5,6 +5,7 @@
 import 'package:et_digital_equb/core/widgets/custom_back_button.dart';
 import 'package:et_digital_equb/core/widgets/faq_item.dart';
 import 'package:et_digital_equb/core/widgets/search_bar_widget.dart';
+import 'package:et_digital_equb/core/widgets/translated_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../controllers/faq_controller.dart';
@@ -27,7 +28,7 @@ class FaqView extends StatelessWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            TranslatedText(
               'faq'.tr,
               style: const TextStyle(
                 fontSize: 20,
@@ -35,7 +36,7 @@ class FaqView extends StatelessWidget {
                 color: AppColors.lightTextPrimary,
               ),
             ),
-            Text(
+            TranslatedText(
               'explore_faq'.tr,
               style: const TextStyle(
                 fontSize: 12,
@@ -95,7 +96,7 @@ class FaqView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  TranslatedText(
                     'how_can_we_help'.tr,
                     style: const TextStyle(
                       fontSize: 16,
@@ -118,7 +119,7 @@ class FaqView extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  TranslatedText(
                     'top_questions'.tr,
                     style: const TextStyle(
                       fontSize: 18,
@@ -146,7 +147,7 @@ class FaqView extends StatelessWidget {
               child: Obx(() {
                 if (controller.filteredFaqs.isEmpty) {
                   return Center(
-                    child: Text(
+                    child: TranslatedText(
                       'no_faqs_found'.tr,
                       style: const TextStyle(
                         fontSize: 16,

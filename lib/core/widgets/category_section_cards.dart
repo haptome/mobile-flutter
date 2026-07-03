@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'category_small_card.dart';
 import 'section_header.dart';
+import 'translated_text.dart';
 import '../theme/app_sizes.dart';
 import '../../models/category_model.dart' as category_models;
 
@@ -45,6 +46,14 @@ class CategorySectionCards extends StatelessWidget {
                   iconUrl:
                       category.icon ?? 'material-symbols:category-outline',
                   label: category.name,
+                  // TranslatedText shows English instantly,
+                  // then swaps to Amharic once the translation arrives.
+                  labelWidget: TranslatedText(
+                    category.name,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
                   onTap: onCategoryTap != null
                       ? () => onCategoryTap!(category)
                       : null,

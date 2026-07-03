@@ -400,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Row(
                       children: [
                         Text(
-                          languageController.isEnglish() ? 'Eng' : 'አማ',
+                          languageController.isEnglish() ? 'lang_toggle_en'.tr : 'lang_toggle_am'.tr,
                           style: AppTextStyles.bodySmall(
                             color: AppColors.black,
                             isDark: false,
@@ -594,7 +594,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         const SizedBox(height: 6),
                                         Flexible(
                                           child: Text(
-                                            campaign['title'] as String? ?? 'Campaign',
+                                            (campaign['title'] as String? ?? 'campaign').tr,
                                             style: AppTextStyles.bodySmall(
                                               color: AppColors.lightTextPrimary,
                                               isDark: false,

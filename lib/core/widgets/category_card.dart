@@ -3,13 +3,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:iconify_design/iconify_design.dart';
-import 'package:iconify_flutter/iconify_flutter.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_sizes.dart';
 import '../theme/app_text_styles.dart';
+import 'translated_text.dart';
 
 class CategoryCard extends StatelessWidget {
-  final String iconUrl; // Material Symbols icon identifier
+  final String iconUrl;
   final String label;
   final VoidCallback? onTap;
 
@@ -35,15 +35,15 @@ class CategoryCard extends StatelessWidget {
             color: AppColors.white,
             borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
             border: Border.all(
-              color: const Color(0x40000000), // #00000040
+              color: const Color(0x40000000),
               width: 0.4,
             ),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: const Color(0x14000000), // #00000014
+                color: Color(0x14000000),
                 blurRadius: 4,
                 spreadRadius: 0,
-                offset: const Offset(0, 4),
+                offset: Offset(0, 4),
               ),
             ],
           ),
@@ -53,28 +53,26 @@ class CategoryCard extends StatelessWidget {
               Container(
                 width: 50,
                 height: 50,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.primary,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: IconifyIcon(
-                    icon:iconUrl,
+                    icon: iconUrl,
                     color: AppColors.white,
                     size: AppSizes.iconMedium,
                   ),
                 ),
               ),
               const SizedBox(height: AppSizes.spacingSmall),
-              Text(
+              TranslatedText(
                 label,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodySmall(
                   color: const Color(0xff232729),
                   isDark: false,
-                ).copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                ).copyWith(fontWeight: FontWeight.bold),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -85,4 +83,3 @@ class CategoryCard extends StatelessWidget {
     );
   }
 }
-

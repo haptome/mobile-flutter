@@ -336,6 +336,8 @@ const Map<String, String> enUS = {
   'daily_label': 'Daily',
   'weekly_label': 'Weekly',
   'monthly_label': 'Monthly',
+  'lang_toggle_en': 'Eng',
+  'lang_toggle_am': 'አማ',
   
   // Profile Page
   'manage_personal_account': 'Manage your personal account',
@@ -590,7 +592,15 @@ const Map<String, String> enUS = {
   'privacy_contact_office': 'Office:',
   'privacy_contact_phone': 'Phone:',
   'privacy_contact_email': 'Email:',
-  
+  'Savings': 'Savings',
+  'Investment': 'Investment',
+  'Emergency Fund': 'Emergency Fund',
+  'Electronics': 'Electronics',
+  'Vehicles': 'Vehicles',
+  'Home Appliances': 'Home Appliances',
+  'Furniture': 'Furniture',
+  'campaign': 'Campaign',
+
   // FAQ Content
   'explore_faq': 'Find answers to common questions',
   'how_can_we_help': 'How can we help you?',
@@ -860,5 +870,15 @@ const Map<String, String> enUS = {
   'transaction_id_colon': 'Transaction ID:',
   'rounds_colon': 'Rounds:',
   'amount_colon': 'Amount:',
+  'members_label': 'Members',
+  'group_not_found': 'Group not found',
+  'no_payment_history_found': 'No payment history found',
+  
+  // Ekub Card Status Actions
+  'view_details': 'View Details',
+  'pending_action': 'Pending',
+  'completed_status': 'Completed',
+  'suspended_status': 'Suspended',
+  'join': 'Join',
 };
 

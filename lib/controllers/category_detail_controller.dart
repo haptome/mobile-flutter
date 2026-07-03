@@ -7,6 +7,8 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:et_digital_equb/core/services/auth_service.dart';
 import 'package:et_digital_equb/core/services/group_service.dart';
+import 'package:et_digital_equb/core/widgets/translated_text.dart';
+import 'package:et_digital_equb/core/widgets/equb_membership_agreement.dart';
 import 'package:et_digital_equb/models/category_model.dart' as category_models;
 import 'package:et_digital_equb/models/group_model.dart';
 import '../core/routes/app_routes.dart';
@@ -144,15 +146,33 @@ class CategoryDetailController extends GetxController {
   }
 
   Future<void> onJoinTap(dynamic group) async {
-    // Show bottom sheet with terms and conditions
-    final result = await Get.bottomSheet<Map<String, dynamic>>(
-      _JoinGroupBottomSheet(group: group),
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      isDismissible: true,
-    );
+    // Cash groups: show the official scroll-to-accept membership agreement
+    // (same as the invite-link flow). In-kind groups: keep the existing
+    // simple terms sheet (the official agreement is cash-only).
+    bool accepted;
+    if (group is Group) {
+      accepted = await showEqubMembershipAgreement(
+        Get.context!,
+        buildCashEqubTc(
+          groupName: group.name,
+          contributionAmount: group.contributionAmount,
+          targetMembers: group.targetMembers,
+          frequency: group.frequency,
+          serviceChargePercent: group.serviceChargePercent,
+          startDate: group.startDate,
+        ),
+      );
+    } else {
+      final result = await Get.bottomSheet<Map<String, dynamic>>(
+        _JoinGroupBottomSheet(group: group),
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        isDismissible: true,
+      );
+      accepted = result != null && result['confirmed'] == true;
+    }
 
-    if (result == null || result['confirmed'] != true) return;
+    if (!accepted) return;
 
     try {
       isLoading.value = true;
@@ -198,8 +218,8 @@ class _JoinGroupBottomSheetState extends State<_JoinGroupBottomSheet> {
     String rules = '';
     
     // Contribution details
-    rules += '1. Contribution Amount: ETB ${group.contributionAmount}\n';
-    rules += '   - Each member must contribute ETB ${group.contributionAmount} ${group.frequency}.\n\n';
+    rules += '1. Contribution Amount: ${'etb'.tr} ${group.contributionAmount}\n';
+    rules += '   - Each member must contribute ${'etb'.tr} ${group.contributionAmount} ${group.frequency}.\n\n';
     
     // Frequency
     String frequencyText = group.frequency == 'weekly' ? 'every week' : 'every month';
@@ -288,7 +308,7 @@ class _JoinGroupBottomSheetState extends State<_JoinGroupBottomSheet> {
             // Title
             Padding(
               padding: const EdgeInsets.all(20.0),
-              child: Text(
+              child: TranslatedText(
                 'Join ${widget.group.name}',
                 style: GoogleFonts.montserrat(
                   fontSize: 20,
@@ -306,7 +326,7 @@ class _JoinGroupBottomSheetState extends State<_JoinGroupBottomSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Terms and Conditions Section
-                    Text(
+                    TranslatedText(
                       'Terms and Conditions',
                       style: GoogleFonts.montserrat(
                         fontSize: 16,
@@ -324,7 +344,7 @@ class _JoinGroupBottomSheetState extends State<_JoinGroupBottomSheet> {
                       ),
                       padding: const EdgeInsets.all(12),
                       child: SingleChildScrollView(
-                        child: Text(
+                        child: TranslatedText(
                           'By joining this group, you agree to:\n\n'
                           '1. Ensure all contributions are made on time\n'
                           '2. Follow the rotation method selected by the group\n'
@@ -343,7 +363,7 @@ class _JoinGroupBottomSheetState extends State<_JoinGroupBottomSheet> {
                     const SizedBox(height: 20),
       
                     // Group Rules Section
-                    Text(
+                    TranslatedText(
                       'Group Rules',
                       style: GoogleFonts.montserrat(
                         fontSize: 16,
@@ -361,7 +381,7 @@ class _JoinGroupBottomSheetState extends State<_JoinGroupBottomSheet> {
                       ),
                       padding: const EdgeInsets.all(12),
                       child: SingleChildScrollView(
-                        child: Text(
+                        child: TranslatedText(
                           _generateGroupRules(),
                           style: GoogleFonts.montserrat(
                             fontSize: 14,
@@ -414,7 +434,7 @@ class _JoinGroupBottomSheetState extends State<_JoinGroupBottomSheet> {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
+                        child: TranslatedText(
                           'I agree to the group terms and conditions',
                           style: GoogleFonts.montserrat(
                             fontSize: 14,
@@ -442,7 +462,7 @@ class _JoinGroupBottomSheetState extends State<_JoinGroupBottomSheet> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
-                            child: Text(
+                            child: TranslatedText(
                               'Cancel',
                               style: GoogleFonts.montserrat(
                                 fontSize: 16,
@@ -469,7 +489,7 @@ class _JoinGroupBottomSheetState extends State<_JoinGroupBottomSheet> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
-                            child: Text(
+                            child: TranslatedText(
                               'Join',
                               style: GoogleFonts.montserrat(
                                 fontSize: 16,

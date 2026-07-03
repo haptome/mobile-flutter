@@ -130,6 +130,17 @@ class PaymentController extends GetxController {
 
         // Handle payment result
         // WebView returns: 'success' | 'failed' | 'cancelled' | 'pending' | null
+        // For non-success outcomes, abandon the stale payment so the next
+        // attempt generates a fresh AddisPay session with a new UUID.
+        if (result != 'success' && result != 'pending' && paymentId.isNotEmpty) {
+          try {
+            await apiService.dio.patch('/payments/$paymentId/abandon');
+          } catch (_) {
+            // best-effort — failure here just means the next attempt may return
+            // the same session, which is still better than blocking the user
+          }
+        }
+
         if (result == 'success') {
           // Payment confirmed — show success and refresh data
           Get.snackbar(

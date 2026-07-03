@@ -2,6 +2,7 @@
 
 import 'package:et_digital_equb/core/theme/app_colors.dart';
 import 'package:et_digital_equb/core/widgets/custom_back_button.dart';
+import 'package:et_digital_equb/core/widgets/translated_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -64,7 +65,7 @@ class PrivacyPolicyView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (controller.effectiveDate.value.isNotEmpty)
-                  Text(
+                  TranslatedText(
                     'Effective Date: ${controller.effectiveDate.value}',
                     style: GoogleFonts.lato(
                       fontSize: 12,
@@ -74,7 +75,7 @@ class PrivacyPolicyView extends StatelessWidget {
                 if (controller.effectiveDate.value.isNotEmpty)
                   const SizedBox(height: 12),
                 if (controller.introduction.value.isNotEmpty)
-                  Text(
+                  TranslatedText(
                     controller.introduction.value,
                     style: GoogleFonts.lato(
                       fontSize: 14,
@@ -112,7 +113,7 @@ class _SectionWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          TranslatedText(
             '${section.id}. ${section.title}',
             style: GoogleFonts.lato(
               fontSize: 16,
@@ -122,7 +123,7 @@ class _SectionWidget extends StatelessWidget {
           ),
           if (section.content.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(
+            TranslatedText(
               section.content,
               style: GoogleFonts.lato(
                 fontSize: 14,
@@ -141,7 +142,7 @@ class _SectionWidget extends StatelessWidget {
                   children: [
                     const Text('• ', style: TextStyle(fontSize: 16, color: Color(0xFF494949))),
                     Expanded(
-                      child: Text(
+                      child: TranslatedText(
                         _stripHtml(item),
                         style: GoogleFonts.lato(
                           fontSize: 14,

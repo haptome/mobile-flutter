@@ -75,66 +75,17 @@ class SelectPaymentMethodView extends StatelessWidget {
               child: Obx(
                 () => Column(
                   children: [
-                    // Chapa
+                    // AddisPay
                     PaymentMethodCard(
-                      id: 'chapa',
-                      name: 'Chapa',
-                      logo: const ChapaLogo(),
-                      description: controller.chapaDescription,
+                      id: 'addispay',
+                      name: 'AddisPay',
+                      logo: const AddisPayLogo(),
+                      description: controller.addisPayDescription,
                       isSelected:
-                          controller.selectedPaymentMethod.value == 'chapa',
-                      onTap: () => controller.selectPaymentMethod('chapa'),
+                          controller.selectedPaymentMethod.value == 'addispay',
+                      onTap: () => controller.selectPaymentMethod('addispay'),
                       onProceed: () => controller.proceedToPayment(
-                        'chapa',
-                        ekubId,
-                        amount,
-                        cycleNumber: cycleNumber,
-                      ),
-                    ),
-                    // Arifpay
-                    PaymentMethodCard(
-                      id: 'arifpay',
-                      name: 'Arifpay',
-                      logo: const ArifpayLogo(),
-                      description: controller.arifpayDescription,
-                      isSelected:
-                          controller.selectedPaymentMethod.value == 'arifpay',
-                      onTap: () => controller.selectPaymentMethod('arifpay'),
-                      onProceed: () => controller.proceedToPayment(
-                        'arifpay',
-                        ekubId,
-                        amount,
-                        cycleNumber: cycleNumber,
-                      ),
-                    ),
-                    // SANTIM PAY
-                    PaymentMethodCard(
-                      id: 'santim_pay',
-                      name: 'SANTIM PAY',
-                      logo: const SantimPayLogo(),
-                      description: controller.santimPayDescription,
-                      isSelected:
-                          controller.selectedPaymentMethod.value ==
-                          'santim_pay',
-                      onTap: () => controller.selectPaymentMethod('santim_pay'),
-                      onProceed: () => controller.proceedToPayment(
-                        'santim_pay',
-                        ekubId,
-                        amount,
-                        cycleNumber: cycleNumber,
-                      ),
-                    ),
-                    // Telebirr (if needed)
-                    PaymentMethodCard(
-                      id: 'telebirr',
-                      name: 'Telebirr',
-                      logo: const TelebirrLogo(),
-                      description: controller.telebirrDescription,
-                      isSelected:
-                          controller.selectedPaymentMethod.value == 'telebirr',
-                      onTap: () => controller.selectPaymentMethod('telebirr'),
-                      onProceed: () => controller.proceedToPayment(
-                        'telebirr',
+                        'addispay',
                         ekubId,
                         amount,
                         cycleNumber: cycleNumber,

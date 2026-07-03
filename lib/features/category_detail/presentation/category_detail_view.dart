@@ -9,8 +9,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../models/category_model.dart' as category_models;
 import '../../../../controllers/category_detail_controller.dart';
-import '../../../../core/widgets/ekub_list_item.dart';
+import '../../../../core/widgets/ekub_list_item_custom.dart';
 import '../../../../core/widgets/scaffold_with_bottom_bar.dart';
+import '../../../../core/widgets/translated_text.dart';
 
 class CategoryDetailView extends StatelessWidget {
   const CategoryDetailView({super.key});
@@ -63,18 +64,14 @@ class CategoryDetailView extends StatelessWidget {
                 color: AppColors.splashBackground,
               ),
             const SizedBox(width: 8),
-            Text(
+            TranslatedText(
               controller.category.value.name,
               style: GoogleFonts.montserrat(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: AppColors.splashBackground,
               ),
-            ),
-          ],
-        ),
-        centerTitle: false,
-      ),
+            ),]),),
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
@@ -141,8 +138,8 @@ class CategoryDetailView extends StatelessWidget {
                     ),
                     childrenPadding: const EdgeInsets.all(AppSizes.paddingMedium),
                     initiallyExpanded: true,
-                    title: Text(
-                      entry.key[0].toUpperCase() + entry.key.substring(1),
+                    title: TranslatedText(
+                      '${entry.key[0].toUpperCase()}${entry.key.substring(1)}',
                       style: GoogleFonts.montserrat(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -151,11 +148,12 @@ class CategoryDetailView extends StatelessWidget {
                     ),
                     children: entry.value.map((g) {
                       final isMember = controller.isUserMember(g);
-                      return EkubListItem.fromGroup(
+                      return EkubListItemCustom.fromAnyGroup(
                         g,
-                        onJoin: isMember ? null : () => controller.onJoinTap(g),
-                        onTap: isMember ? () => controller.onGroupTap(g) : null,
-                        showJoin: !isMember,
+                        actionLabel: isMember ? 'view_details'.tr : 'join'.tr,
+                        onTap: isMember
+                            ? () => controller.onGroupTap(g)
+                            : () => controller.onJoinTap(g),
                       );
                     }).toList(),
                   ),

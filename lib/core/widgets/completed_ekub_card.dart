@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../theme/app_colors.dart';
+import 'translated_text.dart';
 
 class CompletedEkubCard extends StatefulWidget {
   final String id;
@@ -63,7 +64,7 @@ class _CompletedEkubCardState extends State<CompletedEkubCard> {
               child: Row(
                 children: [
                   // Ekub Name
-                  Text(
+                  TranslatedText(
                     widget.name,
                     style: const TextStyle(
                       fontSize: 16,
@@ -115,6 +116,7 @@ class _CompletedEkubCardState extends State<CompletedEkubCard> {
                   Expanded(
                     child: _buildDetailItem(
                       icon: Icons.sync_outlined,
+                      isTranslatable: true,
                       label: '${'paid'.tr} ${widget.frequency}',
                       iconColor: AppColors.lightTextPrimary, // Dark teal
                     ),
@@ -148,6 +150,7 @@ class _CompletedEkubCardState extends State<CompletedEkubCard> {
     required IconData icon,
     required String label,
     required Color iconColor,
+    bool isTranslatable = false,
   }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -155,14 +158,23 @@ class _CompletedEkubCardState extends State<CompletedEkubCard> {
         Icon(icon, size: 18, color: iconColor),
         const SizedBox(width: 6),
         Flexible(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.lightTextPrimary,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
+          child: isTranslatable
+              ? TranslatedText(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.lightTextPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                )
+              : Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.lightTextPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
         ),
       ],
     );

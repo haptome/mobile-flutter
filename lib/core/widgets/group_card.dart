@@ -65,7 +65,7 @@ class GroupCard extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSizes.spacingXSmall),
                         Text(
-                          '${group.contributionAmount.toStringAsFixed(0)} ETB • ${_prettyFrequency(group.frequency)}',
+                          '${group.contributionAmount.toStringAsFixed(0)} ${'etb'.tr} • ${_prettyFrequency(group.frequency)}',
                           style: GoogleFonts.montserrat(
                             fontSize: 13,
                             color: AppColors.textLightGray,

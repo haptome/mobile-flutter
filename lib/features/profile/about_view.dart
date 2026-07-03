@@ -3,6 +3,7 @@
 
 import 'package:et_digital_equb/core/theme/app_colors.dart';
 import 'package:et_digital_equb/core/app_assets.dart';
+import 'package:et_digital_equb/core/widgets/translated_text.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
@@ -79,7 +80,7 @@ class AboutView extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '${'version'.tr} 1.0.1',
+                    '${'version'.tr} 1.0.4',
                     style: GoogleFonts.montserrat(
                       fontSize: 13,
                       color: AppColors.textLightGray,
@@ -154,7 +155,7 @@ class _InfoCard extends StatelessWidget {
           const SizedBox(height: 10),
           const Divider(height: 1, color: Color(0x1A000000)),
           const SizedBox(height: 10),
-          Text(
+          TranslatedText(
             content,
             style: GoogleFonts.montserrat(
               fontSize: 13,

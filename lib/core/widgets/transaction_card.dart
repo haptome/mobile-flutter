@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../theme/app_colors.dart';
+import 'translated_text.dart';
 
 enum TransactionType { deposit, withdrawal, failed, rewards }
 
@@ -184,7 +185,7 @@ class _TransactionCardState extends State<TransactionCard> {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
+                        TranslatedText(
                           widget.source,
                           style: const TextStyle(
                             fontSize: 12,
@@ -231,7 +232,25 @@ class _TransactionCardState extends State<TransactionCard> {
               child: Column(
                 children: [
                   if (widget.ekubName != null) ...[
-                    _buildDetailRow('equb_name_colon'.tr, widget.ekubName!),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'equb_name_colon'.tr,
+                          style: const TextStyle(fontSize: 14, color: AppColors.black),
+                        ),
+                        SizedBox(
+                          width: 200,
+                          child: TranslatedText(
+                            widget.ekubName!,
+                            style: const TextStyle(fontSize: 14, color: AppColors.black),
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.end,
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 12),
                   ],
                   _buildDetailRow('date_colon'.tr, widget.date),

@@ -3,14 +3,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:iconify_design/iconify_design.dart';
-import 'package:iconify_flutter/iconify_flutter.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_sizes.dart';
 import '../theme/app_text_styles.dart';
+import 'translated_text.dart';
 
 class CategorySmallCard extends StatelessWidget {
   final String iconUrl; // Material Symbols icon identifier
   final String label;
+  final Widget? labelWidget; // Optional — replaces label Text when provided
   final VoidCallback? onTap;
   final Color? iconBackgroundColor;
   final List<BoxShadow>? iconBoxShadow;
@@ -21,6 +22,7 @@ class CategorySmallCard extends StatelessWidget {
     super.key,
     required this.iconUrl,
     required this.label,
+    this.labelWidget,
     this.onTap,
     this.iconBackgroundColor,
     this.iconBoxShadow,
@@ -77,20 +79,19 @@ class CategorySmallCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSizes.spacingSmall),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                
-                style: AppTextStyles.bodySmall(
-                  color: const Color(0xff232729),
-                  isDark: false,
-                ).copyWith(
-                  fontWeight: FontWeight.bold,
-                  
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+              labelWidget ??
+                  TranslatedText(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.bodySmall(
+                      color: const Color(0xff232729),
+                      isDark: false,
+                    ).copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
             ],
           ),
         ),

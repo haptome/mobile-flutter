@@ -24,27 +24,35 @@ class ProfileController extends GetxController {
   void onInit() {
     super.onInit();
     _loadUserProfile();
+    // Listen for auth changes to refresh profile data
+    ever(_authService.currentUser, (_) {
+      _loadUserProfile();
+    });
   }
 
   void _loadUserProfile() {
     // Load user data from auth service
     final currentUser = _authService.currentUser.value;
     if (currentUser != null) {
+      final userName = currentUser.fullName?.isNotEmpty == true 
+          ? currentUser.fullName!
+          : currentUser.phone;
+      
       user.value = {
-        'name': currentUser.fullName ?? 'user_name'.tr,
+        'name': userName,
         'phone': currentUser.phone,
-        'idNumber': '1234-5678-9012', // Not in UserModel, would come from API
-        'location': 'Addis Ababa', // Not in UserModel, would come from API
-        'level': '1',
+        'idNumber': '', // ID not in UserModel
+        'location': currentUser.location ?? 'Location',
+        'level': '${currentUser.trustScore}',
         'profileImageUrl': currentUser.profilePicUrl,
       };
     } else {
-      // Default user data for demo
+      // No logged-in user - use empty/placeholder data
       user.value = {
-        'name': 'Nibertu Birhanu',
-        'phone': '+251 9 00 00 0000',
-        'idNumber': '1234-5678-9012',
-        'location': 'Addis Ababa',
+        'name': 'User',
+        'phone': '',
+        'idNumber': '',
+        'location': '',
         'level': '1',
         'profileImageUrl': null,
       };

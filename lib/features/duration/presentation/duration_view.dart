@@ -10,6 +10,7 @@ import '../../../../core/theme/app_sizes.dart';
 import '../../../../controllers/duration_controller.dart';
 import '../../../../models/group_model.dart';
 import '../../../../core/widgets/scaffold_with_bottom_bar.dart';
+import '../../../../core/widgets/translated_text.dart';
 
 class DurationView extends StatefulWidget {
   const DurationView({super.key});
@@ -153,6 +154,7 @@ class _DurationViewState extends State<DurationView> {
               child: _buildFrequencyCard(
                 label,
                 count,
+                frequency: frequency,
                 isSelected: _controller.selectedFrequency.value == frequency,
                 onTap: () => _controller.onFrequencyTap(frequency),
               ),
@@ -166,6 +168,7 @@ class _DurationViewState extends State<DurationView> {
   Widget _buildFrequencyCard(
     String label,
     int count, {
+    String? frequency,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -198,50 +201,22 @@ class _DurationViewState extends State<DurationView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: const Color(0xfff7f7e6),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0x0F000000),
-                    blurRadius: 2,
-                    spreadRadius: 0,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.calendar_today,
-                  size: AppSizes.iconMedium,
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
+            TranslatedText(
+              label,
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.splashBackground,
               ),
             ),
-            const SizedBox(height: AppSizes.spacingSmall),
+            const SizedBox(height: 4),
             Text(
-              label,
-              textAlign: TextAlign.center,
+              '$count ${'groups'.tr}',
               style: GoogleFonts.montserrat(
                 fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xff232729),
+                color: AppColors.textLightGray,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
-            if (count > 0)
-              Text(
-                '$count groups',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.montserrat(
-                  fontSize: 10,
-                  color: AppColors.textLightGray,
-                ),
-              ),
           ],
         ),
       ),
@@ -295,7 +270,7 @@ class _DurationViewState extends State<DurationView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Text(
+                  child: TranslatedText(
                     group.name,
                     style: GoogleFonts.montserrat(
                       fontSize: 18,
@@ -330,7 +305,7 @@ class _DurationViewState extends State<DurationView> {
             ),
             const SizedBox(height: AppSizes.spacingSmall),
             if (group.category != null)
-              Text(
+              TranslatedText(
                 group.category!.name,
                 style: GoogleFonts.montserrat(
                   fontSize: 14,
@@ -353,7 +328,7 @@ class _DurationViewState extends State<DurationView> {
                 Icon(Icons.money, size: 16, color: AppColors.textLightGray),
                 const SizedBox(width: 4),
                 Text(
-                  '${group.contributionAmount.toStringAsFixed(0)} ETB ${group.frequency}',
+                  '${group.contributionAmount.toStringAsFixed(0)} ${'etb'.tr} ${group.frequency}',
                   style: GoogleFonts.montserrat(
                     fontSize: 14,
                     color: AppColors.textLightGray,

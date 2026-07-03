@@ -1,4 +1,4 @@
-package com.et_digital_equb
+package com.etequb
 
 import android.content.pm.PackageManager
 import android.os.Build

@@ -101,13 +101,6 @@ class _ProfileViewState extends State<ProfileView> {
                         ],
                       ),
                       // Wallets Section
-                      SectionHeader(title: 'wallets'.tr),
-                      SectionItem(
-                        icon: Iconsax.wallet_1,
-                        label: 'wallet_and_payments'.tr,
-                        onTap: controller.onWalletTap,
-                        off: false,
-                      ),
                       // Profile Management Section
                       SectionHeader(title: 'profile_management'.tr),
                       SectionItem(

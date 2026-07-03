@@ -6,7 +6,10 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:et_digital_equb/core/theme/app_sizes.dart';
 import 'package:et_digital_equb/controllers/create_group_controller.dart';
+import 'package:et_digital_equb/core/widgets/equb_membership_agreement.dart';
 import 'package:et_digital_equb/core/widgets/scaffold_with_bottom_bar.dart';
+import 'package:et_digital_equb/controllers/language_controller.dart';
+import 'package:et_digital_equb/core/utils/ethiopian_date.dart';
 
 class CreateGroupView extends StatefulWidget {
   const CreateGroupView({super.key});
@@ -25,6 +28,19 @@ class _CreateGroupViewState extends State<CreateGroupView> {
   final _serviceChargeController = TextEditingController();
   final _groupRulesController = TextEditingController();
 
+  // Always create a fresh GetX controller so the form never opens with stale
+  // state (e.g. a category that was selected in a previous session).
+  late final CreateGroupController _gxController;
+
+  @override
+  void initState() {
+    super.initState();
+    if (Get.isRegistered<CreateGroupController>()) {
+      Get.delete<CreateGroupController>(force: true);
+    }
+    _gxController = Get.put(CreateGroupController());
+  }
+
   @override
   void dispose() {
     _groupNameController.dispose();
@@ -39,9 +55,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.isRegistered<CreateGroupController>()
-        ? Get.find<CreateGroupController>()
-        : Get.put(CreateGroupController());
+    final controller = _gxController;
 
     return ScaffoldWithBottomBar(
       backgroundColor: const Color(0xFFFFFFFF),
@@ -376,7 +390,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                 color: Colors.black.withOpacity(0.5),
                 fontWeight: FontWeight.w400,
               ),
-              prefixText: 'ETB ',
+              prefixText: '${'etb'.tr} ',
               border: InputBorder.none,
             ),
             onChanged: (value) {
@@ -386,82 +400,8 @@ class _CreateGroupViewState extends State<CreateGroupView> {
             },
           ),
 
-          // Category
-          const SizedBox(height: 12),
-          Text(
-            'Category *',
-            style: GoogleFonts.montserrat(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Obx(() {
-            if (controller.categories.isEmpty &&
-                controller.isLoadingCategories.value) {
-              return Container(
-                height: 56,
-                alignment: Alignment.center,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              );
-            }
-            return Container(
-              height: 56,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: const Color(0xFFD8DADC), width: 1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  isExpanded: true,
-                  value: controller.selectedCategoryId.value.isEmpty
-                      ? null
-                      : controller.selectedCategoryId.value,
-                  hint: Text(
-                    controller.isLoadingCategories.value
-                        ? 'loading_categories'.tr
-                        : 'select_category'.tr,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: controller.isLoadingCategories.value
-                          ? Colors.black.withOpacity(0.5)
-                          : Colors.black.withOpacity(0.5),
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  items: controller.categories.map((category) {
-                    return DropdownMenuItem<String>(
-                      value: category.id,
-                      child: Text(
-                        category.name,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.black,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: controller.isLoadingCategories.value
-                      ? null
-                      : (String? newValue) {
-                          if (newValue != null) {
-                            controller.updateSelectedCategory(newValue);
-                          }
-                        },
-                  icon: Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14,
-                    color: Colors.black.withOpacity(0.5),
-                  ),
-                  iconSize: 14,
-                ),
-              ),
-            );
-          }),
+          // Category is not shown to the user — it's always null when creating
+          // a group. The backend accepts groups without a category.
 
           // Frequency
           const SizedBox(height: 12),
@@ -591,6 +531,12 @@ class _CreateGroupViewState extends State<CreateGroupView> {
   }
 
   Widget _buildStep3Content(CreateGroupController controller) {
+    // Pre-fill the service charge field with the current platform value on first
+    // render of step 3, so the user sees 4.76 rather than an empty box.
+    if (_serviceChargeController.text.isEmpty) {
+      _serviceChargeController.text =
+          controller.serviceChargePercent.value.toString();
+    }
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -723,7 +669,7 @@ class _CreateGroupViewState extends State<CreateGroupView> {
             ),
           ),
 
-          // Service Charge Percent
+          // Service Charge Percent (platform-enforced, read-only)
           const SizedBox(height: 12),
           Text(
             'service_charge_required'.tr,
@@ -736,24 +682,18 @@ class _CreateGroupViewState extends State<CreateGroupView> {
           const SizedBox(height: 6),
           TextField(
             controller: _serviceChargeController,
-            keyboardType: TextInputType.numberWithOptions(decimal: true),
+            readOnly: true,
             decoration: InputDecoration(
-              hintText: 'enter_service_charge'.tr,
-              hintStyle: TextStyle(
-                fontSize: 16,
-                color: Colors.black.withOpacity(0.5),
-                fontWeight: FontWeight.w400,
-              ),
               suffixText: '%',
               border: InputBorder.none,
+              filled: true,
+              fillColor: Colors.grey.shade100,
             ),
-            onChanged: (value) {
-              if (value.isNotEmpty) {
-                controller.updateServiceChargePercent(
-                  double.tryParse(value) ?? 4.76,
-                );
-              }
-            },
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black.withOpacity(0.6),
+              fontWeight: FontWeight.w400,
+            ),
           ),
 
           // Start Date
@@ -793,7 +733,14 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                     child: Obx(
                       () => Text(
                         controller.startDate.value != null
-                            ? '${controller.startDate.value!.day}/${controller.startDate.value!.month}/${controller.startDate.value!.year}'
+                            ? formatStartDate(
+                                controller.startDate.value!,
+                                amharic: Get.find<LanguageController>()
+                                        .currentLocale
+                                        .value
+                                        .languageCode ==
+                                    'am',
+                              )
                             : 'select_start_date'.tr,
                         style: TextStyle(
                           fontSize: 16,
@@ -896,8 +843,8 @@ class _CreateGroupViewState extends State<CreateGroupView> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      // Show terms and conditions dialog
-                      _showTermsAndConditions(context);
+                      // Show the Amharic membership agreement
+                      _showTermsAndConditions(context, controller);
                     },
                     child: RichText(
                       text: TextSpan(
@@ -929,42 +876,22 @@ class _CreateGroupViewState extends State<CreateGroupView> {
     );
   }
 
-  void _showTermsAndConditions(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'group_terms_conditions_title'.tr,
-          style: GoogleFonts.montserrat(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: SingleChildScrollView(
-          child: Text(
-            'By creating this group, you agree to:\n\n'
-            '1. Ensure all members contribute on time\n'
-            '2. Follow the rotation method selected\n'
-            '3. Maintain transparency in all transactions\n'
-            '4. Resolve disputes fairly and promptly\n'
-            '5. Comply with all applicable laws and regulations\n\n'
-            'Additional terms may apply based on your group rules.',
-            style: GoogleFonts.montserrat(fontSize: 14),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'close'.tr,
-              style: GoogleFonts.montserrat(
-                color: const Color(0xFFBBBB32),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
+  void _showTermsAndConditions(
+      BuildContext context, CreateGroupController controller) async {
+    final tcText = buildCashEqubTc(
+      groupName: controller.groupName.value.isEmpty
+          ? 'ዕቁቡ'
+          : controller.groupName.value,
+      contributionAmount: controller.contributionAmount.value.toDouble(),
+      targetMembers: controller.targetMembers.value,
+      frequency: controller.frequency.value,
+      serviceChargePercent: controller.serviceChargePercent.value,
+      startDate: controller.startDate.value,
     );
+
+    final accepted = await showEqubMembershipAgreement(context, tcText);
+    if (accepted) {
+      controller.updateTermsAccepted(true);
+    }
   }
 }

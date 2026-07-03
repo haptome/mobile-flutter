@@ -3,6 +3,7 @@
 // Linked Spec Section: Account Verification Page
 
 import 'package:et_digital_equb/core/widgets/rotating_svg_loader.dart';
+import 'package:et_digital_equb/core/widgets/translated_text.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -362,7 +363,7 @@ class _VerificationViewState extends State<VerificationView> {
           padding: const EdgeInsets.symmetric(horizontal: 28.0),
           child: Column(
             children: [
-              Text(
+              TranslatedText(
                 'checking_please_wait'.tr,
                 style: GoogleFonts.montserrat(
                   fontSize: 24,
@@ -372,7 +373,7 @@ class _VerificationViewState extends State<VerificationView> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 11),
-              Text(
+              TranslatedText(
                 'account_being_checked'.tr,
                 style: const TextStyle(
                   fontFamily: 'Roboto',
@@ -536,8 +537,8 @@ class DashedBorderPainter extends CustomPainter {
           padding: const EdgeInsets.symmetric(horizontal: 28.0),
           child: Column(
             children: [
-              Text(
-                'verified'.tr + '!',
+              TranslatedText(
+                '${'verified'.tr}!',
                 style: GoogleFonts.montserrat(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
@@ -546,7 +547,7 @@ class DashedBorderPainter extends CustomPainter {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 11),
-              Text(
+              TranslatedText(
                 'account_ready'.tr,
                 style: const TextStyle(
                   fontFamily: 'Roboto',

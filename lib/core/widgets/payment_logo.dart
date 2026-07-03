@@ -119,6 +119,44 @@ class SantimPayLogo extends StatelessWidget {
   }
 }
 
+class AddisPayLogo extends StatelessWidget {
+  const AddisPayLogo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.asset(
+          'assets/images/addispay.png',
+          width: 48,
+          height: 48,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            // Fallback to text logo if image asset is not yet added
+            return Center(
+              child: Text(
+                'AP',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
 class TelebirrLogo extends StatelessWidget {
   const TelebirrLogo({super.key});
 

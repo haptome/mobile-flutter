@@ -30,6 +30,11 @@ flutter_ios_podfile_setup
 # ML Kit Face Detection requires iOS 15.5 or newer
 $iOSVersion = '15.5'
 
+# Pin the native Firebase SDK below 11.12.0 — that's where FirebaseCoreInternal
+# started using Swift 6 syntax (`sending`, `internal import`), which needs
+# Xcode 16.2+. Build Mac is on macOS 13 / Xcode 15.2 (Swift 5.9 max).
+$FirebaseSDKVersion = '11.10.0'
+
 target 'Runner' do
   use_frameworks!
 
@@ -39,7 +44,48 @@ target 'Runner' do
   end
 end
 
+# A few plugins reference iOS 26 SDK APIs (guarded by `@available`, but the
+# SDK headers still need to declare the selector for ObjC/Swift to compile
+# against it at all). Xcode 15.2 only ships the iOS 17.2 SDK, so these fail to
+# compile regardless of the runtime guard. Neutralize the specific iOS-26-only
+# branches post-install — idempotent (checks before patching), regex-matched
+# (tolerant of indentation drift across plugin versions), and confined to
+# lines that just skip a feature this SDK could never exercise anyway.
+def patch_ios26_only_api(path, marker:, pattern:, replacement:)
+  return unless File.exist?(path)
+  contents = File.read(path)
+  return if contents.include?(marker) # already patched
+  unless contents.match?(pattern)
+    Pod::UI.warn "XCODE15_PATCH: expected pattern not found in #{path} — plugin source may have changed, leaving as-is"
+    return
+  end
+  File.write(path, contents.sub(pattern, replacement))
+  Pod::UI.puts "Patched #{path} to drop iOS 26 SDK-only API (Xcode 15.2 compat)"
+end
+
 post_install do |installer|
+  device_info_path = File.join(
+    File.dirname(__FILE__), '.symlinks', 'plugins', 'device_info_plus', 'ios',
+    'device_info_plus', 'Sources', 'device_info_plus', 'FPPDeviceInfoPlusPlugin.m'
+  )
+  patch_ios26_only_api(
+    device_info_path,
+    marker: '// XCODE15_PATCH: isiOSAppOnVision',
+    pattern: /NSNumber \*isiOSAppOnVision = \[NSNumber numberWithBool:NO\];\s*\n\s*if \(@available\(iOS 26\.1, \*\)\) \{\s*\n\s*isiOSAppOnVision = \[NSNumber numberWithBool:\[info isiOSAppOnVision\]\];\s*\n\s*\}/,
+    replacement: "// XCODE15_PATCH: isiOSAppOnVision — iOS 26 SDK not available in Xcode 15.2, always false\n    NSNumber *isiOSAppOnVision = [NSNumber numberWithBool:NO];"
+  )
+
+  connectivity_path = File.join(
+    File.dirname(__FILE__), '.symlinks', 'plugins', 'connectivity_plus', 'ios',
+    'connectivity_plus', 'Sources', 'connectivity_plus', 'PathMonitorConnectivityProvider.swift'
+  )
+  patch_ios26_only_api(
+    connectivity_path,
+    marker: '// XCODE15_PATCH: isUltraConstrained',
+    pattern: /if #available\(iOS 26\.0, \*\), path\.isUltraConstrained \{\s*\n\s*types\.append\(\.satellite\)\s*\n\s*\}/,
+    replacement: '// XCODE15_PATCH: isUltraConstrained — iOS 26 SDK not available in Xcode 15.2, satellite never detected'
+  )
+
   # ML Kit Face Detection configuration
   installer.pods_project.build_configurations.each do |config|
     # Exclude 32-bit architectures (armv7) as ML Kit only supports 64-bit

@@ -1,10 +1,14 @@
 // Purpose: Group Invite screen — shown when user taps an invite deep link
 // Fetches group info and lets the user join with one tap.
+// For cash ekub groups the full Amharic membership contract is presented with
+// dynamic fields filled before the join is finalised.
 
 import 'package:et_digital_equb/controllers/group_detail_controller.dart';
 import 'package:et_digital_equb/core/routes/app_routes.dart';
 import 'package:et_digital_equb/core/services/group_service.dart';
 import 'package:et_digital_equb/core/theme/app_colors.dart';
+import 'package:et_digital_equb/core/widgets/equb_membership_agreement.dart';
+import 'package:et_digital_equb/core/widgets/translated_text.dart';
 import 'package:et_digital_equb/models/group_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -51,8 +55,34 @@ class _GroupInviteViewState extends State<GroupInviteView> {
     }
   }
 
+  // ─── T&C helpers ─────────────────────────────────────────────────────────
+
+  /// Build the full Amharic membership agreement with all dynamic fields filled.
+  String _buildCashEqubTc(Group group) {
+    return buildCashEqubTc(
+      groupName: group.name,
+      contributionAmount: group.contributionAmount,
+      targetMembers: group.targetMembers,
+      frequency: group.frequency,
+      serviceChargePercent: group.serviceChargePercent,
+      startDate: group.startDate,
+    );
+  }
+
+  // ─── Join flow ────────────────────────────────────────────────────────────
+
+  /// Show the Amharic T&C bottom sheet; returns true only if user explicitly accepts.
+  Future<bool> _showCashEqubTermsSheet(Group group) {
+    return showEqubMembershipAgreement(context, _buildCashEqubTc(group));
+  }
+
   Future<void> _joinGroup() async {
     if (_group == null) return;
+
+    // Show the Amharic membership contract first; block join until accepted.
+    final accepted = await _showCashEqubTermsSheet(_group!);
+    if (!accepted) return;
+
     setState(() => _joining = true);
 
     final response = await GroupService.to.joinGroup(_group!.id, acceptTerms: true);
@@ -84,6 +114,8 @@ class _GroupInviteViewState extends State<GroupInviteView> {
       );
     }
   }
+
+  // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +150,8 @@ class _GroupInviteViewState extends State<GroupInviteView> {
                         Text(
                           _error!,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.montserrat(fontSize: 16, color: Colors.grey),
+                          style: GoogleFonts.montserrat(
+                              fontSize: 16, color: Colors.grey),
                         ),
                       ],
                     ),
@@ -145,7 +178,8 @@ class _GroupInviteViewState extends State<GroupInviteView> {
                 color: AppColors.primary.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.group_add, size: 40, color: AppColors.primary),
+              child: const Icon(Icons.group_add,
+                  size: 40, color: AppColors.primary),
             ),
           ),
           const SizedBox(height: 24),
@@ -155,7 +189,7 @@ class _GroupInviteViewState extends State<GroupInviteView> {
             style: GoogleFonts.montserrat(fontSize: 14, color: Colors.grey),
           ),
           const SizedBox(height: 8),
-          Text(
+          TranslatedText(
             group.name,
             textAlign: TextAlign.center,
             style: GoogleFonts.montserrat(
@@ -168,22 +202,121 @@ class _GroupInviteViewState extends State<GroupInviteView> {
           // Group details card
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
                   _infoRow(Icons.payments_outlined, 'Contribution',
-                      '${group.contributionAmount} ETB'),
+                      '${group.contributionAmount.toInt()} ${'etb'.tr}'),
                   const Divider(height: 20),
-                  _infoRow(Icons.schedule, 'Frequency',
-                      '${group.frequency[0].toUpperCase()}${group.frequency.substring(1)}'),
+                  _infoRow(
+                      Icons.schedule,
+                      'Frequency',
+                      TranslatedText(
+                        '${group.frequency[0].toUpperCase()}${group.frequency.substring(1)}',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )),
                   const Divider(height: 20),
                   _infoRow(Icons.people, 'Members',
                       '${group.currentMembers} / ${group.targetMembers}'),
                   const Divider(height: 20),
-                  _infoRow(Icons.info_outline, 'Status',
-                      '${group.status[0].toUpperCase()}${group.status.substring(1)}'),
+                  _infoRow(
+                      Icons.info_outline,
+                      'Status',
+                      TranslatedText(
+                        '${group.status[0].toUpperCase()}${group.status.substring(1)}',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // T&C hint
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.description_outlined,
+                  size: 16, color: Colors.grey),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'You will be asked to read and accept the Amharic membership '
+                  'agreement before joining.',
+                  style: GoogleFonts.montserrat(
+                      fontSize: 12, color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Group Rules Card - Parse and display T&C content
+          Card(
+            elevation: 1,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.grey[200]!),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TranslatedText(
+                    'Group Rules',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.splashBackground,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Display first few rules from T&C
+                  TranslatedText(
+                    '1. Contribution Amount: ${'etb'.tr} ${group.contributionAmount.toInt()}'
+                    '\n   - Each member must contribute ${'etb'.tr} ${group.contributionAmount.toInt()} ${group.frequency}.',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      height: 1.6,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TranslatedText(
+                    '2. Contribution Frequency: ${group.frequency[0].toUpperCase()}${group.frequency.substring(1)}'
+                    '\n   - Contributions are due every ${group.frequency}.',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      height: 1.6,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '3. Service Charge: ${group.serviceChargePercent}%',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      height: 1.6,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '4. Total Members: ${group.targetMembers}',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      height: 1.6,
+                      color: Colors.black87,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -195,13 +328,15 @@ class _GroupInviteViewState extends State<GroupInviteView> {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: _joining
                 ? const SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                        color: Colors.white, strokeWidth: 2),
                   )
                 : Text(
                     'Join Group',
@@ -224,18 +359,25 @@ class _GroupInviteViewState extends State<GroupInviteView> {
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value) {
+  Widget _infoRow(IconData icon, String label, dynamic value) {
     return Row(
       children: [
         Icon(icon, size: 20, color: AppColors.primary),
         const SizedBox(width: 12),
-        Text(label, style: GoogleFonts.montserrat(color: Colors.grey, fontSize: 14)),
+        Text(label,
+            style: GoogleFonts.montserrat(color: Colors.grey, fontSize: 14)),
         const Spacer(),
-        Text(
+        if (value is String)
+          Text(
+            value,
+            style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.w600, fontSize: 14),
+          )
+        else if (value is Widget)
           value,
-          style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
       ],
     );
   }
 }
+
+// (Terms sheet is now in equb_membership_agreement.dart)

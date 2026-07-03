@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
+import '../../controllers/language_controller.dart';
+import '../../core/utils/ethiopian_date.dart';
 
 class CurrentCycleCard extends StatelessWidget {
   final int cycleNumber;
@@ -55,6 +57,9 @@ class CurrentCycleCard extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
+    if (LanguageController.to.isAmharic()) {
+      return formatStartDate(date, amharic: true);
+    }
     const List<String> months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
@@ -145,7 +150,7 @@ class CurrentCycleCard extends StatelessWidget {
                   child: _buildInfoItem(
                     icon: Icons.payments,
                     label: 'amount'.tr,
-                    value: '${amount.toStringAsFixed(0)} ETB',
+                    value: '${amount.toStringAsFixed(0)} ${'etb'.tr}',
                   ),
                 ),
                 if (dueDate != null)

@@ -1,6 +1,8 @@
 // Purpose: Number formatting extensions for shortening large numbers
 // Author: Created for Ekub app
 
+import 'package:get/get.dart';
+
 extension NumberFormatting on num {
   /// Shortens a number to a readable format with K/M/B suffixes
   ///
@@ -76,7 +78,7 @@ extension NumberFormatting on num {
   /// 1000 => "ETB 1K"
   /// 1500000 => "ETB 1.5M"
   String toCurrencyShort({int decimals = 1}) {
-    return '${shorten(decimals: decimals)} ETB';
+    return '${shorten(decimals: decimals)} ${'etb'.tr}';
   }
 
   /// Formats currency with space and shortened format
@@ -85,6 +87,6 @@ extension NumberFormatting on num {
   /// 1000 => "ETB 1 K"
   /// 1500000 => "ETB 1.5 M"
   String toCurrencyShortWithSpace({int decimals = 1}) {
-    return '${shortenWithSpace(decimals: decimals)} ETB';
+    return '${shortenWithSpace(decimals: decimals)} ${'etb'.tr}';
   }
 }

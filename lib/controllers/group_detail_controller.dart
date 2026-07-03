@@ -9,6 +9,7 @@ import 'package:et_digital_equb/core/services/auth_service.dart';
 import 'package:et_digital_equb/models/group_model.dart';
 import 'package:et_digital_equb/models/member_model.dart';
 import 'package:share_plus/share_plus.dart';
+import 'category_detail_controller.dart';
 
 class GroupDetailController extends GetxController {
   final GroupService _groupService = GroupService.to;
@@ -475,7 +476,7 @@ class GroupDetailController extends GetxController {
     if (currentUserId == null) return;
 
     final myMember = members.firstWhereOrNull(
-      (m) => m.user.id == currentUserId && m.status == 'active',
+      (m) => m.user.id == currentUserId && (m.status == 'active' || m.status == 'pending'),
     );
     if (myMember == null) return;
 
@@ -507,6 +508,11 @@ class GroupDetailController extends GetxController {
       final response = await _groupService.leaveGroup(group.id, myMember.id);
 
       if (response.success) {
+        // Refresh user group IDs in CategoryDetailController if it exists
+        if (Get.isRegistered<CategoryDetailController>()) {
+          await Get.find<CategoryDetailController>().loadUserGroupIds();
+        }
+
         Get.back(); // pop group detail
         Get.snackbar(
           'Left Group',

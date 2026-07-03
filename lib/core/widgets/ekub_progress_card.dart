@@ -6,6 +6,7 @@ import 'package:et_digital_equb/core/theme/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../theme/app_colors.dart';
+import 'translated_text.dart';
 
 class EkubProgressCard extends StatelessWidget {
   final String title;
@@ -55,7 +56,7 @@ class EkubProgressCard extends StatelessWidget {
                 SizedBox(
                   // maxWidth: AppSizes.sizedBoxWidth,
                   width: AppSizes.sizedBoxWidth,
-                  child: Text(
+                  child: TranslatedText(
                     title,
                     style: const TextStyle(
                       fontSize: 18,
@@ -74,7 +75,7 @@ class EkubProgressCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 SizedBox(
                   width: 120,
-                  child: Text(
+                  child: TranslatedText(
                     '$frequency $amount',
                     style: const TextStyle(
                       fontSize: 16,
@@ -89,7 +90,7 @@ class EkubProgressCard extends StatelessWidget {
             const SizedBox(height: 16),
             // Progress text
             Text(
-              '${completedRounds} of ${totalRounds} ${'rounds_completed'.tr}',
+              '${completedRounds} ${'of'.tr} ${totalRounds} ${'rounds_completed'.tr}',
               style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textLightGray,

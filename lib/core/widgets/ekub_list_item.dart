@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconsax/iconsax.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_sizes.dart';
 import '../../models/group_model.dart';
 import 'icon_label.dart';
+import 'translated_text.dart';
 
 /// Reusable ekub list item used inside collapsible sections and lists.
 ///
@@ -61,7 +62,7 @@ class EkubListItem extends StatelessWidget {
 
     return EkubListItem(
       title: title,
-      amountLabel: '${contributionAmount.toStringAsFixed(0)} ETB',
+      amountLabel: '${contributionAmount.toStringAsFixed(0)} ${'etb'.tr}',
       frequency: frequency,
       currentMembers: currentMembers,
       avatars: null,
@@ -114,22 +115,28 @@ class EkubListItem extends StatelessWidget {
                       IconLabel(
                         iconData: Iconsax.money,
                         iconColor: AppColors.splashBackground,
-                        label: title,
-                        labelStyle: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.splashBackground,
+                        labelWidget: TranslatedText(
+                          title,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.splashBackground,
+                          ),
                         ),
+                        label: title,
                       ),
                       IconLabel(
                         iconData: Iconsax.timer_1,
                         iconColor: AppColors.splashBackground,
-                        label: _prettyFrequency(frequency),
-                        labelStyle: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.splashBackground,
+                        labelWidget: TranslatedText(
+                          _prettyFrequency(frequency),
+                          style: GoogleFonts.montserrat(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.splashBackground,
+                          ),
                         ),
+                        label: _prettyFrequency(frequency),
                       ),
                     ],
                   ),

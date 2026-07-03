@@ -21,7 +21,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.et_digital_equb"
+    namespace = "com.etequb"
     compileSdk = 36
     ndkVersion = "28.2.13676358"
 
@@ -36,7 +36,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.et_digital_equb"
+        applicationId = "com.etequb"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode

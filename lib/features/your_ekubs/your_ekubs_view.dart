@@ -121,43 +121,14 @@ class _YourEkubsViewState extends State<YourEkubsView> {
                                 itemBuilder: (context, index) {
                                   final ekubData = controller.ekubs[index];
                                   final group = ekubData['group'];
-
-                                  if (group is Group) {
-                                    return EkubListItemCustom.fromGroup(
-                                      group,
-                                      onTap: () =>
-                                          controller.onEkubTap(ekubData['id']),
-                                    );
-                                  } else if (group is InKindGroup) {
-                                    // Convert InKindGroup to a format compatible with EkubListItem
-                                    final groupConverted = Group(
-                                      id: group.id,
-                                      name: group.name,
-                                      type: group.type,
-                                      contributionAmount:
-                                          group.contributionAmount,
-                                      frequency: group.frequency,
-                                      minMembers: group.minMembers,
-                                      targetMembers: group.targetMembers,
-                                      currentMembers:
-                                          0, // InKindGroup doesn't have currentMembers
-                                      rotationMethod: group.rotationMethod,
-                                      serviceChargePercent:
-                                          group.serviceChargePercent,
-                                      status: group.status,
-                                      createdAt: group.createdAt,
-                                      leaderId: group.leaderId,
-                                      categoryId: group.categoryId,
-                                      startDate: group.startDate,
-                                    );
-                                    return EkubListItemCustom.fromGroup(
-                                      groupConverted,
-                                      onTap: () =>
-                                          controller.onEkubTap(ekubData['id']),
-                                    );
+                                  if (group is! Group && group is! InKindGroup) {
+                                    return const SizedBox.shrink();
                                   }
-
-                                  return const SizedBox.shrink();
+                                  return EkubListItemCustom.fromAnyGroup(
+                                    group,
+                                    onTap: () =>
+                                        controller.onEkubTap(ekubData['id']),
+                                  );
                                 },
                               ),
 

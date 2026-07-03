@@ -4,6 +4,7 @@ import 'package:et_digital_equb/core/theme/app_colors.dart';
 import 'package:et_digital_equb/core/widgets/app_button.dart';
 import 'package:et_digital_equb/core/widgets/custom_back_button.dart';
 import 'package:et_digital_equb/core/widgets/scaffold_with_bottom_bar.dart';
+import 'package:et_digital_equb/core/widgets/translated_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -92,7 +93,7 @@ class _LegalContentView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (effectiveDate.isNotEmpty)
-            Text(
+            TranslatedText(
               'Effective Date: $effectiveDate',
               style: GoogleFonts.lato(
                 fontSize: 12,
@@ -101,7 +102,7 @@ class _LegalContentView extends StatelessWidget {
             ),
           if (effectiveDate.isNotEmpty) const SizedBox(height: 12),
           if (introduction.isNotEmpty)
-            Text(
+            TranslatedText(
               introduction,
               style: GoogleFonts.lato(
                 fontSize: 14,
@@ -111,7 +112,7 @@ class _LegalContentView extends StatelessWidget {
             ),
           if (consent.isNotEmpty) ...[
             const SizedBox(height: 12),
-            Text(
+            TranslatedText(
               consent,
               style: GoogleFonts.lato(
                 fontSize: 14,
@@ -149,7 +150,7 @@ class _SectionWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          TranslatedText(
             '${section.id}. ${section.title}',
             style: GoogleFonts.lato(
               fontSize: 16,
@@ -159,7 +160,7 @@ class _SectionWidget extends StatelessWidget {
           ),
           if (section.content.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(
+            TranslatedText(
               section.content,
               style: GoogleFonts.lato(
                 fontSize: 14,
@@ -178,7 +179,7 @@ class _SectionWidget extends StatelessWidget {
                   children: [
                     const Text('• ', style: TextStyle(fontSize: 16, color: Color(0xFF494949))),
                     Expanded(
-                      child: Text(
+                      child: TranslatedText(
                         _stripHtml(item),
                         style: GoogleFonts.lato(
                           fontSize: 14,

@@ -164,12 +164,13 @@ class TransactionsController extends GetxController {
       }
     }
 
-    // Determine source based on group info
+    // Determine source based on group info. Only show the group name when we
+    // actually have it — never the raw group_id, which auto-translates into
+    // nonsense like "from unknown group".
     String source = 'Payment';
-    if (apiItem['group_name'] != null) {
-      source = 'From ${apiItem['group_name']}';
-    } else if (apiItem['group_id'] != null) {
-      source = 'From Group ${apiItem['group_id']}';
+    final groupName = apiItem['group_name']?.toString();
+    if (groupName != null && groupName.isNotEmpty) {
+      source = 'From $groupName';
     }
 
     return {
@@ -181,7 +182,7 @@ class TransactionsController extends GetxController {
       'ekubName': apiItem['group_name'],
       'transactionId': apiItem['reference_id'] ?? apiItem['id'],
       'rounds': apiItem['cycle_number'] != null
-          ? '${apiItem['cycle_number']}th round'
+          ? '${'round'.tr} ${apiItem['cycle_number']}'
           : null,
     };
   }

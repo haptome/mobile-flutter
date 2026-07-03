@@ -235,12 +235,8 @@ class FcmService extends GetxService {
     }
   }
 
-  /// Handle notification tap
+  /// Handle notification tap — navigate directly, skip snackbars
   void _handleNotificationTap(RemoteMessage message) {
-    // Process the notification data
-    _processNotificationData(message.data);
-
-    // Navigate based on notification type
     _navigateBasedOnNotification(message.data);
   }
 
@@ -445,8 +441,8 @@ class FcmService extends GetxService {
           Get.delete<GroupDetailController>();
         }
         Get.put(GroupDetailController(group: group));
-        // activeTab 1 = Payments
-        Get.find<GroupDetailController>().setActiveTab(1);
+        // activeTab 0 = Payments (Members tab removed)
+        Get.find<GroupDetailController>().setActiveTab(0);
         Get.toNamed('/group-detail', arguments: group);
       } else {
         debugPrint('Could not fetch group $groupId: ${response.message}');
@@ -468,46 +464,15 @@ class FcmService extends GetxService {
   /// Handle pre-draw alert notification
   void _handlePreDrawAlert(Map<String, dynamic> data) {
     debugPrint('Pre-draw alert received: $data');
-    
-    // Extract groupId, cycleNumber, and drawingTime from notification data
-    final groupId = data['groupId'] as String?;
-    final cycleNumber = data['cycleNumber'] as String?;
-    final drawingTime = data['drawingTime'] as String?;
-
-    // Validate extracted data
+    final groupId = (data['groupId'] ?? data['group_id']) as String?;
     if (groupId == null || groupId.isEmpty) {
-      debugPrint('Error: Missing or invalid groupId in pre-draw alert');
+      debugPrint('Error: Missing groupId in pre-draw alert');
       return;
     }
-
-    // Parse cycleNumber if available
-    int? parsedCycleNumber;
-    if (cycleNumber != null && cycleNumber.isNotEmpty) {
-      try {
-        parsedCycleNumber = int.parse(cycleNumber);
-      } catch (e) {
-        debugPrint('Error parsing cycleNumber: $e');
-      }
-    }
-
-    // Parse drawingTime if available
-    DateTime? parsedDrawingTime;
-    if (drawingTime != null && drawingTime.isNotEmpty) {
-      try {
-        parsedDrawingTime = DateTime.parse(drawingTime);
-      } catch (e) {
-        debugPrint('Error parsing drawingTime: $e');
-      }
-    }
-
-    // Navigate to /lottery-draw with correct arguments
-    Get.toNamed(
-      '/lottery-draw',
-      arguments: {
-        'groupId': groupId,
-        'cycleNumber': parsedCycleNumber,
-        'drawingTime': parsedDrawingTime,
-      },
+    _navigateToLotteryDraw(
+      groupId: groupId,
+      cycleNumber: (data['cycleNumber'] ?? data['cycle_number'])?.toString(),
+      drawingTime: (data['drawingTime'] ?? data['drawing_time']) as String?,
     );
   }
 
@@ -517,9 +482,10 @@ class FcmService extends GetxService {
 
     switch (type) {
       case 'group_invitation':
-        final groupId = data['metadata']?['group_id'] as String?;
+        // Navigate to group invite screen — fetch group first
+        final groupId = (data['metadata']?['group_id'] ?? data['group_id']) as String?;
         if (groupId != null) {
-          Get.toNamed('/group-detail', arguments: {'groupId': groupId});
+          _navigateToGroupDetail(groupId);
         }
         break;
       case 'payment_success':
@@ -531,7 +497,7 @@ class FcmService extends GetxService {
       case 'payment_reminder_overdue':
       case 'payment_catchup_reminder':
       case 'payment_due':
-        final payGroupId = data['group_id'] as String?;
+        final payGroupId = (data['group_id'] ?? data['metadata']?['group_id']) as String?;
         if (payGroupId != null) {
           _navigateToGroupPayments(payGroupId);
         }
@@ -541,46 +507,72 @@ class FcmService extends GetxService {
         break;
       case 'winner_announcement':
       case 'personalized_winner_notification':
-        final groupId = data['metadata']?['group_id'] as String?;
+        final groupId = (data['metadata']?['group_id'] ?? data['group_id']) as String?;
         if (groupId != null) {
-          Get.toNamed('/group-detail', arguments: {'groupId': groupId});
+          _navigateToLotteryDraw(
+            groupId: groupId,
+            cycleNumber: (data['metadata']?['cycle_number'] ?? data['cycle_number'])?.toString(),
+            drawingTime: null,
+          );
         }
         break;
       case 'pre_draw_alert':
-        final groupId = data['groupId'] as String?;
-        final cycleNumber = data['cycleNumber'] as String?;
-        final drawingTime = data['drawingTime'] as String?;
+        final groupId = (data['groupId'] ?? data['group_id'] ?? data['metadata']?['group_id']) as String?;
         if (groupId != null) {
-          int? parsedCycleNumber;
-          if (cycleNumber != null && cycleNumber.isNotEmpty) {
-            try {
-              parsedCycleNumber = int.parse(cycleNumber);
-            } catch (e) {
-              debugPrint('Error parsing cycleNumber: $e');
-            }
-          }
-          DateTime? parsedDrawingTime;
-          if (drawingTime != null && drawingTime.isNotEmpty) {
-            try {
-              parsedDrawingTime = DateTime.parse(drawingTime);
-            } catch (e) {
-              debugPrint('Error parsing drawingTime: $e');
-            }
-          }
-          Get.toNamed(
-            '/lottery-draw',
-            arguments: {
-              'groupId': groupId,
-              'cycleNumber': parsedCycleNumber,
-              'drawingTime': parsedDrawingTime,
-            },
+          _navigateToLotteryDraw(
+            groupId: groupId,
+            cycleNumber: (data['cycleNumber'] ?? data['cycle_number'])?.toString(),
+            drawingTime: (data['drawingTime'] ?? data['drawing_time']) as String?,
           );
         }
         break;
       default:
-        // Default navigation or no navigation
+        debugPrint('No navigation defined for type: $type');
         break;
     }
+  }
+
+  /// Fetch group by ID then navigate to its detail page
+  Future<void> _navigateToGroupDetail(String groupId) async {
+    try {
+      final response = await GroupService.to.getGroupById(groupId);
+      if (response.success && response.data != null) {
+        final group = response.data!;
+        if (Get.isRegistered<GroupDetailController>()) {
+          Get.delete<GroupDetailController>();
+        }
+        Get.put(GroupDetailController(group: group));
+        Get.toNamed('/group-detail', arguments: group);
+      } else {
+        debugPrint('Could not fetch group $groupId: ${response.message}');
+      }
+    } catch (e) {
+      debugPrint('Error navigating to group detail: $e');
+    }
+  }
+
+  /// Navigate to lottery draw page
+  void _navigateToLotteryDraw({
+    required String groupId,
+    String? cycleNumber,
+    String? drawingTime,
+  }) {
+    int? parsedCycleNumber;
+    if (cycleNumber != null && cycleNumber.isNotEmpty) {
+      try { parsedCycleNumber = int.parse(cycleNumber); } catch (_) {}
+    }
+    DateTime? parsedDrawingTime;
+    if (drawingTime != null && drawingTime.isNotEmpty) {
+      try { parsedDrawingTime = DateTime.parse(drawingTime); } catch (_) {}
+    }
+    Get.toNamed(
+      '/lottery-draw',
+      arguments: {
+        'groupId': groupId,
+        'cycleNumber': parsedCycleNumber,
+        'drawingTime': parsedDrawingTime,
+      },
+    );
   }
 
   /// Subscribe to a topic

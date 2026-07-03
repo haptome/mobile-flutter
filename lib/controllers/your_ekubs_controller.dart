@@ -130,7 +130,7 @@ class YourEkubsController extends GetxController {
         formattedAmount = group.contributionAmount.toCurrencyShort();
       } catch (e) {
         // Fallback if formatting fails
-        formattedAmount = 'ETB ${group.contributionAmount.toStringAsFixed(0)}';
+        formattedAmount = '${'etb'.tr} ${group.contributionAmount.toStringAsFixed(0)}';
       }
 
       return {
@@ -152,7 +152,7 @@ class YourEkubsController extends GetxController {
         'id': group.id,
         'title': group.name,
         'frequency': group.frequency,
-        'amount': 'ETB ${group.contributionAmount.toStringAsFixed(0)}',
+        'amount': '${'etb'.tr} ${group.contributionAmount.toStringAsFixed(0)}',
         'completedRounds': 0,
         'totalRounds': group.targetMembers,
         'type': 'cash',
@@ -177,7 +177,7 @@ class YourEkubsController extends GetxController {
         formattedAmount = group.contributionAmount.toCurrencyShort();
       } catch (e) {
         // Fallback if formatting fails
-        formattedAmount = 'ETB ${group.contributionAmount.toStringAsFixed(0)}';
+        formattedAmount = '${'etb'.tr} ${group.contributionAmount.toStringAsFixed(0)}';
       }
 
       return {
@@ -199,7 +199,7 @@ class YourEkubsController extends GetxController {
         'id': group.id,
         'title': group.name,
         'frequency': group.frequency,
-        'amount': 'ETB ${group.contributionAmount.toStringAsFixed(0)}',
+        'amount': '${'etb'.tr} ${group.contributionAmount.toStringAsFixed(0)}',
         'completedRounds': 0,
         'totalRounds': group.targetMembers,
         'type': 'in_kind',
@@ -282,8 +282,8 @@ class YourEkubsController extends GetxController {
         formattedTotalAmount = totalAmount.toCurrencyShort();
       } catch (e) {
         // Fallback if formatting fails
-        formattedAmount = 'ETB ${group.contributionAmount.toStringAsFixed(0)}';
-        formattedTotalAmount = 'ETB ${totalAmount.toStringAsFixed(0)}';
+        formattedAmount = '${'etb'.tr} ${group.contributionAmount.toStringAsFixed(0)}';
+        formattedTotalAmount = '${'etb'.tr} ${totalAmount.toStringAsFixed(0)}';
       }
 
       return {
@@ -308,10 +308,10 @@ class YourEkubsController extends GetxController {
         'id': group.id,
         'title': group.name,
         'frequency': group.frequency,
-        'amount': 'ETB ${group.contributionAmount.toStringAsFixed(0)}',
+        'amount': '${'etb'.tr} ${group.contributionAmount.toStringAsFixed(0)}',
         'completedRounds': totalRounds,
         'totalRounds': totalRounds,
-        'totalAmount': 'ETB ${totalAmount.toStringAsFixed(0)}',
+        'totalAmount': '${'etb'.tr} ${totalAmount.toStringAsFixed(0)}',
         'type': 'cash_completed',
         'group': group,
       };

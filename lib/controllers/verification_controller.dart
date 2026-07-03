@@ -644,7 +644,7 @@ class VerificationController extends GetxController {
   /// Intent-based helper: pick a document (PDF / image)
   Future<void> pickDocument() async {
     // Permissions removed — open file picker directly.
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       allowMultiple: false,
       type: FileType.custom,
       allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],

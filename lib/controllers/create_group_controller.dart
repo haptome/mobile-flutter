@@ -7,6 +7,7 @@ import 'package:et_digital_equb/core/services/api_service.dart';
 import 'package:et_digital_equb/core/services/group_service.dart';
 import 'package:et_digital_equb/models/category_model.dart';
 import 'package:et_digital_equb/core/routes/app_routes.dart';
+import 'package:et_digital_equb/controllers/your_ekubs_controller.dart';
 
 class CreateGroupController extends GetxController {
   final GroupService _groupService = GroupService.to;
@@ -146,21 +147,21 @@ class CreateGroupController extends GetxController {
         minMembers: minMembers.value,
         type: groupType.value,
         rotationMethod: rotationMethod.value,
-        serviceChargePercent: serviceChargePercent.value,
+        // serviceChargePercent & categoryId omitted — handled server-side
         startDate: startDate.value?.toIso8601String(),
-        leaderId: currentUserId,
-        categoryId: selectedCategoryId.value.isEmpty
-            ? null
-            : selectedCategoryId.value,
-        // durationMonths: calculatedDuration,
       );
 
       if (response.success) {
         // Reset form after successful creation
         resetForm();
 
+        // Eagerly refresh "Your Ekubs" list before navigating so the new group
+        // is already loaded when the screen appears (avoids showing empty state).
+        if (Get.isRegistered<YourEkubsController>()) {
+          Get.find<YourEkubsController>().loadUserGroups();
+        }
+
         // Navigate to ekubs tab after successful creation
-        // Navigate back to ekubs tab
         Get.offAndToNamed(AppRoutes.ekubs); // Navigate directly to ekubs tab
 
         Get.snackbar(
@@ -197,7 +198,12 @@ class CreateGroupController extends GetxController {
     contributionAmount.value = 0;
     frequency.value = 'weekly';
     targetMembers.value = 0;
+    minMembers.value = 3;
     groupType.value = 'private';
+    rotationMethod.value = 'random';
+    serviceChargePercent.value = 4.76; // reset to platform default
+    selectedCategoryId.value = ''; // clear category so form starts empty
+    startDate.value = null;
     durationInMonths.value = 0;
     groupRules.value = '';
     termsAccepted.value = false;
@@ -246,11 +252,6 @@ class CreateGroupController extends GetxController {
     rotationMethod.value = method;
   }
 
-  // Update service charge percentage
-  void updateServiceChargePercent(double percent) {
-    serviceChargePercent.value = percent;
-  }
-
   // Update start date
   void updateStartDate(DateTime? date) {
     startDate.value = date;
@@ -266,8 +267,8 @@ class CreateGroupController extends GetxController {
     String rules = '';
     
     // Contribution details
-    rules += '1. Contribution Amount: ETB ${contributionAmount.value}\n';
-    rules += '   - Each member must contribute ETB ${contributionAmount.value} ${frequency.value}.\n\n';
+    rules += '1. Contribution Amount: ${'etb'.tr} ${contributionAmount.value}\n';
+    rules += '   - Each member must contribute ${'etb'.tr} ${contributionAmount.value} ${frequency.value}.\n\n';
     
     // Frequency
     String frequencyText = frequency.value == 'weekly' ? 'every week' : 'every month';

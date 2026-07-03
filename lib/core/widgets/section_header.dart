@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_sizes.dart';
 import '../theme/app_text_styles.dart';
+import 'translated_text.dart';
 
 /// Reusable section header with title and "View All" link
 class SectionHeader extends StatelessWidget {
@@ -25,7 +26,7 @@ class SectionHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
+          TranslatedText(
             title,
             style: AppTextStyles.h3(
               color: AppColors.black,

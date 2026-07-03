@@ -120,7 +120,7 @@ class PaymentItem extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${payment['amount'] ?? ''} ETB',
+                        '${payment['amount'] ?? ''} ${'etb'.tr}',
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,

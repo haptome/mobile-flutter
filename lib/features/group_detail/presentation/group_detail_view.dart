@@ -2,8 +2,10 @@
 // Author: Auto-generated
 
 import 'package:et_digital_equb/controllers/group_detail_controller.dart';
+import 'package:et_digital_equb/controllers/language_controller.dart';
 import 'package:et_digital_equb/controllers/payment_controller.dart';
 import 'package:et_digital_equb/core/services/auth_service.dart';
+import 'package:et_digital_equb/core/utils/ethiopian_date.dart';
 import 'package:et_digital_equb/core/widgets/current_cycle_card.dart';
 import 'package:et_digital_equb/core/widgets/payment_logo.dart';
 import 'package:et_digital_equb/core/widgets/payment_method_card.dart';
@@ -93,7 +95,16 @@ class GroupDetailView extends StatelessWidget {
             final isActiveMember = controller.members.any(
               (m) => m.user.id == currentUserId && m.status == 'active',
             );
-            if (!isActiveMember) return const SizedBox.shrink();
+            // Hide leave button once the group has started or the user has
+            // made at least one successful payment — leaving at that point
+            // would break the rotation.
+            final groupStarted = controller.group.status == 'started';
+            final hasPaid = controller.payments.any(
+              (p) => p['user_id'] == currentUserId && p['status'] == 'success',
+            );
+            if (!isActiveMember || groupStarted || hasPaid) {
+              return const SizedBox.shrink();
+            }
             return IconButton(
               icon: const Icon(Icons.exit_to_app, color: Colors.red),
               tooltip: 'Leave Group',
@@ -896,46 +907,8 @@ class GroupDetailView extends StatelessWidget {
                                       ),
                                     ),
                                   
-                                  // Payment Methods Section
-                                  Text(
-                                    'payment_methods'.tr,
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  
-                                  // AddisPay
-                                  PaymentMethodCard(
-                                    id: 'addispay',
-                                    name: 'AddisPay',
-                                    logo: const AddisPayLogo(),
-                                    description: paymentController.addisPayDescription,
-                                    isSelected: paymentController.selectedPaymentMethod.value == 'addispay',
-                                    // onTap: () => paymentController.selectPaymentMethod('addispay'),
-                                    // onProceed: () => paymentController.proceedToPayment(
-                                    //   'addispay',
-                                    //   group?.id,
-                                    //   group?.contributionAmount.toDouble(),
-                                    //   cycleNumber: activeCycleNumber,
-                                    // ),
-                                  ),
-                                  // Telebirr
-                                  PaymentMethodCard(
-                                    id: 'telebirr',
-                                    name: 'Telebirr',
-                                    logo: const TelebirrLogo(),
-                                    description: paymentController.telebirrDescription,
-                                    isSelected: paymentController.selectedPaymentMethod.value == 'telebirr',
-                                    // onTap: () => paymentController.selectPaymentMethod('telebirr'),
-                                    // onProceed: () => paymentController.proceedToPayment(
-                                    //   'telebirr',
-                                    //   group?.id,
-                                    //   group?.contributionAmount.toDouble(),
-                                    //   cycleNumber: activeCycleNumber,
-                                    // ),
-                                  ),
+                                  // Payment Methods Section removed from tab view
+                                  // (payment is handled via the bottomsheet pay button)
                                
                                 ],
                               ),
@@ -1169,32 +1142,28 @@ class GroupDetailView extends StatelessWidget {
   }
 
   String _formatDateTime(DateTime date) {
+    final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
+    final minute = date.minute.toString().padLeft(2, '0');
+    final period = date.hour >= 12 ? 'PM' : 'AM';
+    if (LanguageController.to.isAmharic()) {
+      final datePart = formatStartDate(date, amharic: true);
+      return '$datePart  $hour:$minute $period';
+    }
     const List<String> months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
-    final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
-    final minute = date.minute.toString().padLeft(2, '0');
-    final period = date.hour >= 12 ? 'PM' : 'AM';
     return '${months[date.month - 1]} ${date.day}, ${date.year}  $hour:$minute $period';
   }
 
   String _formatDate(DateTime date) {
+    if (LanguageController.to.isAmharic()) {
+      return formatStartDate(date, amharic: true);
+    }
     const List<String> months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
-
     return '${months[date.month - 1]} ${date.day}';
   }
 

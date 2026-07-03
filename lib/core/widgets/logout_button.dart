@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'translated_text.dart';
 
 class LogoutButton extends StatelessWidget {
   final VoidCallback? onLogout;
@@ -37,7 +38,7 @@ class LogoutButton extends StatelessWidget {
                 size: 24,
               ),
               const SizedBox(width: 8),
-              Text(
+              TranslatedText(
                 'logout'.tr,
                 style: const TextStyle(
                   fontSize: 16,

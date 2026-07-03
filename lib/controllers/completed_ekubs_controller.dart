@@ -28,7 +28,7 @@ class CompletedEkubsController extends GetxController {
         'round': 7,
         'frequency': 'weekly'.tr,
         'duration': '3 ${'months'.tr}',
-        'totalAmount': '100,000 ETB',
+        'totalAmount': '100,000 ${'etb'.tr}',
       },
       {
         'id': '2',
@@ -37,16 +37,16 @@ class CompletedEkubsController extends GetxController {
         'round': 7,
         'frequency': 'monthly'.tr,
         'duration': '6 ${'months'.tr}',
-        'totalAmount': '50,000 ETB',
+        'totalAmount': '50,000 ${'etb'.tr}',
       },
       {
         'id': '3',
         'name': 'ekub_name'.tr,
-        'amount': '250,000 ETB birr',
+        'amount': '250,000 ${'etb'.tr}',
         'round': 7,
         'frequency': 'weekly'.tr,
         'duration': '12 ${'months'.tr}',
-        'totalAmount': '250,000 ETB',
+        'totalAmount': '250,000 ${'etb'.tr}',
       },
     ];
     _filterEkubs();

@@ -3,6 +3,7 @@
 
 import 'package:et_digital_equb/core/extensions/number_formatting.dart';
 import 'package:et_digital_equb/core/widgets/scaffold_with_bottom_bar.dart';
+import 'package:et_digital_equb/core/widgets/translated_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,6 +11,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../models/group_model.dart';
 import '../../../../controllers/in_kind_detail_controller.dart';
+import '../../../../controllers/language_controller.dart';
+import '../../../../core/utils/ethiopian_date.dart';
 
 // Helper functions
 String _formatCurrencyShort(num value) {
@@ -22,6 +25,9 @@ String _formatCurrencyShort(num value) {
 }
 
 String _formatDate(DateTime date) {
+  if (LanguageController.to.isAmharic()) {
+    return formatStartDate(date, amharic: true);
+  }
   final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return '${months[date.month - 1]} ${date.day}';
 }
@@ -44,7 +50,7 @@ class InKindDetailView extends StatelessWidget {
           onPressed: () => Get.back(),
         ),
         centerTitle: false,
-        title: Text(
+        title: TranslatedText(
           group.name,
           style: GoogleFonts.montserrat(
             fontSize: 20,
@@ -82,7 +88,7 @@ class InKindDetailView extends StatelessWidget {
                       children: [
                         SizedBox(
                           width: 50,
-                          child: Text(
+                          child: TranslatedText(
                             group.name,
                             style: GoogleFonts.montserrat(
                               fontSize: 18,
@@ -97,7 +103,7 @@ class InKindDetailView extends StatelessWidget {
                           color: AppColors.borderLightGray,
                         ),
                         const SizedBox(width: 6),
-                        Text(
+                        TranslatedText(
                           '${group.frequency[0].toUpperCase()}${group.frequency.substring(1)} ${group.contributionAmount.toCurrencyShort()}',
                           style: GoogleFonts.montserrat(
                             fontSize: 14,
@@ -501,7 +507,7 @@ class InKindDetailView extends StatelessWidget {
                                                         color: Colors.black54,
                                                       ),
                                               ),
-                                              title: Text(
+                                              title: TranslatedText(
                                                 member.user.fullName,
                                                 style: GoogleFonts.montserrat(
                                                   fontWeight: FontWeight.w600,
@@ -610,8 +616,17 @@ class InKindDetailView extends StatelessWidget {
                                     return Column(
                                       children: [
                                         ListTile(
-                                          title: Text(
-                                            'ETB ${payment['amount']} - ${payment['member']}',
+                                          title: Row(
+                                            children: [
+                                              Text(
+                                                '${'etb'.tr} ${payment['amount']} - ',
+                                              ),
+                                              Flexible(
+                                                child: TranslatedText(
+                                                  payment['member'],
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                           subtitle: Text(
                                             '${payment['date']} | ${payment['status']}',
@@ -685,7 +700,7 @@ class InKindDetailView extends StatelessWidget {
                                             Icons.history,
                                             color: Color(0xffc6c92a),
                                           ),
-                                          title: Text(event['action']),
+                                          title: TranslatedText(event['action']),
                                           subtitle: Text(
                                             '${event['date']} - ${event['initiator']}',
                                           ),

@@ -335,71 +335,169 @@ class _LiveLotteryDrawState extends State<LiveLotteryDraw>
   }
 }
 
-/// Simple lottery draw button for compact spaces
-class LotteryDrawButton extends StatelessWidget {
+/// Draw button that pulses green when a draw is imminent (isReady = true),
+/// and stays amber/grey otherwise.
+class LotteryDrawButton extends StatefulWidget {
   final VoidCallback? onPressed;
   final bool isEnabled;
+  final bool isReady; // true when next draw is within ~5 minutes
   final String? tooltip;
 
   const LotteryDrawButton({
     super.key,
     this.onPressed,
     this.isEnabled = true,
+    this.isReady = false,
     this.tooltip,
   });
 
   @override
+  State<LotteryDrawButton> createState() => _LotteryDrawButtonState();
+}
+
+class _LotteryDrawButtonState extends State<LotteryDrawButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnim;
+  late final Animation<double> _glowAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _scaleAnim = Tween<double>(begin: 1.0, end: 1.08).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _glowAnim = Tween<double>(begin: 6.0, end: 20.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _updateAnimation();
+  }
+
+  @override
+  void didUpdateWidget(LotteryDrawButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isReady != widget.isReady) {
+      _updateAnimation();
+    }
+  }
+
+  void _updateAnimation() {
+    if (widget.isReady && widget.isEnabled) {
+      _controller.repeat(reverse: true);
+    } else {
+      _controller.stop();
+      _controller.reset();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip ?? 'live_lottery_draw'.tr,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isEnabled
-                ? [Colors.amber, Colors.orange]
-                : [Colors.grey.shade300, Colors.grey.shade400],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: isEnabled
-              ? [
-                  BoxShadow(
-                    color: Colors.amber.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: isEnabled ? onPressed : null,
-            borderRadius: BorderRadius.circular(20),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.casino,
-                    size: 16,
-                    color: isEnabled ? Colors.white : Colors.grey.shade600,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'draw'.tr,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: isEnabled ? Colors.white : Colors.grey.shade600,
+    // Colour scheme: green when ready, amber when enabled, grey when disabled
+    final List<Color> gradientColors = widget.isReady
+        ? [const Color(0xFF00C853), const Color(0xFF69F0AE)] // vivid green
+        : widget.isEnabled
+            ? [Colors.amber, Colors.orange]
+            : [Colors.grey.shade300, Colors.grey.shade400];
+
+    final Color glowColor = widget.isReady
+        ? const Color(0xFF00C853)
+        : Colors.amber;
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Tooltip(
+          message: widget.tooltip ?? 'live_lottery_draw'.tr,
+          child: Transform.scale(
+            scale: (widget.isReady && widget.isEnabled)
+                ? _scaleAnim.value
+                : 1.0,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: gradientColors),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: widget.isEnabled
+                    ? [
+                        BoxShadow(
+                          color: glowColor.withValues(
+                            alpha: widget.isReady ? 0.7 : 0.3,
+                          ),
+                          blurRadius: widget.isReady
+                              ? _glowAnim.value
+                              : 8,
+                          spreadRadius: widget.isReady ? 2 : 0,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: widget.isEnabled ? widget.onPressed : null,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Green dot indicator when ready
+                        if (widget.isReady) ...[
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  blurRadius: 4,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                        ],
+                        Icon(
+                          Icons.casino,
+                          size: 16,
+                          color: widget.isEnabled
+                              ? Colors.white
+                              : Colors.grey.shade600,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          widget.isReady ? 'Draw Now!' : 'draw'.tr,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: widget.isEnabled
+                                ? Colors.white
+                                : Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
