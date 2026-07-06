@@ -91,6 +91,22 @@ class SelectPaymentMethodView extends StatelessWidget {
                         cycleNumber: cycleNumber,
                       ),
                     ),
+                    // TeleBirr
+                    PaymentMethodCard(
+                      id: 'telebirr',
+                      name: 'telebirr'.tr,
+                      logo: const TelebirrLogo(),
+                      description: controller.telebirrDescription,
+                      isSelected:
+                          controller.selectedPaymentMethod.value == 'telebirr',
+                      onTap: () => controller.selectPaymentMethod('telebirr'),
+                      onProceed: () => controller.proceedToPayment(
+                        'telebirr',
+                        ekubId,
+                        amount,
+                        cycleNumber: cycleNumber,
+                      ),
+                    ),
                   ],
                 ),
               ),
